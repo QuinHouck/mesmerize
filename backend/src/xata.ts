@@ -14,6 +14,7 @@ const tables = [
       { name: "description", type: "text" },
       { name: "private", type: "bool", defaultValue: "true" },
       { name: "image", type: "file", file: { defaultPublicAccess: true } },
+      { name: "name", type: "string", unique: true },
     ],
   },
   {
