@@ -1,20 +1,15 @@
 import axios from 'axios';
 
-const packageBaseURL = `https://localhost:3000/api/packages`;
-
-function getAxios(token) {
-    return axios.create({
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-    })
-}
+const packageBaseURL = `http://10.0.0.70:9000/api/packages`;
 
 class PackageService {
 
   getAvailable() {
     return axios.get(packageBaseURL);
+  }
+
+  getPackage(name) {
+    return axios.get(packageBaseURL + "/" + name);
   }
 
   create(data) {

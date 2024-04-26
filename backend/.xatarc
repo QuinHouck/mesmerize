@@ -1,6 +1,0 @@
-{
-  "databaseURL": "https://Quinten-Houck-s-workspace-o5n5ug.us-east-1.xata.sh/db/mesmerize",
-  "codegen": {
-    "output": "src/xata.ts"
-  }
-}

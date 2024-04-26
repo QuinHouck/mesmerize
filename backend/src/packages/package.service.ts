@@ -1,12 +1,35 @@
-import xata from "../utils/xata";
+import * as mongoDB from 'mongodb';
 
-export const getAvailable = async () => {
+import mongo from '../utils/mongo';
 
+export const getAvailablePackages = async () => {
+    try {
+        await mongo.connect();
+        const database: mongoDB.Db = mongo.db('packages');
+        const pack = database.collection("package-info");
 
+        const query = {name: "countries"};
+        const available = await pack.find(query).toArray();
+
+        return available;
+    } finally {
+        await mongo.close();
+    }
 
 }
 
-export const getByName = async (name: String, id: Number) => {
-    
+export const getPackage = async (name: string) => {
+    try {
+        await mongo.connect();
+        const database: mongoDB.Db = mongo.db('packages');
+        const pack = database.collection(name);
+
+        const query = {};
+        const countries = await pack.find(query).toArray();
+
+        return countries;
+    } finally {
+        await mongo.close();
+    }
 }
 
