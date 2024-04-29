@@ -13,6 +13,7 @@ const QuizOptionScreen = () => {
 
     const [selectedQuestion, setQuestion] = useState(null);
     const [selectedAnswer, setAnswer] = useState(null);
+    const [answerType, setAnswerType] = useState(null);
 
 
     const navigation = useNavigation();
@@ -38,7 +39,18 @@ const QuizOptionScreen = () => {
 
     async function handleStart(){
         if(!selectedQuestion || !selectedAnswer || (selectedAnswer===selectedQuestion)) return;
-        console.log("Good!")
+        // console.log("Good!")
+
+        const shuffled = packageInfo.items.sort(() => 0.5 - Math.random());
+        const num = Math.min(10, packageInfo.items.length);
+        const selected = shuffled.slice(0, num);
+
+        navigation.navigate("QuizGame", {question: selectedQuestion, answer: selectedAnswer, answerType: answerType, items: selected});
+    }
+
+    async function handleAnswer(att){
+        setAnswer(att.name);
+        setAnswerType(att.type);
     }
 
     return (
@@ -83,7 +95,7 @@ const QuizOptionScreen = () => {
                         {packageInfo && packageInfo.attributes.map((att) => {
                             if(att.answer){
                                 return (
-                                    <TouchableOpacity style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => setAnswer(att.name)}>
+                                    <TouchableOpacity style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleAnswer(att)}>
                                         <Text style={(att.name === selectedAnswer) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
                                     </TouchableOpacity>
                                 )

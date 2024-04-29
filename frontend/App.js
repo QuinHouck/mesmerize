@@ -7,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from './src/screens/HomeScreen';
 import QuizOptionScreen from './src/screens/QuizOptionScreen';
-import GameScreen from './src/screens/GameScreen';
+import QuizGameScreen from './src/screens/QuizGameScreen';
 import StoreScreen from './src/screens/StoreScreen';
 
 const Stack = createStackNavigator();
@@ -19,6 +19,7 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
         <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="QuizGame" component={QuizGameScreen} />
       </Stack.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>
