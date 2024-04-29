@@ -39,6 +39,7 @@ const StoreScreen = () => {
             const packageItems = {
                 title: p.title,
                 name: p.name,
+                attributes: p.attributes,
                 items: response.data
             }
 
@@ -59,9 +60,7 @@ const StoreScreen = () => {
                     <Text style={styles.title_button_text}>Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Store</Text>
-                <View style={styles.title_button}>
-
-                </View>
+                <View style={styles.title_button}/>
             </View>
             <ScrollView style={styles.scroll_container}>
                 <View style={styles.package_options_container}>

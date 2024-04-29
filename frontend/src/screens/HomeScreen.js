@@ -37,7 +37,7 @@ const HomeScreen = () => {
                 <TouchableOpacity style={styles.option}>
                     <Text style={styles.options_text}>Multiple Choice</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option} onPress={getPackageInfo}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("QuizOption")}>
                     <Text style={styles.options_text}>Write Quiz</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.option}>

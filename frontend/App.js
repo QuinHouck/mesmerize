@@ -6,7 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import HomeScreen from './src/screens/HomeScreen';
-import PlayScreen from './src/screens/PlayScreen';
+import QuizOptionScreen from './src/screens/QuizOptionScreen';
 import GameScreen from './src/screens/GameScreen';
 import StoreScreen from './src/screens/StoreScreen';
 
@@ -18,8 +18,7 @@ export default function App() {
       <Stack.Navigator screenOptions={{gestureEnabled: false}}>
         <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
-        {/* <Stack.Screen options={{ headerShown: false }} name="Tabs" component={Tabs} /> */}
-        {/* <Stack.Screen options={{ headerShown: false }} name="Game" component={GameScreen} /> */}
+        <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />
       </Stack.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>
