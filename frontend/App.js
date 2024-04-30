@@ -9,6 +9,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import QuizOptionScreen from './src/screens/QuizOptionScreen';
 import QuizGameScreen from './src/screens/QuizGameScreen';
 import StoreScreen from './src/screens/StoreScreen';
+import QuizResultsScreen from './src/screens/QuizResultsScreen';
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,7 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
         <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />
         <Stack.Screen options={{ headerShown: false }} name="QuizGame" component={QuizGameScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="QuizResults" component={QuizResultsScreen} />
       </Stack.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>

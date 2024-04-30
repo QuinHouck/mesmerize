@@ -12,9 +12,13 @@ const QuizGameScreen = () => {
     const answerType = route.params?.answerType;
     const items = route.params?.items;
 
+    const [selected, setSelected] = useState(null);
+    const [results, setResults] = useState([]);
+
     const inputRef = React.useRef();
 
     const navigation = useNavigation();
+    const isFocused = useIsFocused();
 
     const [points, setPoints] = useState(0);
     const [idx, setIndex] = useState(0);
@@ -29,7 +33,36 @@ const QuizGameScreen = () => {
         setTimeout(() => {
             inputRef.current?.focus();
         });
-    }, []);
+    }, [isFocused]);
+
+    useEffect(() => {
+        getSelected();
+    }, [isFocused]);
+
+    function getSelected(){
+        if(!isFocused) return;
+        const shuffled = items.sort(() => 0.5 - Math.random());
+        const num = Math.min(10, items.length);
+        const chosen = shuffled.slice(0, num);
+
+        let res = [];
+        chosen.forEach((item) => {
+            const data = {
+                question: item[question],
+                answer: item[answer],
+                input: "",
+                correct: false
+            }
+            res.push(data);
+        });
+
+        setResults(res);
+        setSelected(chosen);
+        setInput("");
+        setPoints(0);
+        setIndex(0);
+        setCorrect(0);
+    }
 
     function getKeyboard() {
         if(answerType === "numeric") return 'numeric';
@@ -41,28 +74,38 @@ const QuizGameScreen = () => {
 
     async function handleSubmit(){
 
-        const distance = getDistance(input, items[idx][answer]);
+        const distance = getDistance(input, selected[idx][answer]);
 
+        let correct = false;
         if(distance < 2){
             // console.log("Correct")
             setCorrect(2);
             setPoints(points+1);
+            correct = true;
         } else {
             setCorrect(1);
             // console.log("Incorrect")
         }
 
-        setInput(items[idx][answer]);
+        results[idx].input = input;
+        results[idx].correct = correct;
+
+        setInput(selected[idx][answer]);
 
         setTimeout(() => {
-            if(idx+1 >= items.length){
-                console.log("done");
+            if(idx+1 >= selected.length){
+                endGame();
                 return;
             }
             setIndex(idx+1);
             setInput("");
             setCorrect(0);
-        }, 3000)
+        }, 2500)
+    }
+
+    function endGame(){
+        // console.log("Results: ", results);
+        navigation.navigate("QuizResults", {question: question, answer: answer, answerType: answerType, items: items, results: results});
     }
 
     //Function Taken from: https://www.tutorialspoint.com/levenshtein-distance-in-javascript
@@ -116,18 +159,18 @@ const QuizGameScreen = () => {
                     <Text style={styles.title_button_text}>Pause</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Write Quiz</Text>
-                <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                <TouchableOpacity style={styles.title_button} onPress={endGame}>
                     <Text style={styles.title_button_text}>End</Text>
                 </TouchableOpacity>
             </View>
-            <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.question_container}>
-                    <Text style={styles.question_text}>{items[idx][question]}</Text>
+                    <Text style={styles.question_text}>{selected[idx][question]}</Text>
                 </View>
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
                         <Text style={styles.stats_left_text}>{`${points} pts`}</Text>
-                        <Text style={styles.stats_left_text}>{`${idx+1}/${items.length}`}</Text>
+                        <Text style={styles.stats_left_text}>{`${idx+1}/${selected.length}`}</Text>
                     </View>
                     <View style={styles.stats_left}>
                         <Text style={styles.stats_left_text}>{`00:45`}</Text>
@@ -147,7 +190,7 @@ const QuizGameScreen = () => {
                         onSubmitEditing={handleSubmit}
                     />
                 </View>
-            </KeyboardAvoidingView>
+            </KeyboardAvoidingView>}
         </SafeAreaView>
     );
 

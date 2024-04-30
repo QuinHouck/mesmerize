@@ -7,7 +7,7 @@ import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'r
 
 const QuizOptionScreen = () => {
 
-    const [selectedPackage, setPackage] = useState("");
+    const [selectedPackage, setPackage] = useState("countries");
 
     const [packageInfo, setPackageInfo] = useState(null)
 
@@ -26,7 +26,7 @@ const QuizOptionScreen = () => {
 
     async function getPackageData(){
         try {
-            const saved_info = await AsyncStorage.getItem("countries");
+            const saved_info = await AsyncStorage.getItem(selectedPackage);
             const info = JSON.parse(saved_info);
             setPackageInfo(info);
             setLoading(false);
@@ -41,11 +41,11 @@ const QuizOptionScreen = () => {
         if(!selectedQuestion || !selectedAnswer || (selectedAnswer===selectedQuestion)) return;
         // console.log("Good!")
 
-        const shuffled = packageInfo.items.sort(() => 0.5 - Math.random());
-        const num = Math.min(10, packageInfo.items.length);
-        const selected = shuffled.slice(0, num);
+        // const shuffled = packageInfo.items.sort(() => 0.5 - Math.random());
+        // const num = Math.min(10, packageInfo.items.length);
+        // const selected = shuffled.slice(0, num);
 
-        navigation.navigate("QuizGame", {question: selectedQuestion, answer: selectedAnswer, answerType: answerType, items: selected});
+        navigation.navigate("QuizGame", {question: selectedQuestion, answer: selectedAnswer, answerType: answerType, items: packageInfo.items});
     }
 
     async function handleAnswer(att){
