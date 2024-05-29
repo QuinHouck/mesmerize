@@ -11,6 +11,7 @@ packageRouter.get("/", async (req: Request, res: Response) => {
         return res.status(200).json(packages);
     } catch (error: any) {
         console.log("BAD")
+        console.log(error.message);
         return res.status(500).send(error.message);
     }
 });
@@ -24,7 +25,7 @@ packageRouter.get("/:name", async (req: Request, res: Response) => {
 
         return res.status(200).json(package_items);
     } catch (error: any) {
-        console.log("BAD")
+        console.log(error);
         return res.status(500).send(error.message);
     }
 });

@@ -53,7 +53,7 @@ const QuizResultsScreen = () => {
                 </View>
                 {results.map((item) => {
                     return (
-                        <View style={styles.row_item_container}>
+                        <View key={item.question} style={styles.row_item_container}>
                             <View style={styles.row_item}>
                                 <Text>{item.question}</Text>
                             </View>

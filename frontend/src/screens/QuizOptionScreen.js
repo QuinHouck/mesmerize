@@ -79,7 +79,7 @@ const QuizOptionScreen = () => {
                         {packageInfo && packageInfo.attributes.map((att) => {
                             if(att.question){
                                 return (
-                                    <TouchableOpacity style={(att.name === selectedQuestion) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => setQuestion(att.name)}>
+                                    <TouchableOpacity key={att.name} style={(att.name === selectedQuestion) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => setQuestion(att.name)}>
                                         <Text style={(att.name === selectedQuestion) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
                                     </TouchableOpacity>
                                 )
@@ -95,7 +95,7 @@ const QuizOptionScreen = () => {
                         {packageInfo && packageInfo.attributes.map((att) => {
                             if(att.answer){
                                 return (
-                                    <TouchableOpacity style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleAnswer(att)}>
+                                    <TouchableOpacity key={att.name} style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleAnswer(att)}>
                                         <Text style={(att.name === selectedAnswer) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
                                     </TouchableOpacity>
                                 )
