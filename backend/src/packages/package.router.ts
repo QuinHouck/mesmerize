@@ -6,7 +6,7 @@ export const packageRouter = express.Router();
 // GET: List of all Packages
 packageRouter.get("/", async (req: Request, res: Response) => {
     try {
-        // const packages = await PackageService.getAvailablePackages();
+        const packages = await PackageService.getAvailablePackages();
         const back = {
             test: "yes"
         };
