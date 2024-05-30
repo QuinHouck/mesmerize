@@ -6,7 +6,7 @@ import { packageRouter } from "./packages/package.router";
 
 dotenv.config();
 
-const PORT = process.env.PORT || "9000";
+const PORT = process.env.PORT || "8080";
 const HOST = process.env.HOST || "0.0.0.0";
 
 const app:Application = express();
