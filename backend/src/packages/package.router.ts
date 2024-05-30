@@ -7,10 +7,8 @@ export const packageRouter = express.Router();
 packageRouter.get("/", async (req: Request, res: Response) => {
     try {
         const packages = await PackageService.getAvailablePackages();
-        const back = {
-            test: "yes"
-        };
-        return res.status(200).json(back);
+
+        return res.status(200).json(packages);
     } catch (error: any) {
         console.log("BAD")
         console.log(error.message);
