@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const packageBaseURL = `http://10.0.0.176:9000/api/packages`;
+const packageBaseURL = `http://3.91.197.7:9000/api/packages`;
 
 class PackageService {
 
