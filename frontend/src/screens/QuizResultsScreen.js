@@ -9,6 +9,7 @@ const QuizResultsScreen = () => {
 
     const route = useRoute()
     const question = route.params?.question;
+    const questionType = route.params?.questionType;
     const answer = route.params?.answer;
     const answerType = route.params?.answerType;
     const items = route.params?.items;
@@ -23,7 +24,7 @@ const QuizResultsScreen = () => {
     }, []);
 
     async function handlePlay(){
-        navigation.navigate("QuizGame", {question: question, answer: answer, answerType: answerType, items: items});
+        navigation.navigate("QuizGame", {question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});
     }
 
 
@@ -53,7 +54,7 @@ const QuizResultsScreen = () => {
                 </View>
                 {results.map((item) => {
                     return (
-                        <View key={item.question} style={styles.row_item_container}>
+                        <View key={item.answer} style={styles.row_item_container}>
                             <View style={styles.row_item}>
                                 <Text>{item.question}</Text>
                             </View>

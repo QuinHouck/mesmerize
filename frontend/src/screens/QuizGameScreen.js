@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 
-
+import { getFlags } from '../util/getImages';
 
 const QuizGameScreen = () => {
 
     const route = useRoute()
     const question = route.params?.question;
+    const questionType = route.params?.questionType;
     const answer = route.params?.answer;
     const answerType = route.params?.answerType;
     const items = route.params?.items;
@@ -29,21 +30,25 @@ const QuizGameScreen = () => {
 
     const [isLoading, setLoading] = useState(true);
 
-    useEffect(() => {
-        setTimeout(() => {
-            inputRef.current?.focus();
-        });
-    }, [isFocused]);
+    const [images, setImages] = useState(null);
 
     useEffect(() => {
         getSelected();
     }, [isFocused]);
 
-    function getSelected(){
-        if(!isFocused) return;
+    async function getSelected(){
+        if(!isFocused){
+            setLoading(true);
+            return;
+        }
         const shuffled = items.sort(() => 0.5 - Math.random());
         const num = Math.min(10, items.length);
         const chosen = shuffled.slice(0, num);
+
+        if(questionType === "image"){
+            const ret = await getFlags(chosen);
+            setImages(ret);
+        }
 
         let res = [];
         chosen.forEach((item) => {
@@ -62,6 +67,7 @@ const QuizGameScreen = () => {
         setPoints(0);
         setIndex(0);
         setCorrect(0);
+        setLoading(false);
     }
 
     function getKeyboard() {
@@ -104,8 +110,7 @@ const QuizGameScreen = () => {
     }
 
     function endGame(){
-        // console.log("Results: ", results);
-        navigation.navigate("QuizResults", {question: question, answer: answer, answerType: answerType, items: items, results: results});
+        navigation.navigate("QuizResults", {question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
     }
 
     //Function Taken from: https://www.tutorialspoint.com/levenshtein-distance-in-javascript
@@ -152,6 +157,14 @@ const QuizGameScreen = () => {
         }
     }
 
+    if(isLoading){
+        return (
+            <SafeAreaView style={styles.main_container}>
+
+            </SafeAreaView>
+        );
+    };
+
     return (
         <SafeAreaView style={styles.main_container}>
              <View style={styles.top_container}>
@@ -165,7 +178,14 @@ const QuizGameScreen = () => {
             </View>
             {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.question_container}>
-                    <Text style={styles.question_text}>{selected[idx][question]}</Text>
+                    {questionType === "image" ?
+                        <Image 
+                            style={{height: '50%', aspectRatio: images[`${selected[idx]["iso2"].toLowerCase()}.png`].ar}}
+                            source={images[`${selected[idx]["iso2"].toLowerCase()}.png`].image}
+                        />
+                        :
+                        <Text style={styles.question_text}>{selected[idx][question]}</Text>
+                    }
                 </View>
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
@@ -188,6 +208,7 @@ const QuizGameScreen = () => {
                         returnKeyType='go'
                         blurOnSubmit={false}
                         onSubmitEditing={handleSubmit}
+                        autoFocus
                     />
                 </View>
             </KeyboardAvoidingView>}
@@ -251,6 +272,11 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 30,
         fontWeight: '700'
+    },
+
+    question_image:{
+        height: '50%',
+        aspectRatio: 2/1,
     },
 
     stats_container: {

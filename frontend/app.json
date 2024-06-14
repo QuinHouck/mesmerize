@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Mesmerize",
+    "slug": "mesmerize",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,21 +16,28 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.quinhouck.frontend"
+      "bundleIdentifier": "com.quinhouck.frontend",
+      "infoPlist": {
+        "NSAppTransportSecurity": { 
+          "NSAllowsArbitraryLoads": true 
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "635ac497-501b-4757-a3aa-bf9e278c74f3"
+        "projectId": "5766cc56-016e-463d-92c8-16a6527c3858"
       }
-    }
+    },
+    "owner": "quinhouck"
   }
 }
