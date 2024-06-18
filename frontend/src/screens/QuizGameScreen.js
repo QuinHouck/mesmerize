@@ -4,6 +4,8 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 
 import { getFlags } from '../util/getImages';
 
+import AsiaMap from '../images/countries/continents/AsiaMap.jsx';
+
 const QuizGameScreen = () => {
 
     const route = useRoute()
@@ -157,6 +159,24 @@ const QuizGameScreen = () => {
         }
     }
 
+    function renderQuestion(current){
+        switch(questionType){
+            case "image":
+                return <Image 
+                    style={{height: '50%', aspectRatio: images[`${selected[idx]["iso2"].toLowerCase()}.png`].ar}}
+                    source={images[`${selected[idx]["iso2"].toLowerCase()}.png`].image}
+                />;
+            case "map":
+                return (
+                    <View style={{height: '100%', width: "100%"}}>
+                        <AsiaMap selected={current} style={{height: '100%', width: "100%"}}/>
+                    </View>
+                );
+            default: 
+                return <Text style={styles.question_text}>{selected[idx][question]}</Text>;
+        }
+    }
+
     if(isLoading){
         return (
             <SafeAreaView style={styles.main_container}>
@@ -178,14 +198,15 @@ const QuizGameScreen = () => {
             </View>
             {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.question_container}>
-                    {questionType === "image" ?
+                    {renderQuestion(selected[idx])}
+                    {/* {questionType === "image" ?
                         <Image 
                             style={{height: '50%', aspectRatio: images[`${selected[idx]["iso2"].toLowerCase()}.png`].ar}}
                             source={images[`${selected[idx]["iso2"].toLowerCase()}.png`].image}
                         />
                         :
                         <Text style={styles.question_text}>{selected[idx][question]}</Text>
-                    }
+                    } */}
                 </View>
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
