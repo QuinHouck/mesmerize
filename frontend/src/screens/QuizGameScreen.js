@@ -4,7 +4,7 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 
 import { getFlags } from '../util/getImages';
 
-import AsiaMap from '../images/countries/continents/AsiaMap.jsx';
+import AsiaMap from '../images/countries/continents/AsiaMap.js';
 
 const QuizGameScreen = () => {
 
