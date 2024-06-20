@@ -2,7 +2,7 @@ const fs = require('fs');
 
 let ogText = "bad";
 
-fs.readFile('frontend/src/images/countries/continents/northAmericaHigh2-01.svg', (err, data) => {
+fs.readFile('frontend/src/images/countries/continents/asiaHigh2.svg', (err, data) => {
     if(err) throw err;
 
     ogText = data.toString();

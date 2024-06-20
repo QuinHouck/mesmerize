@@ -47,7 +47,7 @@ const QuizGameScreen = () => {
         }
 
         let asian = items.filter((country) => {
-            return country.region === 'Europe';
+            return country.region === 'Asia';
         })
 
         if(questionType === "map"){
@@ -182,7 +182,7 @@ const QuizGameScreen = () => {
             case "map":
                 return (
                     <View style={{height: '100%', width: "90%"}}>
-                        <EuropeMap selected={current} style={{height: '100%', width: "90%"}}/>
+                        <AsiaMap selected={current} style={{height: '100%', width: "90%"}}/>
                     </View>
                 );
             default: 
