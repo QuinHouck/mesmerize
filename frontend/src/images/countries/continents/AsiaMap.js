@@ -94,7 +94,7 @@ const SvgComponent = ({selected}) => {
       const transformMatrix = [1, 0, 0, 1, ((width/2)-countries[selected.iso2].centerX), ((height/2)-countries[selected.iso2].centerY)];
       let centerX = countries[selected.iso2].centerX;
       let centerY = countries[selected.iso2].centerY;
-      let scale = Math.min((height*0.3)/countries[selected.iso2].height, (width*0.3)/countries[selected.iso2].width, 10);
+      let scale = Math.ceil(Math.min((height*0.3)/countries[selected.iso2].height, (width*0.3)/countries[selected.iso2].width, 10));
 
       for (var i = 0; i < 4; i++) {
         transformMatrix[i] *= scale;

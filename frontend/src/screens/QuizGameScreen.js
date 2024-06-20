@@ -6,6 +6,7 @@ import { getFlags } from '../util/getImages';
 
 import AsiaMap from '../images/countries/continents/AsiaMap.js';
 import EuropeMap from '../images/countries/continents/EuropeMap.js';
+import NorthMap from '../images/countries/continents/NorthMap.js';
 
 const QuizGameScreen = () => {
 
@@ -45,9 +46,15 @@ const QuizGameScreen = () => {
             return;
         }
 
-        const asian = items.filter((country) => {
+        let asian = items.filter((country) => {
             return country.region === 'Europe';
         })
+
+        if(questionType === "map"){
+            asian = asian.filter((country) => {
+                return country.mappable === true;
+            })
+        }
 
         const shuffled = asian.sort(() => 0.5 - Math.random());
         const num = Math.min(10, items.length);
