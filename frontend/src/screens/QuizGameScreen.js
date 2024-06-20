@@ -43,7 +43,12 @@ const QuizGameScreen = () => {
             setLoading(true);
             return;
         }
-        const shuffled = items.sort(() => 0.5 - Math.random());
+
+        const asian = items.filter((country) => {
+            return country.region === 'Asia';
+        })
+
+        const shuffled = asian.sort(() => 0.5 - Math.random());
         const num = Math.min(10, items.length);
         const chosen = shuffled.slice(0, num);
 
@@ -168,8 +173,8 @@ const QuizGameScreen = () => {
                 />;
             case "map":
                 return (
-                    <View style={{height: '100%', width: "100%"}}>
-                        <AsiaMap selected={current} style={{height: '100%', width: "100%"}}/>
+                    <View style={{height: '100%', width: "90%"}}>
+                        <AsiaMap selected={current} style={{height: '100%', width: "90%"}}/>
                     </View>
                 );
             default: 
@@ -253,6 +258,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         paddingVertical: 10,
         backgroundColor: "#745e96",
+        zIndex: 10,
     },
 
     title_text: {
