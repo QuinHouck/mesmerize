@@ -5,6 +5,7 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 import { getFlags } from '../util/getImages';
 
 import AsiaMap from '../images/countries/continents/AsiaMap.js';
+import EuropeMap from '../images/countries/continents/EuropeMap.js';
 
 const QuizGameScreen = () => {
 
@@ -45,7 +46,7 @@ const QuizGameScreen = () => {
         }
 
         const asian = items.filter((country) => {
-            return country.region === 'Asia';
+            return country.region === 'Europe';
         })
 
         const shuffled = asian.sort(() => 0.5 - Math.random());
@@ -174,7 +175,7 @@ const QuizGameScreen = () => {
             case "map":
                 return (
                     <View style={{height: '100%', width: "90%"}}>
-                        <AsiaMap selected={current} style={{height: '100%', width: "90%"}}/>
+                        <EuropeMap selected={current} style={{height: '100%', width: "90%"}}/>
                     </View>
                 );
             default: 
