@@ -5,8 +5,11 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 import { getFlags } from '../util/getImages';
 
 import AsiaMap from '../images/countries/continents/AsiaMap.js';
+import AfricaMap from '../images/countries/continents/AfricaMap.js';
 import EuropeMap from '../images/countries/continents/EuropeMap.js';
 import NorthMap from '../images/countries/continents/NorthMap.js';
+import SouthMap from '../images/countries/continents/SouthMap.js';
+import OceaniaMap from '../images/countries/continents/OceaniaMap.js';
 
 const QuizGameScreen = () => {
 
@@ -47,7 +50,7 @@ const QuizGameScreen = () => {
         }
 
         let asian = items.filter((country) => {
-            return country.region === 'Asia';
+            return country.region === 'Oceania';
         })
 
         if(questionType === "map"){
@@ -182,7 +185,7 @@ const QuizGameScreen = () => {
             case "map":
                 return (
                     <View style={{height: '100%', width: "90%"}}>
-                        <AsiaMap selected={current} style={{height: '100%', width: "90%"}}/>
+                        <OceaniaMap selected={current} style={{height: '100%', width: "90%"}}/>
                     </View>
                 );
             default: 
