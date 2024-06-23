@@ -8,6 +8,9 @@ import X from '../icons/X.svg';
 const QuizResultsScreen = () => {
 
     const route = useRoute()
+    const pack = route.params?.pack;
+    const div = route.params?.div;
+    const divOption = route.params?.divOption;
     const question = route.params?.question;
     const questionType = route.params?.questionType;
     const answer = route.params?.answer;

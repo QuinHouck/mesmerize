@@ -40,6 +40,7 @@ const StoreScreen = () => {
                 title: p.title,
                 name: p.name,
                 attributes: p.attributes,
+                divisions: p.divisions,
                 items: response.data
             }
 

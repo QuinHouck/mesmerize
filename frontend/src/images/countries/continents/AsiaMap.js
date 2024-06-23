@@ -84,7 +84,7 @@ const SvgComponent = ({selected}) => {
   const [matrix, setMatrix] = useState([1, 0, 0, 1, 0, 0]);
 
   useEffect(() => {
-      console.log(selected);
+      // console.log(selected);
       // console.log(countries[selected.iso2].centerX);
       getMatrix();
   }, [selected]);

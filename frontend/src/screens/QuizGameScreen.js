@@ -11,9 +11,14 @@ import NorthMap from '../images/countries/continents/NorthMap.js';
 import SouthMap from '../images/countries/continents/SouthMap.js';
 import OceaniaMap from '../images/countries/continents/OceaniaMap.js';
 
+import Map from '../components/Map.js'
+
 const QuizGameScreen = () => {
 
     const route = useRoute()
+    const pack = route.params?.pack;
+    const div = route.params?.div;
+    const divOption = route.params?.divOption;
     const question = route.params?.question;
     const questionType = route.params?.questionType;
     const answer = route.params?.answer;
@@ -49,18 +54,22 @@ const QuizGameScreen = () => {
             return;
         }
 
-        let asian = items.filter((country) => {
-            return country.region === 'Oceania';
-        })
+        let filtered = items;
+
+        if(div && divOption){
+            filtered = items.filter((country) => {
+                return country.region === divOption;
+            })
+        }
 
         if(questionType === "map"){
-            asian = asian.filter((country) => {
+            filtered = filtered.filter((country) => {
                 return country.mappable === true;
             })
         }
 
-        const shuffled = asian.sort(() => 0.5 - Math.random());
-        const num = Math.min(10, items.length);
+        const shuffled = filtered.sort(() => 0.5 - Math.random());
+        const num = Math.min(10, filtered.length);
         const chosen = shuffled.slice(0, num);
 
         if(questionType === "image"){
@@ -128,7 +137,7 @@ const QuizGameScreen = () => {
     }
 
     function endGame(){
-        navigation.navigate("QuizResults", {question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
+        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
     }
 
     //Function Taken from: https://www.tutorialspoint.com/levenshtein-distance-in-javascript
@@ -184,8 +193,8 @@ const QuizGameScreen = () => {
                 />;
             case "map":
                 return (
-                    <View style={{height: '100%', width: "90%"}}>
-                        <OceaniaMap selected={current} style={{height: '100%', width: "90%"}}/>
+                    <View style={{height: '100%', width: "100%", alignItems: 'center'}}>
+                        <Map selected={current} pack={pack} div={div} divOption={divOption} style={{width: '100%'}}/>
                     </View>
                 );
             default: 

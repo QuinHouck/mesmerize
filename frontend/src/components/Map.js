@@ -8,16 +8,20 @@ import NorthMap from '../images/countries/continents/NorthMap.js';
 import SouthMap from '../images/countries/continents/SouthMap.js';
 import OceaniaMap from '../images/countries/continents/OceaniaMap.js';
 
-const SvgComponent = ({selected, pack, divName, divOption}) => {
+const SvgComponent = ({selected, pack, div, divOption}) => {
 
     useEffect(() => {
+        // console.log("Pack: ", pack);
+        // console.log("Div: ", div);
+        // console.log("Option: ", divOption);
 
     }, [selected]);
 
     function getMap(){
         switch(pack){
             case "countries":
-                switch(divOption){
+                let region = selected.region;
+                switch(region){
                     case "Africa":
                         return <AfricaMap selected={selected}/>
                     case "NA":
