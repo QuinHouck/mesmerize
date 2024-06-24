@@ -27,7 +27,7 @@ const QuizResultsScreen = () => {
     }, []);
 
     async function handlePlay(){
-        navigation.navigate("QuizGame", {question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});
+        navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});
     }
 
 

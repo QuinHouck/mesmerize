@@ -21,6 +21,7 @@ const QuizOptionScreen = () => {
 
     const [showDivModal, setDivModal] = useState(false);
 
+
     const navigation = useNavigation();
 
     const [isLoading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ const QuizOptionScreen = () => {
             const info = JSON.parse(saved_info);
             setPackageInfo(info);
             setLoading(false);
-            console.log("Info: ", info.divisions[0]);
+            // console.log("Info: ", info.divisions[0]);
         } catch (e){
             console.log(e.message);
             console.log("Could not find package");
@@ -71,7 +72,6 @@ const QuizOptionScreen = () => {
         } else {
             setSelectedDiv(division);
             setDivModal(true);
-            console.log(division); 
         } 
     }
 

@@ -4,13 +4,6 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 
 import { getFlags } from '../util/getImages';
 
-import AsiaMap from '../images/countries/continents/AsiaMap.js';
-import AfricaMap from '../images/countries/continents/AfricaMap.js';
-import EuropeMap from '../images/countries/continents/EuropeMap.js';
-import NorthMap from '../images/countries/continents/NorthMap.js';
-import SouthMap from '../images/countries/continents/SouthMap.js';
-import OceaniaMap from '../images/countries/continents/OceaniaMap.js';
-
 import Map from '../components/Map.js'
 
 const QuizGameScreen = () => {
@@ -40,6 +33,14 @@ const QuizGameScreen = () => {
 
     const [correct, setCorrect] = useState(0);
 
+    const [time, setTime] = useState(45);
+    const [tid, setTid] = useState(null);
+    const timerRef = useRef(time);
+
+    const [isPaused, setIsPaused] = useState(false);
+    const [inRound, setInRound] = useState(false);
+    const [ended, setEnded] = useState(false);
+
     const [isLoading, setLoading] = useState(true);
 
     const [images, setImages] = useState(null);
@@ -47,6 +48,29 @@ const QuizGameScreen = () => {
     useEffect(() => {
         getSelected();
     }, [isFocused]);
+
+    useEffect(() => {
+        // console.log("InRound: ", inRound);
+        // console.log("Ended: ", ended);
+        if(!inRound || ended) return;
+        timerRef.current = 45;
+        const timerId = setInterval(() => {
+            timerRef.current -= 1;
+            if (timerRef.current < 0) {
+                clearInterval(timerId);
+                handleSubmit();
+                // console.log("Ended");
+            } else {
+                setTime(timerRef.current);
+            }
+        }, 1000);
+        setTid(timerId);
+        return () => {
+            // console.log("cleared");
+            clearInterval(timerId);
+            if(tid) clearInterval(tid);
+        };
+    }, [inRound, ended]);
 
     async function getSelected(){
         if(!isFocused){
@@ -94,6 +118,8 @@ const QuizGameScreen = () => {
         setPoints(0);
         setIndex(0);
         setCorrect(0);
+        setInRound(true);
+        setEnded(false);
         setLoading(false);
     }
 
@@ -106,19 +132,32 @@ const QuizGameScreen = () => {
     }
 
     async function handleSubmit(){
+        setInRound(false);
 
-        const distance = getDistance(input, selected[idx][answer]);
+        let distance = getDistance(input, selected[idx][answer]);
 
         let correct = false;
+        let correctId = 1;
         if(distance < 2){
             // console.log("Correct")
-            setCorrect(2);
             setPoints(points+1);
             correct = true;
+            correctId = 2;
         } else {
-            setCorrect(1);
-            // console.log("Incorrect")
+            if(selected[idx].accepted){
+                for(other of selected[idx].accepted){
+                    distance = getDistance(input, other);
+                    if(distance < 2){
+                        setPoints(points+1);
+                        correct = true;
+                        correctId = 2;
+                        break;
+                    }
+                }
+            }
         }
+
+        setCorrect(correctId)
 
         results[idx].input = input;
         results[idx].correct = correct;
@@ -133,27 +172,36 @@ const QuizGameScreen = () => {
             setIndex(idx+1);
             setInput("");
             setCorrect(0);
-        }, 2500)
+            setInRound(true);
+            // startTimer();
+        }, 2500);    
     }
 
     function endGame(){
+        if(tid) {
+            clearInterval(tid);
+        }
+        setInRound(false);
+        setEnded(true);
         navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
+    }
+
+    function parseString(str){
+        if(str === "") return str;
+        str = str.toLowerCase();
+        str = str.replace(' ', '');
+        str = str.replace('-', '');
+        str = str.replace('\'', '');
+        return str;
     }
 
     //Function Taken from: https://www.tutorialspoint.com/levenshtein-distance-in-javascript
     function getDistance(str1, str2){  
-        str1 = str1.toLowerCase();
-        str1 = str1.replace(' ', '');
-        str1 = str1.replace('-', '');
-        str1 = str1.replace('\'', '');
-        
-        str2 = str2.toLowerCase();
-        str2 = str2.replace(' ', '');
-        str2 = str2.replace('-', '');
-        str2 = str2.replace('\'', '');
+        str1 = parseString(str1);
+        str2 = parseString(str2);
 
-        const track = Array(str2.length + 1).fill(null).map(() =>
-        Array(str1.length + 1).fill(null));
+        if(str1 === "") return 10;
+        const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
         for (let i = 0; i <= str1.length; i += 1) {
             track[0][i] = i;
         }
@@ -239,7 +287,7 @@ const QuizGameScreen = () => {
                         <Text style={styles.stats_left_text}>{`${idx+1}/${selected.length}`}</Text>
                     </View>
                     <View style={styles.stats_left}>
-                        <Text style={styles.stats_left_text}>{`00:45`}</Text>
+                        <Text style={styles.stats_left_text}>{`00:${time.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false})}`}</Text>
                     </View>
                 </View>
                 <View style={styles.answer_container}>

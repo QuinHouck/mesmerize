@@ -41,6 +41,7 @@ const StoreScreen = () => {
                 name: p.name,
                 attributes: p.attributes,
                 divisions: p.divisions,
+                accepted: p.accepted,
                 items: response.data
             }
 
@@ -145,7 +146,6 @@ const styles = StyleSheet.create({
 
     package_option: {
         width: '80%',
-        height: '30px',
         backgroundColor: "#745e96",
         alignItems: 'center',
         justifyContent: 'center',
@@ -162,7 +162,6 @@ const styles = StyleSheet.create({
     package_option_selected: {
         flexDirection: 'row',
         width: '80%',
-        height: '30px',
         backgroundColor: "white",
         alignItems: 'center',
         justifyContent: 'space-between',
