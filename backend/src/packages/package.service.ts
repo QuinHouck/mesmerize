@@ -8,7 +8,7 @@ export const getAvailablePackages = async () => {
         const database: mongoDB.Db = mongo.db('packages');
         const pack = database.collection("package-info");
 
-        const query = {name: "countries"};
+        const query = {};
         const available = await pack.find(query).toArray();
 
         return available;

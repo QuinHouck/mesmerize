@@ -47,12 +47,35 @@ const StoreScreen = () => {
 
             // console.log(packageItems);
             await AsyncStorage.setItem(packageItems.name, JSON.stringify(packageItems));
+            await addPackage(packageItems);
             console.log("Success!")
             
         } catch(error) {
             console.log("Error: ", error);
             // console.log("Res: ", error.response);
         }
+    }
+
+    async function addPackage(newPack){
+        let packs = await AsyncStorage.getItem("packs");
+        if(!packs){
+            packs = [];
+        } else {
+            packs = JSON.parse(packs);
+        }
+
+        const data = {
+            title: newPack.title,
+            name: newPack.name,
+        }
+
+        let idx = packs.map(function(e) { return e.name; }).indexOf(newPack.name);
+        if(idx){
+            packs[idx] = data;
+        } else {
+            packs.push(data);
+        }
+        await AsyncStorage.setItem("packs", JSON.stringify(packs));
     }
 
     return (
@@ -140,12 +163,14 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         alignItems: 'center',
+        gap: 20,
         // backgroundColor: 'purple',
         padding: 20,
     },
 
     package_option: {
         width: '80%',
+        height: 80,
         backgroundColor: "#745e96",
         alignItems: 'center',
         justifyContent: 'center',
@@ -162,6 +187,7 @@ const styles = StyleSheet.create({
     package_option_selected: {
         flexDirection: 'row',
         width: '80%',
+        height: 80,
         backgroundColor: "white",
         alignItems: 'center',
         justifyContent: 'space-between',

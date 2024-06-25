@@ -4,10 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import Modal from "react-native-modal";
 
+import DropDown from '../icons/DropDown.svg';
 
 const QuizOptionScreen = () => {
 
-    const [selectedPackage, setPackage] = useState("countries");
+    const [downloaded, setDownloaded] = useState([]);
+    const [selectedPackage, setPackage] = useState(null);
 
     const [packageInfo, setPackageInfo] = useState(null)
 
@@ -20,6 +22,7 @@ const QuizOptionScreen = () => {
     const [selectedDivOption, setDivOption] = useState(null);
 
     const [showDivModal, setDivModal] = useState(false);
+    const [showPackModal, setPackModal] = useState(false);
 
 
     const navigation = useNavigation();
@@ -27,8 +30,23 @@ const QuizOptionScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
-        getPackageData();
+        if(selectedPackage){
+            getPackageData();
+        }
     }, [selectedPackage]);
+
+    useEffect(() => {
+        getDownloaded();
+    }, []);
+
+    async function getDownloaded(){
+        let packs = await AsyncStorage.getItem("packs");
+        if(packs){
+            packs = JSON.parse(packs);
+        }
+        setDownloaded(packs);
+        if(packs.length !== 0) setPackage(packs[1].name);
+    }
 
     async function getPackageData(){
         try {
@@ -75,7 +93,7 @@ const QuizOptionScreen = () => {
         } 
     }
 
-    async function handleCancel(){
+    async function handleDivCancel(){
         if(!selectedDivOption){
             setSelectedDiv(null);
         }
@@ -86,6 +104,19 @@ const QuizOptionScreen = () => {
     async function handleDivOption(option){
         setDivOption(option);
         setDivModal(false);
+    }
+
+    async function handlePackCancel(){
+        setPackModal(false);
+    }
+
+    async function handlePackOption(option){
+        if(selectedPackage.name !== option.name){
+            setPackage(option.name);
+            setQuestion(null);
+            setAnswer(null); 
+        }
+        setPackModal(false);
     }
 
     if(isLoading){
@@ -106,9 +137,10 @@ const QuizOptionScreen = () => {
                 <View style={styles.title_button}/>
             </View>
             <View style={styles.package_container}>
-                <View style={styles.package_title}>
-                    <Text style={styles.title_text}>{packageInfo.title}</Text>
-                </View>
+                <Text style={styles.title_text}>{packageInfo.title}</Text>
+                {downloaded.length > 1 && <TouchableOpacity style={styles.button_container} onPress={() => setPackModal(true)}>
+                    <DropDown style={styles.button_icon}/>
+                </TouchableOpacity>}
             </View>
             <View style={styles.division_container}>
                 <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
@@ -164,13 +196,29 @@ const QuizOptionScreen = () => {
             <Modal 
                 isVisible={showDivModal}
                 coverScreen={true}
-                onBackdropPress={handleCancel}
+                onBackdropPress={handleDivCancel}
                 style={styles.modal_container}
             >
                 <View style={styles.modal_options_container}>
                     {selectedDiv && selectedDiv.options.map((option) => {
                         return (
                             <TouchableOpacity key={option.title} style={styles.modal_options_button} onPress={() => handleDivOption(option)}>
+                                <Text style={styles.modal_options_text}>{option.title}</Text>
+                            </TouchableOpacity>
+                        )
+                    })}
+                </View>
+            </Modal>
+            <Modal 
+                isVisible={showPackModal}
+                coverScreen={true}
+                onBackdropPress={handlePackCancel}
+                style={styles.modal_container}
+            >
+                <View style={styles.modal_options_container}>
+                    {downloaded && downloaded.map((option) => {
+                        return (
+                            <TouchableOpacity key={option.name} style={styles.modal_options_button} onPress={() => handlePackOption(option)}>
                                 <Text style={styles.modal_options_text}>{option.title}</Text>
                             </TouchableOpacity>
                         )
@@ -225,9 +273,23 @@ const styles = StyleSheet.create({
     package_container: {
         flexDirection: 'row',
         justifyContent: 'center',
+        alignItems: 'center',
+        maxHeight: 60,
+        gap: 10,
         paddingHorizontal: 30,
         paddingVertical: 10,
         backgroundColor: '#3b2c5e'
+    },
+
+    button_container: {
+        height: '75%',
+        aspectRatio: 1,
+    },
+
+    button_icon: {
+        color: 'white',
+        height: '100%',
+        aspectRatio: 1,
     },
 
     division_container: {

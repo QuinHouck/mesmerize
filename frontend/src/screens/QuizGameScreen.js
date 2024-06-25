@@ -81,14 +81,14 @@ const QuizGameScreen = () => {
         let filtered = items;
 
         if(div && divOption){
-            filtered = items.filter((country) => {
-                return country.region === divOption;
+            filtered = items.filter((item) => {
+                return item[div] === divOption;
             })
         }
 
         if(questionType === "map"){
-            filtered = filtered.filter((country) => {
-                return country.mappable === true;
+            filtered = filtered.filter((item) => {
+                return item.mappable === true;
             })
         }
 
@@ -124,7 +124,7 @@ const QuizGameScreen = () => {
     }
 
     function getKeyboard() {
-        if(answerType === "numeric") return 'numeric';
+        if(answerType === "number") return 'number-pad';
 
         if(Platform.OS === 'ios') return 'ascii-capable';
 
@@ -133,8 +133,18 @@ const QuizGameScreen = () => {
 
     async function handleSubmit(){
         setInRound(false);
+        let distance = 10;
 
-        let distance = getDistance(input, selected[idx][answer]);
+        if(answerType === 'string'){
+            distance = getDistance(input, selected[idx][answer]);
+        } else if(answerType === 'number'){
+            // console.log(input, typeof(input));
+            // console.log(selected[idx][answer], typeof(selected[idx][answer]));
+            if(Number(input) === selected[idx][answer]){
+                distance = 0;
+            }
+        }
+        
 
         let correct = false;
         let correctId = 1;
@@ -144,7 +154,7 @@ const QuizGameScreen = () => {
             correct = true;
             correctId = 2;
         } else {
-            if(selected[idx].accepted){
+            if(selected[idx].accepted && answerType === 'string'){
                 for(other of selected[idx].accepted){
                     distance = getDistance(input, other);
                     if(distance < 2){
@@ -162,7 +172,7 @@ const QuizGameScreen = () => {
         results[idx].input = input;
         results[idx].correct = correct;
 
-        setInput(selected[idx][answer]);
+        setInput(selected[idx][answer].toString());
 
         setTimeout(() => {
             if(idx+1 >= selected.length){
@@ -299,7 +309,7 @@ const QuizGameScreen = () => {
                         autoCorrect={false}
                         spellCheck={false}
                         keyboardType={getKeyboard()}
-                        returnKeyType='go'
+                        returnKeyType={answerType === 'number' ? 'done' : 'go'}
                         blurOnSubmit={false}
                         onSubmitEditing={handleSubmit}
                         autoFocus
