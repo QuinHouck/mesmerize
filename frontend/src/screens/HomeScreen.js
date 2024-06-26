@@ -40,7 +40,7 @@ const HomeScreen = () => {
                 <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("QuizOption")}>
                     <Text style={styles.options_text}>Write Quiz</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("TestOption")}>
                     <Text style={styles.options_text}>Write Test</Text>
                 </TouchableOpacity>
             </View>

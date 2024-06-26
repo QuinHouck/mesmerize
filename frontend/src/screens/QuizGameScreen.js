@@ -134,9 +134,12 @@ const QuizGameScreen = () => {
     async function handleSubmit(){
         setInRound(false);
         let distance = 10;
+        let percent = 10;
 
         if(answerType === 'string'){
-            distance = getDistance(input, selected[idx][answer]);
+            distance = await getDistance(input, selected[idx][answer]);
+            percent = distance/(selected[idx][answer].length);
+            // console.log("Percent: ", percent);
         } else if(answerType === 'number'){
             // console.log(input, typeof(input));
             // console.log(selected[idx][answer], typeof(selected[idx][answer]));
@@ -148,7 +151,7 @@ const QuizGameScreen = () => {
 
         let correct = false;
         let correctId = 1;
-        if(distance < 2){
+        if(percent < 0.2){
             // console.log("Correct")
             setPoints(points+1);
             correct = true;
@@ -157,7 +160,9 @@ const QuizGameScreen = () => {
             if(selected[idx].accepted && answerType === 'string'){
                 for(other of selected[idx].accepted){
                     distance = getDistance(input, other);
-                    if(distance < 2){
+                    percent = distance/(selected[idx][answer].length);
+                    // console.log("Percent: ", percent);
+                    if(percent < 0.2){
                         setPoints(points+1);
                         correct = true;
                         correctId = 2;
@@ -202,6 +207,7 @@ const QuizGameScreen = () => {
         str = str.replace(' ', '');
         str = str.replace('-', '');
         str = str.replace('\'', '');
+        str = str.replace('.', '');
         return str;
     }
 
