@@ -17,7 +17,8 @@ const StoreScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
-        getAvailablePackages()
+        getAvailablePackages();
+        // AsyncStorage.removeItem("packs");
     }, []);
 
     async function getAvailablePackages(){
@@ -42,6 +43,7 @@ const StoreScreen = () => {
                 attributes: p.attributes,
                 divisions: p.divisions,
                 accepted: p.accepted,
+                test_division: p.test_division,
                 items: response.data
             }
 
@@ -70,7 +72,8 @@ const StoreScreen = () => {
         }
 
         let idx = packs.map(function(e) { return e.name; }).indexOf(newPack.name);
-        if(idx){
+        console.log(idx);
+        if(idx !== -1){
             packs[idx] = data;
         } else {
             packs.push(data);

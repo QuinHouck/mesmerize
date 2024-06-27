@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
+import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
@@ -11,6 +11,8 @@ const TestGameScreen = () => {
     const pack = route.params?.pack;
     const div = route.params?.div;
     const divOption = route.params?.divOption;
+    const listDivName = route.params?.listDivName;
+    const listDiv = route.params?.listDiv;
     const items = route.params?.items;
 
     const [selected, setSelected] = useState(null);
@@ -36,8 +38,8 @@ const TestGameScreen = () => {
     const [tid, setTid] = useState(null);
     const timerRef = useRef(time);
 
-    const [listModal, setListModal] = useState(false);
-    const [mapModal, setMapModal] = useState(false);
+    const [showList, setList] = useState(false);
+    const [showMap, setMap] = useState(false);
 
     const [isLoading, setLoading] = useState(true);
 
@@ -80,7 +82,9 @@ const TestGameScreen = () => {
 
         setSelected(filtered);
         setTotal(filtered.length);
+        setAnswered([]);
         setInput("");
+        setLastInput("");
         setNumCorrect(0);
         setCorrect(0);
         setLoading(false);
@@ -95,48 +99,49 @@ const TestGameScreen = () => {
     async function handleSubmit(){
         let distance = 10;
         let percent = 10;
+        let end = false;
 
         let realMatch = "";
 
-        const correct = selected.some(e => {
+        let correct = 3;
+        const good = selected.some(e => {
             distance = getDistance(input, e.name);
             percent = distance/e.name.length;
             if(percent < 0.2){
                 realMatch = e;
-                return true;
-            } else {
-                return false;
+                const already = answered.some((a) => a === realMatch)
+                if(already){
+                    correct = 2;
+                } else {
+                    correct = 1;
+                    return true;
+                }
             }
         });
 
-        let already = false;
-        if(correct){
-            already = answered.some(e => e.name === realMatch.name);
-        }
-
-        if(correct && !already){
-            setCorrect(1);
+        if(correct === 1){
             setNumCorrect(numCorrect + 1);
             setLastInput(realMatch.name);
             answered.push(realMatch);
-        } else if (correct && already){
-            setCorrect(2);
+            if(numCorrect+1 === total) end = true;
+        } else if (correct === 2){
             setLastInput(realMatch.name);
         } else {
-            setCorrect(3);
             setLastInput(input);
         }
-
+        setCorrect(correct)
         setInput("");  
+
+        if(end){
+            endGame();
+        }
     }
 
     function endGame(){
         if(tid) {
             clearInterval(tid);
         }
-        setInRound(false);
-        setEnded(true);
-        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
+        navigation.navigate("TestOption", {pack: pack, div: div, divOption: divOption, items: items});
     }
 
     function parseString(str){
@@ -205,7 +210,10 @@ const TestGameScreen = () => {
     return (
         <SafeAreaView style={styles.main_container}>
              <View style={styles.top_container}>
-                <View style={styles.top_left_container}>
+                <View style={[styles.top_left_container, showList ? {justifyContent: 'space-between'} : {justifyContent: 'flex-end'}]}>
+                    {showList && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-start'}]} onPress={() => setList(false)}>
+                        <Text style={styles.title_button_text}>Back</Text>
+                    </TouchableOpacity>}
                     <Text style={styles.top_text}>{`${Math.floor((numCorrect/total)*100)}%`}</Text>
                 </View>
                 <View style={styles.top_mid_container}>
@@ -217,9 +225,8 @@ const TestGameScreen = () => {
                     </TouchableOpacity>
                     <Text style={styles.top_text}>{`${numCorrect}/${total}`}</Text>
                 </View>
-                
             </View>
-            {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            {selected && !showList && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.symbol_container}>
                     {getPicture()}
                 </View>
@@ -230,8 +237,13 @@ const TestGameScreen = () => {
                         </View>
                         <Text style={styles.stats_left_text}>{lastInput}</Text>
                     </View>
-                    <View style={styles.stats_left}>
-                        
+                    <View style={[styles.stats_left, {paddingBottom: 10}]}>
+                        <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={() => setList(true)}>
+                            <Text style={styles.title_button_text}>List</Text>
+                        </TouchableOpacity>
+                        {pack.divisions && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]}>
+                            <Text style={styles.title_button_text}>Map</Text>
+                        </TouchableOpacity>} 
                     </View>
                 </View>
                 <View style={styles.answer_container}>
@@ -250,6 +262,39 @@ const TestGameScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>}
+            {selected && showList && <ScrollView>
+                <View style={styles.list_container}>
+                    {(!listDivName || div) && selected.map((obj, index) => {
+                        return (
+                            <View key={index} style={styles.list_object_container}>
+                                <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
+                            </View>
+                        )
+                    })}
+                    {(listDivName && !div) && listDiv.map((d) => {
+                        const parts = selected.filter((e) => e[listDivName] === d.name);
+                        const correctParts = answered.filter((e) => e[listDivName] === d.name);
+                        return (
+                            <View style={styles.list_div_container}>
+                                <View style={styles.list_div_title}>
+                                    <Text style={styles.list_div_title_text}>{d.title}</Text>
+                                    <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
+                                </View>
+                                <View>
+                                    {parts.map((obj) => {
+                                        return (
+                                            <View key={obj.name} style={styles.list_object_container}>
+                                                <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
+                                            </View>
+                                        )
+                                    })} 
+                                </View>
+                                
+                            </View>
+                        )
+                    })}
+                </View>
+            </ScrollView>}
         </SafeAreaView>
     );
 
@@ -280,7 +325,7 @@ const styles = StyleSheet.create({
         width: '25%',
         borderColor: 'white',
         borderBottomWidth: 2,
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         alignItems: 'flex-end',
     },
 
@@ -315,15 +360,14 @@ const styles = StyleSheet.create({
         width: 60,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
     },
 
     title_button_text: {
         color: 'white',
-        fontSize: 20,
-        fontWeight: '500',
+        fontSize: 16,
+        fontWeight: '400',
         borderColor: 'white',
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderRadius: 5,
         paddingVertical: 3,
         paddingHorizontal: 5,
@@ -347,16 +391,15 @@ const styles = StyleSheet.create({
     },
 
     stats_container: {
-        flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 15,
     },
 
     stats_left: {
-        gap: 10,
+        gap: 15,
         minWidth: '25%',
-        
+        marginBottom: 5
     },
 
     stats_left_text: {
@@ -380,6 +423,42 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#222222'
+    },
+
+    list_container: {
+        width: '100%',
+        gap: 10,
+    },
+
+    list_div_container: {
+        width: '100%',
+        marginVertical: 5,
+    },
+
+    list_div_title: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 2,
+        paddingHorizontal: 5,
+        borderBottomColor: 'rgba(255,255,255,1)',
+    },
+
+    list_div_title_text: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    list_object_container: {
+        width: '100%',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.5)',
+        marginLeft: 15,
+    },
+
+    list_object: {
+        color: 'white',
+        paddingVertical: 5
     },
 
 });

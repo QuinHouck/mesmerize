@@ -45,7 +45,20 @@ const QuizOptionScreen = () => {
             packs = JSON.parse(packs);
         }
         setDownloaded(packs);
-        if(packs.length !== 0) setPackage(packs[1].name);
+
+        let last = await AsyncStorage.getItem("lastQuiz");
+        if(!last){
+            if(packs.length !== 0) setPackage(packs[0].name);  
+        } else {
+            last = JSON.parse(last);
+            setPackage(last.pack);
+            setSelectedDiv(last.div);
+            setDivOption(last.divOptionName);
+            setQuestion(last.question);
+            setQuestionType(last.questionType);
+            setAnswer(last.answer);
+            setAnswerType(last.answerType);
+        }
     }
 
     async function getPackageData(){
@@ -69,6 +82,18 @@ const QuizOptionScreen = () => {
 
         let divOptionName = null;
         if(selectedDivOption) divOptionName = selectedDivOption.name;
+
+        const gameData = {
+            pack: selectedPackage,
+            div: selectedDiv,
+            divOptionName: selectedDivOption,
+            question: selectedQuestion,
+            questionType: questionType,
+            answer: selectedAnswer,
+            answerType: answerType
+        }
+
+        await AsyncStorage.setItem("lastQuiz", JSON.stringify(gameData));
 
         navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, items: packageInfo.items});
     }

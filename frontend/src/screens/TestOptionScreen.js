@@ -33,13 +33,23 @@ const TestOptionScreen = () => {
         getDownloaded();
     }, []);
 
+
     async function getDownloaded(){
         let packs = await AsyncStorage.getItem("packs");
         if(packs){
             packs = JSON.parse(packs);
         }
         setDownloaded(packs);
-        if(packs.length !== 0) setPackage(packs[0].name);
+
+        let last = await AsyncStorage.getItem("lastTest");
+        if(!last){
+            if(packs.length !== 0) setPackage(packs[0].name);  
+        } else {
+            last = JSON.parse(last);
+            setPackage(last.pack);
+            setSelectedDiv(last.div);
+            setDivOption(last.divOptionName);
+        }
     }
 
     async function getPackageData(){
@@ -63,7 +73,27 @@ const TestOptionScreen = () => {
         let divOptionName = null;
         if(selectedDivOption) divOptionName = selectedDivOption.name;
 
-        navigation.navigate("TestGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, items: packageInfo.items});
+        let listDiv = null;
+        let listDivName = null;
+        if(packageInfo.divisions && packageInfo.test_division){
+            let found = packageInfo.divisions.find((e) => e.name === packageInfo.test_division);
+            // console.log(found);
+            if(found && found.options){
+                listDivName = packageInfo.test_division;
+                listDiv = found.options;
+            }
+            
+        }
+
+        const gameData = {
+            pack: selectedPackage,
+            div: selectedDiv,
+            divOptionName: selectedDivOption
+        }
+
+        await AsyncStorage.setItem("lastTest", JSON.stringify(gameData));
+
+        navigation.navigate("TestGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, listDivName: listDivName, listDiv: listDiv, items: packageInfo.items});
     }
 
     async function handleDiv(division){
