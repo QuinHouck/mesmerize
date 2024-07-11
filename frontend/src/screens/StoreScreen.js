@@ -44,13 +44,15 @@ const StoreScreen = () => {
                 divisions: p.divisions,
                 accepted: p.accepted,
                 test_division: p.test_division,
+                test_time: p.test_time,
                 items: response.data
             }
 
             // console.log(packageItems);
             await AsyncStorage.setItem(packageItems.name, JSON.stringify(packageItems));
             await addPackage(packageItems);
-            console.log("Success!")
+            console.log("Success!");
+            setSelected("");
             
         } catch(error) {
             console.log("Error: ", error);

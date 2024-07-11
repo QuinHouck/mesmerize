@@ -13,6 +13,7 @@ const TestGameScreen = () => {
     const divOption = route.params?.divOption;
     const listDivName = route.params?.listDivName;
     const listDiv = route.params?.listDiv;
+    const test_time = route.params?.time;
     const items = route.params?.items;
 
     const [selected, setSelected] = useState(null);
@@ -34,7 +35,7 @@ const TestGameScreen = () => {
     const [numCorrect, setNumCorrect] = useState(0);
     const [total, setTotal] = useState(0);
 
-    const [time, setTime] = useState(45);
+    const [time, setTime] = useState(test_time);
     const [tid, setTid] = useState(null);
     const timerRef = useRef(time);
 
@@ -47,24 +48,23 @@ const TestGameScreen = () => {
         getSelected();
     }, [isFocused]);
 
-    // useEffect(() => {
-    //     if(!inRound || ended) return;
-    //     timerRef.current = 45;
-    //     const timerId = setInterval(() => {
-    //         timerRef.current -= 1;
-    //         if (timerRef.current < 0) {
-    //             clearInterval(timerId);
-    //             handleSubmit();
-    //         } else {
-    //             setTime(timerRef.current);
-    //         }
-    //     }, 1000);
-    //     setTid(timerId);
-    //     return () => {
-    //         clearInterval(timerId);
-    //         if(tid) clearInterval(tid);
-    //     };
-    // }, [inRound, ended]);
+    useEffect(() => {
+        timerRef.current = test_time;
+        const timerId = setInterval(() => {
+            timerRef.current -= 1;
+            if (timerRef.current < 0) {
+                clearInterval(timerId);
+                handleSubmit();
+            } else {
+                setTime(timerRef.current);
+            }
+        }, 1000);
+        setTid(timerId);
+        return () => {
+            clearInterval(timerId);
+            if(tid) clearInterval(tid);
+        };
+    }, []);
 
     async function getSelected(){
         if(!isFocused){
@@ -180,6 +180,10 @@ const TestGameScreen = () => {
         return track[str2.length][str1.length];
     }
 
+    function addZeros(num){
+        return num.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false});
+    }
+
     function getPicture(){
         switch(correct){
             case 1:
@@ -217,7 +221,9 @@ const TestGameScreen = () => {
                     <Text style={styles.top_text}>{`${Math.floor((numCorrect/total)*100)}%`}</Text>
                 </View>
                 <View style={styles.top_mid_container}>
-                    <Text>{time}</Text>
+                    <View style={styles.timer_circle}>
+                        <Text style={styles.timer_text}>{`${addZeros(Math.floor(time/60))}:${addZeros(time%60)}`}</Text>
+                    </View>
                 </View>
                 <View style={styles.top_right_container}>
                     <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={endGame}>
@@ -333,6 +339,22 @@ const styles = StyleSheet.create({
         height: '100%',
         width: '50%',
         alignItems: 'center',
+    },
+
+    timer_circle: {
+        borderColor: 'white',
+        borderWidth: 2,
+        borderRadius: 50,
+        height: '100%',
+        aspectRatio: 1/1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    timer_text: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: '600',
     },
 
     top_right_container: {
