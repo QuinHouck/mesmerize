@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 
-import { getFlags } from '../util/getImages';
+import { getImages } from '../util/getImages';
 
 import Map from '../components/Map.js'
 
@@ -44,6 +44,7 @@ const QuizGameScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     const [images, setImages] = useState(null);
+    const [imageHeight, setImageHeight] = useState('50%');
 
     useEffect(() => {
         getSelected();
@@ -97,8 +98,9 @@ const QuizGameScreen = () => {
         const chosen = shuffled.slice(0, num);
 
         if(questionType === "image"){
-            const ret = await getFlags(chosen);
-            setImages(ret);
+            const {imgs, height} = await getImages(chosen, pack);
+            setImages(imgs);
+            setImageHeight(height);
         }
 
         let res = [];
@@ -252,8 +254,8 @@ const QuizGameScreen = () => {
         switch(questionType){
             case "image":
                 return <Image 
-                    style={{height: '50%', aspectRatio: images[`${selected[idx]["iso2"].toLowerCase()}.png`].ar}}
-                    source={images[`${selected[idx]["iso2"].toLowerCase()}.png`].image}
+                    style={{height: imageHeight, aspectRatio: images[selected[idx]["name"]].ar}}
+                    source={images[selected[idx]["name"]].image}
                 />;
             case "map":
                 return (
