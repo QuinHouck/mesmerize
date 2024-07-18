@@ -109,6 +109,7 @@ const QuizGameScreen = () => {
                 question: item[question],
                 answer: item[answer],
                 input: "",
+                name: item.name,
                 correct: false
             }
             res.push(data);
@@ -200,7 +201,7 @@ const QuizGameScreen = () => {
         }
         setInRound(false);
         setEnded(true);
-        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results});
+        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results, images: images});
     }
 
     function parseString(str){

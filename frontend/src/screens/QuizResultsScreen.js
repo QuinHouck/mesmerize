@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
+import Modal from "react-native-modal";
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
@@ -17,6 +18,10 @@ const QuizResultsScreen = () => {
     const answerType = route.params?.answerType;
     const items = route.params?.items;
     const results = route.params?.results;
+    const images = route.params?.images;
+
+    const [selectedImage, setImage] = useState(null);
+    const [showingModal, setModal] = useState(false);
 
     const navigation = useNavigation();
 
@@ -28,6 +33,16 @@ const QuizResultsScreen = () => {
 
     async function handlePlay(){
         navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});
+    }
+
+    async function handleImage(image){
+        setImage(image);
+        setModal(true);
+    }
+
+    async function handleClose(){
+        setImage(null);
+        setModal(false);
     }
 
 
@@ -42,9 +57,9 @@ const QuizResultsScreen = () => {
             </View>
             <View style={styles.results_container}>
                 <View style={styles.row_title}>
-                    <View style={styles.row_item}>
+                    {questionType !== "map" && <View style={styles.row_item}>
                         <Text style={styles.row_title_text}>Question</Text>
-                    </View>
+                    </View>}
                     <View style={styles.row_item}>
                         <Text style={styles.row_title_text}></Text>
                     </View>
@@ -58,9 +73,18 @@ const QuizResultsScreen = () => {
                 {results.map((item) => {
                     return (
                         <View key={item.question ? item.question : item.answer} style={styles.row_item_container}>
-                            <View style={styles.row_item}>
-                                <Text>{item.question}</Text>
-                            </View>
+                            {(questionType !== "map") && <View style={styles.row_item}>
+                                {questionType === "image" ?
+                                    <TouchableOpacity style={styles.row_image_container} onPress={() => handleImage(images[item["name"]])}>
+                                        <Image 
+                                            style={{height: 25, aspectRatio: images[item["name"]].ar}}
+                                            source={images[item["name"]].image}
+                                        />  
+                                    </TouchableOpacity>
+                                    :
+                                    <Text>{item.question}</Text>
+                                }
+                            </View>}
                             <View style={[styles.row_item, {justifyContent: 'center', alignItems: 'center'}]}>
                                 {item.correct ? 
                                     <Check style={styles.correct_icon}/>
@@ -83,6 +107,22 @@ const QuizResultsScreen = () => {
                     <Text style={styles.play_text}>Play Again!</Text>
                 </TouchableOpacity>
             </View>
+
+            <Modal 
+                isVisible={showingModal}
+                coverScreen={true}
+                onBackdropPress={handleClose}
+                style={styles.modal_container}
+            >
+                <TouchableOpacity style={styles.modal_image_container} onPress={handleClose}>
+                    {selectedImage && <Image 
+                        style={{height: 'auto', width: '100%', aspectRatio: selectedImage.ar}}
+                        // style={{width: 10}}
+                        source={selectedImage.image}
+                    />} 
+                </TouchableOpacity>
+                
+            </Modal>
         </SafeAreaView>
     );
 
@@ -157,6 +197,11 @@ const styles = StyleSheet.create({
         padding: 5,
     },
 
+    row_image_container: {
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
     correct_icon: {
         width: "25%",
         aspectRatio: 1,
@@ -191,5 +236,19 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 30,
         fontWeight: '700'
-    }
+    },
+
+    modal_container: {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    modal_image_container: {
+        width: '80%',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
 });
