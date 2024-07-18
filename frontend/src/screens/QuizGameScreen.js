@@ -144,10 +144,11 @@ const QuizGameScreen = () => {
             percent = distance/(selected[idx][answer].length);
             // console.log("Percent: ", percent);
         } else if(answerType === 'number'){
-            // console.log(input, typeof(input));
+            // console.log(input, typeof(Number(input)));
             // console.log(selected[idx][answer], typeof(selected[idx][answer]));
-            if(Number(input) === selected[idx][answer]){
+            if(Number(input) === Number(selected[idx][answer])){
                 distance = 0;
+                percent = 0;
             }
         }
         
