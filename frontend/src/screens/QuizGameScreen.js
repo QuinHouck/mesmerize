@@ -93,9 +93,12 @@ const QuizGameScreen = () => {
             })
         }
 
-        const shuffled = filtered.sort(() => 0.5 - Math.random());
+        // const shuffled = filtered.sort(() => 0.5 - Math.random());
         const num = Math.min(10, filtered.length);
-        const chosen = shuffled.slice(0, num);
+        const chosen = getChosen(filtered, num);
+        // const chosen = shuffled.slice(0, num);
+
+        // console.log(chosen);
 
         if(questionType === "image"){
             const {imgs, height} = await getImages(chosen, pack);
@@ -125,6 +128,31 @@ const QuizGameScreen = () => {
         setEnded(false);
         setLoading(false);
     }
+
+    function getChosen(filtered, num){
+        let weights = [];
+        let total = 0;
+        for(const item of filtered){
+            total = total + item.weight;
+            weights.push(total);
+        }
+
+        let chosen = []
+        while(chosen.length < num){
+            let random  = Math.random() * total;
+            for(i=0; i<weights.length; i++){
+                if(weights[i] > random){
+                    break;
+                }
+            }
+            if(!chosen.includes(filtered[i])){
+                chosen.push(filtered[i]);
+            }
+        }
+        chosen = chosen.sort(() => 0.5 - Math.random());
+        return chosen;
+    }
+        
 
     function getKeyboard() {
         if(answerType === "number") return 'number-pad';

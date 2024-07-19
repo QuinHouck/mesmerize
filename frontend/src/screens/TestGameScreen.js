@@ -24,9 +24,6 @@ const TestGameScreen = () => {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
 
-    const [points, setPoints] = useState(0);
-    const [idx, setIndex] = useState(0);
-
     const [input, setInput] = useState("");
     const [lastInput, setLastInput] = useState("");
 
@@ -42,15 +39,21 @@ const TestGameScreen = () => {
     const [showList, setList] = useState(false);
     const [showMap, setMap] = useState(false);
 
+    const [started, setStarted] = useState(true);
+    const [ended, setEnded] = useState(false);
+    
+
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
         getSelected();
-    }, [isFocused]);
+    }, [started, isFocused]);
 
     useEffect(() => {
+        if(!started) return;
         timerRef.current = test_time;
         const timerId = setInterval(() => {
+            if(ended) return;
             timerRef.current -= 1;
             if (timerRef.current < 0) {
                 clearInterval(timerId);
@@ -64,13 +67,15 @@ const TestGameScreen = () => {
             clearInterval(timerId);
             if(tid) clearInterval(tid);
         };
-    }, []);
+    }, [started]);
 
     async function getSelected(){
         if(!isFocused){
             setLoading(true);
             return;
         }
+
+        if(!started) return;
 
         let filtered = items;
 
@@ -141,7 +146,18 @@ const TestGameScreen = () => {
         if(tid) {
             clearInterval(tid);
         }
+        setEnded(true);
+        setStarted(false);
+    }
+
+    function returnMenu(){
         navigation.navigate("TestOption", {pack: pack, div: div, divOption: divOption, items: items});
+    }
+
+    function playAgain(){
+        setStarted(true);
+        setEnded(false);
+        // navigation.navigate("TestGame", {pack: pack, div: div, divOption: divOption, listDivName: listDivName, listDiv: listDiv, time: test_time, items: items});
     }
 
     function parseString(str){
@@ -225,14 +241,14 @@ const TestGameScreen = () => {
                         <Text style={styles.timer_text}>{`${addZeros(Math.floor(time/60))}:${addZeros(time%60)}`}</Text>
                     </View>
                 </View>
-                <View style={styles.top_right_container}>
-                    <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={endGame}>
+                <View style={[styles.top_right_container, ended ? {justifyContent: 'flex-end'} : {}]}>
+                    {!ended && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={endGame}>
                         <Text style={styles.title_button_text}>End</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                     <Text style={styles.top_text}>{`${numCorrect}/${total}`}</Text>
                 </View>
             </View>
-            {selected && !showList && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            {selected && !showList && !ended && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.symbol_container}>
                     {getPicture()}
                 </View>
@@ -268,6 +284,35 @@ const TestGameScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>}
+            {ended && !showList && <View style={styles.results_container}>
+                <View style={styles.missed_title_container}>
+                    <Text style={styles.end_button_text}>What you missed:</Text>
+                </View>
+                {(selected.length !== answered.length) ? 
+                <ScrollView style={styles.missed_container}>
+                    {selected.map((item) => {
+                        if(!answered.includes(item)){
+                            return (
+                                <Text key={item._id} style={styles.missed_item}>{item.name}</Text>
+                            )
+                        }
+                    })}
+                    
+                </ScrollView>
+                :
+                <View style={styles.perfect_container}>
+                    <Text style={styles.perfect_text}>Perfect!</Text>
+                </View>
+                }
+                <View style={styles.end_button_container}>
+                    <TouchableOpacity style={styles.end_button} onPress={returnMenu}>
+                        <Text style={styles.end_button_text}>Menu</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.end_button} onPress={playAgain}>
+                        <Text style={styles.end_button_text}>Play Again</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>}
             {selected && showList && <ScrollView>
                 <View style={styles.list_container}>
                     {(!listDivName || div) && selected.map((obj, index) => {
@@ -301,6 +346,7 @@ const TestGameScreen = () => {
                     })}
                 </View>
             </ScrollView>}
+
         </SafeAreaView>
     );
 
@@ -481,6 +527,68 @@ const styles = StyleSheet.create({
     list_object: {
         color: 'white',
         paddingVertical: 5
+    },
+
+    // Results
+
+    results_container: {
+        flex: 1,
+        gap: 5,
+    },
+
+    missed_title_container: {
+        height: '5%',
+        paddingHorizontal: 20,
+        justifyContent: 'flex-end',
+        borderBottomWidth: 2,
+        borderBottomColor: 'rgba(255,255,255,1)',
+        paddingBottom: 5,
+    },
+
+    perfect_container: {
+        height: '30%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    perfect_text: {
+        color: 'white',
+        fontSize: 25,
+        fontWeight: '700'
+    },
+
+    missed_container: {
+        height: '30%',
+        paddingHorizontal: 30,
+    },
+
+    missed_item: {
+        color: 'white',
+        paddingVertical: 2
+    },
+
+    end_button_container: {
+        height: '20%',
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        borderTopWidth: 2,
+        borderTopColor: 'rgba(255,255,255,1)',
+    },
+
+    end_button: {
+        minWidth: '40%',
+        paddingVertical: 20,
+        backgroundColor: '#745e96',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 5
+    },
+
+    end_button_text: {
+        color: 'white',
+        fontSize: 15,
+        fontWeight: '600'
     },
 
 });

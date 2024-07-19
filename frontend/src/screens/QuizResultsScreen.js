@@ -28,8 +28,26 @@ const QuizResultsScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
-        
+        adjustWeights();
     }, []);
+
+    function adjustWeights(){
+        for(const item of results){
+            const idx = items.map((e) => { return e.name }).indexOf(item.name);
+            let newItem = items[idx];
+            let newWeight = newItem.weight;
+
+            if(item.correct){
+                newWeight = Math.max(newWeight-20, 1);
+            } else {
+                if(item.input !== ""){
+                    newWeight = 60;
+                }
+            }
+            newItem.weight = newWeight;
+            items[idx] = newItem;
+        }
+    }
 
     async function handlePlay(){
         navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});

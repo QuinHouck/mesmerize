@@ -95,7 +95,13 @@ const QuizOptionScreen = () => {
 
         await AsyncStorage.setItem("lastQuiz", JSON.stringify(gameData));
 
-        navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, items: packageInfo.items});
+        let newItems = [];
+        for(const item of packageInfo.items){
+            item.weight = 1;
+            newItems.push(item);
+        }
+
+        navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, items: newItems});
     }
 
     async function handleAnswer(att){
