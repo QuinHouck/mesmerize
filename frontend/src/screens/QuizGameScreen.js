@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
+import Modal from "react-native-modal";
 
 import { getImages } from '../util/getImages';
 
@@ -51,10 +52,7 @@ const QuizGameScreen = () => {
     }, [isFocused]);
 
     useEffect(() => {
-        // console.log("InRound: ", inRound);
-        // console.log("Ended: ", ended);
-        if(!inRound || ended) return;
-        timerRef.current = 45;
+        if(!inRound || ended || isPaused) return;
         const timerId = setInterval(() => {
             timerRef.current -= 1;
             if (timerRef.current < 0) {
@@ -71,7 +69,7 @@ const QuizGameScreen = () => {
             clearInterval(timerId);
             if(tid) clearInterval(tid);
         };
-    }, [inRound, ended]);
+    }, [inRound, ended, isPaused]);
 
     async function getSelected(){
         if(!isFocused){
@@ -127,6 +125,7 @@ const QuizGameScreen = () => {
         setInRound(true);
         setEnded(false);
         setLoading(false);
+        timerRef.current = 45;
     }
 
     function getChosen(filtered, num){
@@ -220,8 +219,16 @@ const QuizGameScreen = () => {
             setInput("");
             setCorrect(0);
             setInRound(true);
+            timerRef.current = 45;
             // startTimer();
         }, 2500);    
+    }
+
+    function pauseGame(){
+        if(tid) {
+            clearInterval(tid);
+        };
+        setIsPaused(true);
     }
 
     function endGame(){
@@ -309,7 +316,7 @@ const QuizGameScreen = () => {
     return (
         <SafeAreaView style={styles.main_container}>
              <View style={styles.top_container}>
-                <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                <TouchableOpacity style={styles.title_button} onPress={pauseGame}>
                     <Text style={styles.title_button_text}>Pause</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Write Quiz</Text>
@@ -320,14 +327,6 @@ const QuizGameScreen = () => {
             {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.question_container}>
                     {renderQuestion(selected[idx])}
-                    {/* {questionType === "image" ?
-                        <Image 
-                            style={{height: '50%', aspectRatio: images[`${selected[idx]["iso2"].toLowerCase()}.png`].ar}}
-                            source={images[`${selected[idx]["iso2"].toLowerCase()}.png`].image}
-                        />
-                        :
-                        <Text style={styles.question_text}>{selected[idx][question]}</Text>
-                    } */}
                 </View>
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
@@ -354,6 +353,19 @@ const QuizGameScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>}
+            <Modal 
+                isVisible={isPaused}
+                coverScreen={true}
+                onBackdropPress={() => setIsPaused(false)}
+                style={styles.modal_container}
+            >
+                <View style={styles.modal_middle_container}>
+                    <Text style={[styles.resume_button_text, {fontSize: 30}]}>Paused</Text>
+                    <TouchableOpacity style={styles.resume_button} onPress={() => setIsPaused(false)}>
+                        <Text style={styles.resume_button_text}>Resume</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 
@@ -454,5 +466,38 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600'
     },
+
+    // Paused
+
+    modal_container: {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    modal_middle_container: {
+        borderRadius: 10,
+        padding: 20,
+        gap: 30,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    resume_button: {
+        minWidth: '40%',
+        paddingVertical: 20,
+        backgroundColor: '#745e96',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 5
+    },
+
+    resume_button_text: {
+        color: 'white',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+
 
 });
