@@ -7,6 +7,7 @@ import PackageService from '../services/package.service';
 
 import DownloadIcon from '../icons/Download.svg';
 import UninstallIcon from '../icons/Uninstall.svg';
+import UpdateIcon from '../icons/Update.svg';
 
 const StoreScreen = () => {
 
@@ -20,10 +21,43 @@ const StoreScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
-        getAvailablePackages();
-        getDownloaded();
+        // getAvailablePackages();
+        // getDownloaded();
+        loadStore();
         // AsyncStorage.removeItem("packs");
     }, [selected]);
+
+    async function loadStore(){
+        try {
+            const response = await PackageService.getAvailable();
+
+            let avail = response.data;
+            
+            let packs = await AsyncStorage.getItem("packs");
+            let newPacks = [];
+            if(packs){
+                packs = JSON.parse(packs);
+                let names = response.data.map((d) => {return d.name});
+                for(const pack of packs){
+                    let idx = names.indexOf(pack.name);
+                    let data = avail[idx];
+                    data.updateable = false;
+                    if(data.version !== pack.version){
+                        data.updateable = true;
+                    }
+                    newPacks.push(data);
+                }
+
+            }
+
+            setAvailable(avail);
+            setDownloaded(newPacks);
+
+        } catch(error) {
+            console.log("Error: ", error);
+            // console.log("Res: ", error.response);
+        }
+    }
 
     async function getAvailablePackages(){
         try {
@@ -161,9 +195,15 @@ const StoreScreen = () => {
                             return (
                                 <TouchableOpacity key={p.name} style={styles.package_option_selected} onPress={() => setSelected("")}>
                                     <Text style={styles.package_title_selected_text}>{p.title}</Text>
-                                    <TouchableOpacity onPress={() => uninstall(p)}>
-                                        <UninstallIcon style={styles.icon}/>
-                                    </TouchableOpacity>
+                                    <View>
+                                        {p.updateable && <TouchableOpacity onPress={() => downloadPackage(p)}>
+                                            <UpdateIcon style={styles.icon}/>
+                                        </TouchableOpacity>}
+                                        <TouchableOpacity onPress={() => uninstall(p)}>
+                                            <UninstallIcon style={styles.icon}/>
+                                        </TouchableOpacity>
+                                    </View>
+                                    
                                 </TouchableOpacity>
                             ); 
                         }
