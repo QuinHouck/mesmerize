@@ -41,23 +41,31 @@ const QuizOptionScreen = () => {
 
     async function getDownloaded(){
         let packs = await AsyncStorage.getItem("packs");
-        if(packs){
+        if(packs && packs !== "[]"){
             packs = JSON.parse(packs);
+            setDownloaded(packs);
+        } else {
+            setLoading(false);
+            return;
         }
-        setDownloaded(packs);
 
         let last = await AsyncStorage.getItem("lastQuiz");
         if(!last){
             if(packs.length !== 0) setPackage(packs[0].name);  
         } else {
             last = JSON.parse(last);
-            setPackage(last.pack);
-            setSelectedDiv(last.div);
-            setDivOption(last.divOptionName);
-            setQuestion(last.question);
-            setQuestionType(last.questionType);
-            setAnswer(last.answer);
-            setAnswerType(last.answerType);
+            if(packs.map((p) => {return p.name}).includes(last.pack)){
+                setPackage(last.pack);
+                setSelectedDiv(last.div);
+                setDivOption(last.divOptionName);
+                setQuestion(last.question);
+                setQuestionType(last.questionType);
+                setAnswer(last.answer);
+                setAnswerType(last.answerType);
+            } else {
+                setPackage(packs[0].name);
+                await AsyncStorage.removeItem("lastQuiz");
+            }
         }
     }
 
@@ -66,6 +74,7 @@ const QuizOptionScreen = () => {
             const saved_info = await AsyncStorage.getItem(selectedPackage);
             const info = JSON.parse(saved_info);
             setPackageInfo(info);
+            // console.log(info);
             setLoading(false);
             // console.log("Info: ", info.divisions[0]);
         } catch (e){
@@ -151,12 +160,30 @@ const QuizOptionScreen = () => {
     }
 
     if(isLoading){
+        // console.log("Loading");
         return (
             <SafeAreaView style={styles.main_container}>
 
             </SafeAreaView>
         );
     };
+
+    if(downloaded.length === 0){
+        return (
+            <SafeAreaView style={styles.main_container}>
+                <View style={styles.top_container}>
+                    <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                        <Text style={styles.title_button_text}>Back</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title_text}>Write Quiz</Text>
+                    <View style={styles.title_button}/>
+                </View>
+                <View style={styles.empty_container}>
+                    <Text style={styles.empty_text}>Go to the store to download your first package!</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -488,6 +515,16 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 15,
         fontWeight: '600'
+    },
+
+    empty_container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    empty_text: {
+        color: 'white'
     },
 
 

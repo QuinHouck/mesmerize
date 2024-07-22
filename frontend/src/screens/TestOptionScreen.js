@@ -36,19 +36,27 @@ const TestOptionScreen = () => {
 
     async function getDownloaded(){
         let packs = await AsyncStorage.getItem("packs");
-        if(packs){
+        if(packs && packs !== "[]"){
             packs = JSON.parse(packs);
+            setDownloaded(packs);
+        } else {
+            setLoading(false);
+            return;
         }
-        setDownloaded(packs);
 
         let last = await AsyncStorage.getItem("lastTest");
         if(!last){
             if(packs.length !== 0) setPackage(packs[0].name);  
         } else {
             last = JSON.parse(last);
-            setPackage(last.pack);
-            setSelectedDiv(last.div);
-            setDivOption(last.divOptionName);
+            if(packs.map((p) => {return p.name}).includes(last.pack)){
+                setPackage(last.pack);
+                setSelectedDiv(last.div);
+                setDivOption(last.divOptionName);
+            } else {
+                setPackage(packs[0].name);
+                await AsyncStorage.removeItem("lastTest");
+            }
         }
     }
 
@@ -133,9 +141,27 @@ const TestOptionScreen = () => {
     }
 
     if(isLoading){
+        // console.log("Loading");
         return (
             <SafeAreaView style={styles.main_container}>
 
+            </SafeAreaView>
+        );
+    };
+
+    if(downloaded.length === 0){
+        return (
+            <SafeAreaView style={styles.main_container}>
+                <View style={styles.top_container}>
+                    <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                        <Text style={styles.title_button_text}>Back</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title_text}>Write Test</Text>
+                    <View style={styles.title_button}/>
+                </View>
+                <View style={styles.empty_container}>
+                    <Text style={styles.empty_text}>Go to the store to download your first package!</Text>
+                </View>
             </SafeAreaView>
         );
     };
@@ -376,5 +402,14 @@ const styles = StyleSheet.create({
         fontWeight: '600'
     },
 
+    empty_container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    empty_text: {
+        color: 'white'
+    },
 
 });

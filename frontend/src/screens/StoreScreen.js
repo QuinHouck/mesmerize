@@ -6,11 +6,14 @@ import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollVi
 import PackageService from '../services/package.service';
 
 import DownloadIcon from '../icons/Download.svg';
+import UninstallIcon from '../icons/Uninstall.svg';
 
 const StoreScreen = () => {
 
     const [available, setAvailable] = useState([]);
     const [selected, setSelected] = useState("");
+
+    const [downloaded, setDownloaded] = useState([]);
 
     const navigation = useNavigation();
 
@@ -18,8 +21,9 @@ const StoreScreen = () => {
 
     useEffect(() => {
         getAvailablePackages();
+        getDownloaded();
         // AsyncStorage.removeItem("packs");
-    }, []);
+    }, [selected]);
 
     async function getAvailablePackages(){
         try {
@@ -30,6 +34,15 @@ const StoreScreen = () => {
             console.log("Error: ", error);
             // console.log("Res: ", error.response);
         }
+    }
+
+    async function getDownloaded(){
+        let packs = await AsyncStorage.getItem("packs");
+        if(packs){
+            packs = JSON.parse(packs);
+        }
+        // console.log(packs);
+        setDownloaded(packs);
     }
 
     async function downloadPackage(p){
@@ -45,13 +58,14 @@ const StoreScreen = () => {
                 accepted: p.accepted,
                 test_division: p.test_division,
                 test_time: p.test_time,
+                version: p.version,
                 items: response.data
             }
 
             // console.log(packageItems);
             await AsyncStorage.setItem(packageItems.name, JSON.stringify(packageItems));
             await addPackage(packageItems);
-            console.log("Success!");
+            // console.log("Success!");
             setSelected("");
             
         } catch(error) {
@@ -71,10 +85,11 @@ const StoreScreen = () => {
         const data = {
             title: newPack.title,
             name: newPack.name,
+            version: newPack.version
         }
 
         let idx = packs.map(function(e) { return e.name; }).indexOf(newPack.name);
-        console.log(idx);
+        // console.log(idx);
         if(idx !== -1){
             packs[idx] = data;
         } else {
@@ -83,18 +98,33 @@ const StoreScreen = () => {
         await AsyncStorage.setItem("packs", JSON.stringify(packs));
     }
 
+    async function uninstall(pack){
+        await AsyncStorage.removeItem(pack.name);
+        let idx = downloaded.map((d) => {return d.name}).indexOf(pack.name);
+        let newDownloaded = downloaded;
+        newDownloaded.splice(idx,1);
+        await AsyncStorage.setItem("packs", JSON.stringify(newDownloaded));
+        setDownloaded(newDownloaded);
+        setSelected("");
+    }
+
     return (
         <SafeAreaView style={styles.main_container}>
-            <View style={styles.top_container}>
+            <View style={styles.secondary_container}>
+               <View style={styles.top_container}>
                 <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
                     <Text style={styles.title_button_text}>Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Store</Text>
                 <View style={styles.title_button}/>
             </View>
-            <ScrollView style={styles.scroll_container}>
+            <View style={styles.store_text_container}>
+                <Text style={styles.store_text}>Available</Text>
+            </View>
+            <ScrollView contentContainerStyle={styles.scroll_container}>
                 <View style={styles.package_options_container}>
                    {available.map((p) => {
+                        if(downloaded.map((d) => {return d.name}).includes(p.name)) return;
                         if(selected !== p.name){
                             return (
                                 <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
@@ -115,6 +145,34 @@ const StoreScreen = () => {
                     })} 
                 </View>
             </ScrollView>
+            <View style={styles.store_text_container}>
+                <Text style={styles.store_text}>Downloaded</Text>
+            </View>
+            <ScrollView contentContainerStyle={styles.scroll_container}>
+                <View style={styles.package_options_container}>
+                   {downloaded.map((p) => {
+                        if(selected !== p.name){
+                            return (
+                                <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
+                                    <Text style={styles.package_title_text}>{p.title}</Text>
+                                </TouchableOpacity> 
+                            ); 
+                        } else {
+                            return (
+                                <TouchableOpacity key={p.name} style={styles.package_option_selected} onPress={() => setSelected("")}>
+                                    <Text style={styles.package_title_selected_text}>{p.title}</Text>
+                                    <TouchableOpacity onPress={() => uninstall(p)}>
+                                        <UninstallIcon style={styles.icon}/>
+                                    </TouchableOpacity>
+                                </TouchableOpacity>
+                            ); 
+                        }
+                        
+                    })} 
+                </View>
+            </ScrollView> 
+            </View>
+            
         </SafeAreaView>
     );
 
@@ -127,6 +185,10 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         backgroundColor: "#222222",
+    },
+
+    secondary_container: {
+        
     },
 
     top_container: {
@@ -162,6 +224,8 @@ const styles = StyleSheet.create({
 
     scroll_container: {
         // backgroundColor: 'purple',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     package_options_container: {
@@ -169,7 +233,7 @@ const styles = StyleSheet.create({
         height: '100%',
         alignItems: 'center',
         gap: 20,
-        // backgroundColor: 'purple',
+        // backgroundColor: 'green',
         padding: 20,
     },
 
@@ -196,6 +260,7 @@ const styles = StyleSheet.create({
         backgroundColor: "white",
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 5,
         padding: 20,
         borderRadius: 5,
     }, 
@@ -207,9 +272,24 @@ const styles = StyleSheet.create({
     },
 
     icon: {
-        height: '100%',
+        height: '90%',
         aspectRatio: 1,
         color: '#222222',
+    },
+
+    store_text_container: {
+        borderBottomColor: 'white',
+        borderBottomWidth: 2,
+        marginHorizontal: 20,
+        marginTop: 20,
+        padding: 5,
+    },
+
+    store_text: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '500',
+        
     },
 
 });
