@@ -4,12 +4,12 @@
     "slug": "mesmerize",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/icons/MesmerizeLogo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/icons/MesmerizeLogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#9981c9"
     },
     "assetBundlePatterns": [
       "**/*"
