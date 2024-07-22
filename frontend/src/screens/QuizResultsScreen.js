@@ -18,6 +18,7 @@ const QuizResultsScreen = () => {
     const answerType = route.params?.answerType;
     const items = route.params?.items;
     const results = route.params?.results;
+    const range = route.params?.range;
     const images = route.params?.images;
 
     const [selectedImage, setImage] = useState(null);
@@ -50,7 +51,7 @@ const QuizResultsScreen = () => {
     }
 
     async function handlePlay(){
-        navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items});
+        navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, range: range, items: items});
     }
 
     async function handleImage(image){

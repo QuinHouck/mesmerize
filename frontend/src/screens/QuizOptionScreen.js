@@ -3,6 +3,7 @@ import { useNavigation, useIsFocused } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import Modal from "react-native-modal";
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 import DropDown from '../icons/DropDown.svg';
 
@@ -20,6 +21,11 @@ const QuizOptionScreen = () => {
 
     const [selectedDiv, setSelectedDiv] = useState(null);
     const [selectedDivOption, setDivOption] = useState(null);
+
+    const [showRangeModal, setRangeModal] = useState(false);
+    const [ranged, setRanged] = useState(false);
+    const [start, setStart] = useState(1);
+    const [end, setEnd] = useState(1);
 
     const [showDivModal, setDivModal] = useState(false);
     const [showPackModal, setPackModal] = useState(false);
@@ -74,6 +80,8 @@ const QuizOptionScreen = () => {
             const saved_info = await AsyncStorage.getItem(selectedPackage);
             const info = JSON.parse(saved_info);
             setPackageInfo(info);
+            setRanged(false);
+            setEnd(info.num);
             // console.log(info);
             setLoading(false);
             // console.log("Info: ", info.divisions[0]);
@@ -110,7 +118,18 @@ const QuizOptionScreen = () => {
             newItems.push(item);
         }
 
-        navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, items: newItems});
+        let range = {
+            ranged: ranged,
+            start: start,
+            end: end,
+            attr: packageInfo.ranged
+        }
+
+        navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, range: range, items: newItems});
+    }
+
+    async function handleAll(){
+
     }
 
     async function handleAnswer(att){
@@ -131,6 +150,7 @@ const QuizOptionScreen = () => {
             setSelectedDiv(division);
             setDivModal(true);
         } 
+        setRanged(false);
     }
 
     async function handleDivCancel(){
@@ -143,6 +163,7 @@ const QuizOptionScreen = () => {
 
     async function handleDivOption(option){
         setDivOption(option);
+        setRanged(false);
         setDivModal(false);
     }
 
@@ -157,6 +178,24 @@ const QuizOptionScreen = () => {
             setAnswer(null); 
         }
         setPackModal(false);
+    }
+
+    async function handleRange(){
+        setRangeModal(true);
+
+    }
+
+    async function handleCloseRange(submitted){
+        if(submitted){
+            setRanged(true);
+            setSelectedDiv(null);
+        }
+        setRangeModal(false);
+    }
+
+    function handleSlider(values){
+        setStart(values[0]);
+        setEnd(values[1]);
     }
 
     if(isLoading){
@@ -201,8 +240,8 @@ const QuizOptionScreen = () => {
                 </TouchableOpacity>}
             </View>
             <View style={styles.division_container}>
-                <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
-                    <Text style={(selectedDiv === null) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
+                <TouchableOpacity style={(!selectedDiv && !ranged) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
+                    <Text style={(selectedDiv === null && !ranged) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
                 </TouchableOpacity>
                 {packageInfo.divisions && packageInfo.divisions.map((division) => {
                     return (
@@ -211,6 +250,15 @@ const QuizOptionScreen = () => {
                         </TouchableOpacity>
                     )
                 })}
+                {packageInfo.ranged && 
+                <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
+                    {(selectedDiv === null && ranged) ? 
+                        <Text style={styles.division_button_title_selected}>{`${start} - ${end}`}</Text>
+                        :
+                        <Text style={styles.division_button_title}>Range</Text>
+                    }
+                    {/* <Text style={(selectedDiv === null && ranged) ? styles.division_button_title_selected : styles.division_button_title}>Range</Text> */}
+                </TouchableOpacity>}
             </View>
             <View style={styles.qa_container}>
                 <View style={styles.qa_half_container}>
@@ -281,6 +329,38 @@ const QuizOptionScreen = () => {
                             </TouchableOpacity>
                         )
                     })}
+                </View>
+            </Modal>
+            <Modal 
+                isVisible={showRangeModal}
+                coverScreen={true}
+                onBackdropPress={() => handleCloseRange(false)}
+                style={styles.modal_container}
+            >
+                <View style={styles.slider_container}>
+                    <Text style={styles.slider_text}>{`${start} - ${end}`}</Text>
+                    <MultiSlider
+                        values={[start, end]}
+                        isMarkersSeparated={true}
+                        onValuesChange={handleSlider}
+                        min={1}
+                        max={packageInfo.num}
+                        step={1}
+                        snapped
+                        sliderLength={200}
+                        style={styles.slider}
+                        unselectedStyle={{
+                            backgroundColor: 'white',
+                            height: 5,
+                        }}
+                        selectedStyle={{
+                            backgroundColor: '#3b2c5e',
+                            height: 5,
+                        }}
+                    />
+                    <TouchableOpacity style={[styles.modal_options_button, {backgroundColor: '#3b2c5e'}]} onPress={() => handleCloseRange(true)}>
+                        <Text style={styles.modal_options_text}>Submit</Text>
+                    </TouchableOpacity>
                 </View>
             </Modal>
         </SafeAreaView>
@@ -359,7 +439,7 @@ const styles = StyleSheet.create({
     },
 
     division_button: {
-        minWidth: '30%',
+        minWidth: '20%',
         paddingVertical: 10,
         paddingHorizontal: 5,
         backgroundColor: 'white',
@@ -371,7 +451,7 @@ const styles = StyleSheet.create({
     },
 
     division_button_selected: {
-        minWidth: '30%',
+        minWidth: '20%',
         paddingVertical: 10,
         paddingHorizontal: 5,
         backgroundColor: '#745e96',
@@ -491,15 +571,13 @@ const styles = StyleSheet.create({
     },
 
     modal_options_container: {
-        width: '70%',
+        width: '80%',
         height: '50%',
         backgroundColor: '#e5e0f0',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-evenly',
         borderRadius: 5,
-        borderWidth: 5,
-        borderColor: '#745e96'
     },
 
     modal_options_button: {
@@ -526,6 +604,26 @@ const styles = StyleSheet.create({
     empty_text: {
         color: 'white'
     },
+
+    slider: {
+        width: '80%',
+    },
+
+    slider_container: {
+        width: '80%',
+        height: '50%',
+        backgroundColor: '#745e96',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
+        borderRadius: 10,
+    },
+
+    slider_text: {
+        color: 'white',
+        fontSize: 50,
+        fontWeight: '700'
+    }
 
 
 });

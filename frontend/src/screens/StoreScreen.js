@@ -92,6 +92,8 @@ const StoreScreen = () => {
                 accepted: p.accepted,
                 test_division: p.test_division,
                 test_time: p.test_time,
+                ranged: p.ranged,
+                num: response.data.length,
                 version: p.version,
                 items: response.data
             }

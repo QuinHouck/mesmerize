@@ -17,6 +17,7 @@ const QuizGameScreen = () => {
     const questionType = route.params?.questionType;
     const answer = route.params?.answer;
     const answerType = route.params?.answerType;
+    const range = route.params?.range;
     const items = route.params?.items;
 
     const [selected, setSelected] = useState(null);
@@ -88,6 +89,13 @@ const QuizGameScreen = () => {
         if(questionType === "map"){
             filtered = filtered.filter((item) => {
                 return item.mappable === true;
+            })
+        }
+
+        if(range.ranged){
+            filtered = filtered.filter((item) => {
+                let num = item[range["attr"]];
+                return (num <= range.end && num >= range.start);
             })
         }
 
@@ -237,7 +245,7 @@ const QuizGameScreen = () => {
         }
         setInRound(false);
         setEnded(true);
-        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results, images: images});
+        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results, range: range, images: images});
     }
 
     function parseString(str){
