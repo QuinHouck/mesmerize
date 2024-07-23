@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import LottieView from 'lottie-react-native';
+
 import colors from '../util/colors.js';
 
 import Logo from '../icons/MesmerizeText.svg';
@@ -22,6 +24,27 @@ const HomeScreen = () => {
 
     }, []);
 
+    function animationDone(){
+        setLoading(false);
+    }
+
+    if(isLoading){
+        return (
+            <SafeAreaView style={[styles.main_container, {backgroundColor: 'white'}]}>
+                <View style={styles.animation_container}>
+                    <LottieView
+                        autoPlay
+                        style={styles.animation}
+                        source={require('./TinySharkLogoAnimated.json')}
+                        loop={false}
+                        onAnimationFinish={animationDone}
+                    >
+                    </LottieView>
+                </View>
+            </SafeAreaView>
+        )
+    }
+
     return (
         <SafeAreaView style={styles.main_container}>
             <View style={styles.title_container}>
@@ -32,7 +55,7 @@ const HomeScreen = () => {
                 {options.map((option) => {
                     if(option.nav === "") return;
                     return (
-                        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate(option.nav)}>
+                        <TouchableOpacity key={option.nav} style={styles.option} onPress={() => navigation.navigate(option.nav)}>
                             <LinearGradient 
                                 colors={[colors.lightPurple, colors.lightPurpleShadow]} 
                                 style={styles.option_inside} 
@@ -136,7 +159,18 @@ const styles = StyleSheet.create({
         height: '80%',
         aspectRatio: 1,
         color: 'white',
-    }
+    },
+
+    animation_container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    animation: {
+        width: '100%',
+        aspectRatio: 1
+    },
 
 
 });
