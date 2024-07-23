@@ -6,6 +6,7 @@
 export default colors ={
     whitePurple: '#e5e0f0',
     lightPurple: '#745e96',
+    lightPurpleShadow: '#52406e',
     darkPurple: '#3b2c5e',
     darkGrey: '#222222'
 }

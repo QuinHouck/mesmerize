@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation, useIsFocused } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import colors from '../util/colors.js';
 
+import Logo from '../icons/MesmerizeText.svg';
 import StoreIcon from '../icons/Store.svg';
 import DotsIcon from '../icons/Dots.svg';
 
 const HomeScreen = () => {
 
     const navigation = useNavigation();
+
+    const options = [{text: "Multiple Choice", nav: ""}, {text: "Write Quiz", nav: "QuizOption"}, {text: "Write Test", nav: "TestOption"}]
 
     const [isLoading, setLoading] = useState(true);
 
@@ -21,18 +25,26 @@ const HomeScreen = () => {
     return (
         <SafeAreaView style={styles.main_container}>
             <View style={styles.title_container}>
+                {/* <Logo style={styles.logo}/> */}
                 <Text style={styles.title_text}>Mesmerize</Text>
             </View>
             <View style={styles.options_container}>
-                {/* <TouchableOpacity style={styles.option}>
-                    <Text style={styles.options_text}>Multiple Choice</Text>
-                </TouchableOpacity> */}
-                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("QuizOption")}>
-                    <Text style={styles.options_text}>Write Quiz</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("TestOption")}>
-                    <Text style={styles.options_text}>Write Test</Text>
-                </TouchableOpacity>
+                {options.map((option) => {
+                    if(option.nav === "") return;
+                    return (
+                        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate(option.nav)}>
+                            <LinearGradient 
+                                colors={[colors.lightPurple, colors.lightPurpleShadow]} 
+                                style={styles.option_inside} 
+                                dither={false}
+                                start={{x: 0.49, y: 0.3}}
+                                end={{x: 0.5, y: 1}}
+                            >
+                                <Text style={styles.options_text}>{option.text}</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    )
+                })}
             </View>
             <View style={styles.bottom_container}>
                 <TouchableOpacity style={styles.icon_container} onPress={() => navigation.navigate("Store")}>
@@ -64,7 +76,15 @@ const styles = StyleSheet.create({
 
     title_text: {
         color: 'white',
-        fontSize: 50,
+        fontSize: 60,
+        marginTop: 100,
+    },
+
+    logo: {
+        width: '80%',
+        // height: 'auto',
+        aspectRatio: 1,
+        // backgroundColor: 'red'
     },
 
     options_container: {
@@ -75,11 +95,18 @@ const styles = StyleSheet.create({
     },
 
     option: {
+        width: '50%',
+        shadowColor: '#111111',
+        shadowOffset: {width: 2, height: 3},
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+    },
+
+    option_inside: {
+        padding: 10,
+        width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 10,
-        width: '50%',
-        backgroundColor: colors.lightPurple,
         borderRadius: 5,
     },
 

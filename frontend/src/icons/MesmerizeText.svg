@@ -1,25 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 1024 1024" style="enable-background:new 0 0 1024 1024;" xml:space="preserve">
+	 viewBox="0 0 890.317 180.934" style="enable-background:new 0 0 890.317 180.934;" xml:space="preserve">
 <style type="text/css">
 	.st0{display:none;fill:#9981C9;}
-	.st1{fill:#FFFFFF;}
+	.st1{display:none;fill:#FFFFFF;}
 	.st2{font-family:'TradeGothic-BoldCondTwenty';}
-	.st3{font-size:230px;}
-	.st4{letter-spacing:-11;}
-	.st5{display:none;}
-	.st6{display:inline;fill:#FFFFFF;}
-	.st7{display:inline;}
-	.st8{display:none;fill:#FFFFFF;}
+	.st3{font-size:247.1791px;}
+	.st4{letter-spacing:-7;}
+	.st5{fill:#FFFFFF;}
+	.st6{display:none;}
+	.st7{display:inline;fill:#FFFFFF;}
+	.st8{font-size:230px;}
+	.st9{display:inline;}
 </style>
-<rect x="-12.893" y="-12.893" class="st0" width="1050.562" height="1050.562"/>
-<text transform="matrix(1 0 0 1 101.4273 555.9066)" class="st1 st2 st3 st4">Mesmerize</text>
-<text transform="matrix(1 0 0 1 67.7197 670.2665)" class="st5"><tspan x="0" y="0" class="st6 st2 st3">Me</tspan><tspan x="242.645" y="0" class="st7 st2 st3">s</tspan><tspan x="332.113" y="0" class="st6 st2 st3">m</tspan><tspan x="485.521" y="0" class="st7 st2 st3">e</tspan><tspan x="587.638" y="0" class="st6 st2 st3">rize</tspan></text>
-<text transform="matrix(1 0 0 1 551.9883 662.011)" class="st8 st2 st3">o</text>
-<text transform="matrix(1 0 0 1 98.5063 520.0417)" class="st5"><tspan x="0" y="0" class="st6 st2 st3">Mem</tspan><tspan x="396.053" y="0" class="st7 st2 st3">o</tspan><tspan x="498.17" y="0" class="st6 st2 st3">rize</tspan></text>
-<text transform="matrix(1 0 0 1 292.685 700.0897)" class="st8 st2 st3">s</text>
-<text transform="matrix(1 0 0 1 494.6738 700.0895)" class="st8 st2 st3">e</text>
-<polygon class="st8" points="337.268,536.551 321.685,563.542 352.852,563.542 "/>
-<polygon class="st8" points="545.435,536.551 529.852,563.542 561.018,563.542 "/>
+<rect x="-79.984" y="-404.385" class="st0" width="1050.562" height="1050.562"/>
+<text transform="matrix(1 0 0 1 -13.1006 178.4624)" class="st1 st2 st3 st4">Mesmerize</text>
+<g>
+	<path class="st5" d="M124.577,0v178.462H97.882V39.054h-0.494L69.704,178.462H54.873L27.189,39.054h-0.495v139.408H0V0h40.29
+		l21.752,104.309h0.494L84.287,0H124.577z"/>
+	<path class="st5" d="M228.391,117.162h-58.334v19.28c0,15.324,5.438,21.751,15.325,21.751c9.887,0,15.325-6.427,15.325-21.751
+		v-2.967h27.684c-0.495,28.179-12.112,47.458-43.009,47.458c-31.639,0-43.009-20.269-43.009-49.436V92.444
+		c0-29.167,11.37-49.436,43.009-49.436s43.009,20.269,43.009,49.436V117.162z M200.707,94.422v-6.921
+		c0-15.325-5.438-21.752-15.325-21.752c-9.887,0-15.325,6.427-15.325,21.752v6.921H200.707z"/>
+	<path class="st5" d="M296.608,82.31c-1.977-10.628-6.921-16.561-15.819-16.561c-7.168,0-12.111,3.708-12.111,10.629
+		c0,20.763,51.907,29.167,51.907,68.715c0,23.729-16.314,35.841-38.807,35.841c-24.223,0-38.065-13.842-42.267-37.076l24.223-6.674
+		c1.73,11.123,5.685,21.01,18.292,21.01c7.168,0,12.358-4.202,12.358-11.617c0-22.987-51.907-31.639-51.907-67.974
+		c0-21.01,16.313-35.594,37.076-35.594c21.752,0,36.335,14.583,40.537,35.346L296.608,82.31z"/>
+	<path class="st5" d="M390.041,178.462V75.389c0-6.674-4.202-9.64-9.64-9.64c-5.932,0-11.37,3.708-17.797,8.404v104.309H334.92
+		V45.48h26.201v13.348c11.617-9.887,17.55-15.819,30.65-15.819c13.842,0,18.291,4.943,24.224,15.819
+		c13.347-12.853,20.762-15.819,30.897-15.819c17.303,0,25.953,10.629,25.953,27.931v107.522h-27.684V75.389
+		c0-6.674-4.449-9.64-9.887-9.64c-5.933,0-11.37,3.708-17.55,8.404v104.309H390.041z"/>
+	<path class="st5" d="M576.906,117.162h-58.334v19.28c0,15.324,5.438,21.751,15.325,21.751c9.888,0,15.325-6.427,15.325-21.751
+		v-2.967h27.684c-0.494,28.179-12.111,47.458-43.009,47.458c-31.639,0-43.009-20.269-43.009-49.436V92.444
+		c0-29.167,11.37-49.436,43.009-49.436s43.009,20.269,43.009,49.436V117.162z M549.222,94.422v-6.921
+		c0-15.325-5.438-21.752-15.325-21.752c-9.887,0-15.325,6.427-15.325,21.752v6.921H549.222z"/>
+	<path class="st5" d="M594.7,178.462V45.48h26.448v15.572h0.494c6.674-11.37,18.291-18.044,31.392-18.044h5.685v28.92
+		c-4.943-1.236-9.64-2.719-17.797-2.719c-9.393,0-18.538,5.933-18.538,17.797v91.456H594.7z"/>
+	<path class="st5" d="M669.84,25.212V0h27.684v25.212H669.84z M669.84,178.462V45.48h27.684v132.981H669.84z"/>
+	<path class="st5" d="M714.576,68.221V45.48h77.86v22.74l-51.66,87.501h51.66v22.74h-81.321v-22.74l50.672-87.501H714.576z"/>
+	<path class="st5" d="M890.317,117.162h-58.333v19.28c0,15.324,5.438,21.751,15.324,21.751c9.888,0,15.325-6.427,15.325-21.751
+		v-2.967h27.684c-0.494,28.179-12.111,47.458-43.009,47.458c-31.639,0-43.009-20.269-43.009-49.436V92.444
+		c0-29.167,11.37-49.436,43.009-49.436s43.009,20.269,43.009,49.436V117.162z M862.633,94.422v-6.921
+		c0-15.325-5.438-21.752-15.325-21.752c-9.887,0-15.324,6.427-15.324,21.752v6.921H862.633z"/>
+</g>
+<text transform="matrix(1 0 0 1 0.6293 278.7743)" class="st6"><tspan x="0" y="0" class="st7 st2 st8">Me</tspan><tspan x="242.645" y="0" class="st9 st2 st8">s</tspan><tspan x="332.113" y="0" class="st7 st2 st8">m</tspan><tspan x="485.521" y="0" class="st9 st2 st8">e</tspan><tspan x="587.638" y="0" class="st7 st2 st8">rize</tspan></text>
+<text transform="matrix(1 0 0 1 484.898 270.5189)" class="st1 st2 st8">o</text>
+<text transform="matrix(1 0 0 1 31.416 128.5496)" class="st6"><tspan x="0" y="0" class="st7 st2 st8">Mem</tspan><tspan x="396.053" y="0" class="st9 st2 st8">o</tspan><tspan x="498.17" y="0" class="st7 st2 st8">rize</tspan></text>
+<text transform="matrix(1 0 0 1 225.5947 308.5975)" class="st1 st2 st8">s</text>
+<text transform="matrix(1 0 0 1 427.5834 308.5973)" class="st1 st2 st8">e</text>
+<polygon class="st1" points="270.178,145.058 254.595,172.05 285.761,172.05 "/>
+<polygon class="st1" points="478.345,145.058 462.761,172.05 493.928,172.05 "/>
 </svg>
