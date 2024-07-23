@@ -5,6 +5,8 @@ import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'r
 import Modal from "react-native-modal";
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
+import colors from '../util/colors.js';
+
 import DropDown from '../icons/DropDown.svg';
 
 const QuizOptionScreen = () => {
@@ -354,11 +356,11 @@ const QuizOptionScreen = () => {
                             height: 5,
                         }}
                         selectedStyle={{
-                            backgroundColor: '#3b2c5e',
+                            backgroundColor: colors.darkPurple,
                             height: 5,
                         }}
                     />
-                    <TouchableOpacity style={[styles.modal_options_button, {backgroundColor: '#3b2c5e'}]} onPress={() => handleCloseRange(true)}>
+                    <TouchableOpacity style={[styles.modal_options_button, {backgroundColor: colors.darkPurple}]} onPress={() => handleCloseRange(true)}>
                         <Text style={styles.modal_options_text}>Submit</Text>
                     </TouchableOpacity>
                 </View>
@@ -374,7 +376,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     top_container: {
@@ -382,7 +384,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
     },
 
     title_text: {
@@ -416,7 +418,7 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: '#3b2c5e'
+        backgroundColor: colors.darkPurple
     },
 
     button_container: {
@@ -435,7 +437,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-evenly',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: '#e5e0f0'
+        backgroundColor: colors.whitePurple
     },
 
     division_button: {
@@ -447,23 +449,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     division_button_selected: {
         minWidth: '20%',
         paddingVertical: 10,
         paddingHorizontal: 5,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     division_button_title: {
-        color: '#745e96',
+        color: colors.lightPurple,
         fontSize: 15,
         fontWeight: '600'
     },
@@ -484,13 +486,13 @@ const styles = StyleSheet.create({
     qa_half_container: {
         height: '100%',
         width: '50%',
-        backgroundColor: '#e5e0f0'
+        backgroundColor: colors.whitePurple
     }, 
 
     qa_half_title: {
         padding: 10,
         alignItems: 'center',
-        backgroundColor: '#3b2c5e'
+        backgroundColor: colors.darkPurple
     },
 
     section_text: {
@@ -508,12 +510,12 @@ const styles = StyleSheet.create({
     qa_half_option_selected: {
         width: '100%',
         paddingVertical: 10,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     qa_half_option: {
@@ -524,7 +526,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     option_text_selected: {
@@ -534,7 +536,7 @@ const styles = StyleSheet.create({
     },
 
     option_text: {
-        color: '#745e96',
+        color: colors.lightPurple,
         fontSize: 15,
         fontWeight: '600'
     },
@@ -544,12 +546,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 30,
-        backgroundColor: '#e5e0f0',
+        backgroundColor: colors.whitePurple,
         padding: 10,
     },
 
     start_button: {
-        backgroundColor: '#3b2c5e',
+        backgroundColor: colors.darkPurple,
         padding: 10,
         width: '50%',
         alignItems: 'center',
@@ -573,7 +575,7 @@ const styles = StyleSheet.create({
     modal_options_container: {
         width: '80%',
         height: '50%',
-        backgroundColor: '#e5e0f0',
+        backgroundColor: colors.whitePurple,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-evenly',
@@ -583,7 +585,7 @@ const styles = StyleSheet.create({
     modal_options_button: {
         width: '70%',
         paddingVertical: 14,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5
@@ -612,7 +614,7 @@ const styles = StyleSheet.create({
     slider_container: {
         width: '80%',
         height: '50%',
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-evenly',

@@ -3,6 +3,8 @@ import { useNavigation } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
 
+import colors from '../util/colors.js';
+
 import PackageService from '../services/package.service';
 
 import DownloadIcon from '../icons/Download.svg';
@@ -226,7 +228,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     secondary_container: {
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
     },
 
     title_text: {
@@ -282,7 +284,7 @@ const styles = StyleSheet.create({
     package_option: {
         width: '80%',
         height: 80,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
     }, 
 
     package_title_selected_text: {
-        color: '#222222',
+        color: colors.darkGrey,
         fontSize: 20,
         fontWeight: '700',
     },
@@ -316,7 +318,7 @@ const styles = StyleSheet.create({
     icon: {
         height: '90%',
         aspectRatio: 1,
-        color: '#222222',
+        color: colors.darkGrey,
     },
 
     store_text_container: {

@@ -3,6 +3,8 @@ import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 import Modal from "react-native-modal";
 
+import colors from '../util/colors.js';
+
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     top_container: {
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
     },
 
     title_text: {
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     },
 
     row_title: {
-        backgroundColor: '#3b2c5e',
+        backgroundColor: colors.darkPurple,
         flexDirection: 'row',
         paddingHorizontal: 5,
     },
@@ -238,12 +240,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 30,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         padding: 10,
     },
 
     play_button: {
-        backgroundColor: '#3b2c5e',
+        backgroundColor: colors.darkPurple,
         padding: 10,
         // width: '50%',
         alignItems: 'center',

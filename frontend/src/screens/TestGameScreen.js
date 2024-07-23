@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
 
+import colors from '../util/colors.js';
+
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
@@ -368,7 +370,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         // paddingHorizontal: 30,
         paddingVertical: 10,
-        // backgroundColor: "#745e96",
+        // backgroundColor: colors.lightPurple,
         zIndex: 10,
     },
 
@@ -480,7 +482,7 @@ const styles = StyleSheet.create({
     },
 
     answer_container: {
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         padding: 10,
     },
 
@@ -579,7 +581,7 @@ const styles = StyleSheet.create({
     end_button: {
         minWidth: '40%',
         paddingVertical: 20,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5

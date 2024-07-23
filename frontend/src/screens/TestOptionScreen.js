@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import Modal from "react-native-modal";
 
+import colors from '../util/colors.js';
+
 import DropDown from '../icons/DropDown.svg';
 
 const TestOptionScreen = () => {
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
     },
 
     title_text: {
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: '#3b2c5e'
+        backgroundColor: colors.darkPurple
     },
 
     button_container: {
@@ -305,7 +307,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         gap: 30,
         paddingVertical: 10,
-        backgroundColor: '#e5e0f0'
+        backgroundColor: colors.whitePurple
     },
 
     division_button: {
@@ -317,23 +319,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     division_button_selected: {
         minWidth: '50%',
         paddingVertical: 10,
         paddingHorizontal: 5,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5,
         borderWidth: 4,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     division_button_title: {
-        color: '#745e96',
+        color: colors.lightPurple,
         fontSize: 20,
         fontWeight: '600'
     },
@@ -349,12 +351,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 30,
-        backgroundColor: '#e5e0f0',
+        backgroundColor: colors.whitePurple,
         padding: 10,
     },
 
     start_button: {
-        backgroundColor: '#3b2c5e',
+        backgroundColor: colors.darkPurple,
         padding: 10,
         width: '50%',
         alignItems: 'center',
@@ -378,19 +380,19 @@ const styles = StyleSheet.create({
     modal_options_container: {
         width: '70%',
         height: '50%',
-        backgroundColor: '#e5e0f0',
+        backgroundColor: colors.whitePurple,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-evenly',
         borderRadius: 5,
         borderWidth: 5,
-        borderColor: '#745e96'
+        borderColor: colors.lightPurple
     },
 
     modal_options_button: {
         width: '70%',
         paddingVertical: 14,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5

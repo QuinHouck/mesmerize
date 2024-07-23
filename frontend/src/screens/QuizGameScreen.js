@@ -3,6 +3,8 @@ import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 import Modal from "react-native-modal";
 
+import colors from '../util/colors.js';
+
 import { getImages } from '../util/getImages';
 
 import Map from '../components/Map.js'
@@ -287,7 +289,7 @@ const QuizGameScreen = () => {
     function getTextColor(){
         switch(correct){
             case 0:
-                return '#222222';
+                return colors.darkGrey;
             case 1:
                 return '#ed0e0e';
             case 2:
@@ -385,7 +387,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     top_container: {
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 30,
         paddingVertical: 10,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         zIndex: 10,
     },
 
@@ -463,7 +465,7 @@ const styles = StyleSheet.create({
     },
 
     answer_container: {
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         padding: 10,
     },
 
@@ -495,7 +497,7 @@ const styles = StyleSheet.create({
     resume_button: {
         minWidth: '40%',
         paddingVertical: 20,
-        backgroundColor: '#745e96',
+        backgroundColor: colors.lightPurple,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5

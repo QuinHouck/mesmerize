@@ -3,6 +3,8 @@ import { useNavigation, useIsFocused } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 
+import colors from '../util/colors.js';
+
 import StoreIcon from '../icons/Store.svg';
 import DotsIcon from '../icons/Dots.svg';
 
@@ -16,27 +18,15 @@ const HomeScreen = () => {
 
     }, []);
 
-    async function getPackageInfo(){
-        try {
-            const saved_info = await AsyncStorage.getItem("countries");
-            const info = JSON.parse(saved_info);
-            console.log("Info: ", info);
-        } catch (e){
-            console.log(e.message);
-            console.log("Could not find package");
-        }
-        
-    }
-
     return (
         <SafeAreaView style={styles.main_container}>
             <View style={styles.title_container}>
                 <Text style={styles.title_text}>Mesmerize</Text>
             </View>
             <View style={styles.options_container}>
-                <TouchableOpacity style={styles.option}>
+                {/* <TouchableOpacity style={styles.option}>
                     <Text style={styles.options_text}>Multiple Choice</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity style={styles.option} onPress={() => navigation.navigate("QuizOption")}>
                     <Text style={styles.options_text}>Write Quiz</Text>
                 </TouchableOpacity>
@@ -63,7 +53,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     title_container: {
@@ -89,7 +79,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 10,
         width: '50%',
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         borderRadius: 5,
     },
 
@@ -109,7 +99,7 @@ const styles = StyleSheet.create({
     icon_container: {
         height: '60%',
         aspectRatio: 1,
-        backgroundColor: "#745e96",
+        backgroundColor: colors.lightPurple,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
