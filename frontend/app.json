@@ -18,8 +18,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.quinhouck.frontend",
       "infoPlist": {
-        "NSAppTransportSecurity": { 
-          "NSAllowsArbitraryLoads": true 
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
         }
       }
     },
@@ -38,6 +38,12 @@
         "projectId": "5766cc56-016e-463d-92c8-16a6527c3858"
       }
     },
-    "owner": "quinhouck"
+    "owner": "quinhouck",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5766cc56-016e-463d-92c8-16a6527c3858"
+    }
   }
 }

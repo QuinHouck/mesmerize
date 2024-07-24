@@ -12,6 +12,7 @@ import StoreScreen from './src/screens/StoreScreen';
 import QuizResultsScreen from './src/screens/QuizResultsScreen';
 import TestOptionScreen from './src/screens/TestOptionScreen';
 import TestGameScreen from './src/screens/TestGameScreen';
+import Acknowledgements from './src/screens/Acknowledgements';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="QuizResults" component={QuizResultsScreen} />
         <Stack.Screen options={{ headerShown: false }} name="TestOption" component={TestOptionScreen} />
         <Stack.Screen options={{ headerShown: false }} name="TestGame" component={TestGameScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Acknowledgements" component={Acknowledgements} />
       </Stack.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>

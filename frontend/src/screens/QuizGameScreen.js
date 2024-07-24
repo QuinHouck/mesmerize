@@ -37,6 +37,8 @@ const QuizGameScreen = () => {
 
     const [correct, setCorrect] = useState(0);
 
+    const [cooldown, setCooldown] = useState(false);
+
     const [time, setTime] = useState(45);
     const [tid, setTid] = useState(null);
     const timerRef = useRef(time);
@@ -172,6 +174,8 @@ const QuizGameScreen = () => {
     }
 
     async function handleSubmit(){
+        if(cooldown) return;
+        setCooldown(true);
         setInRound(false);
         let distance = 10;
         let percent = 10;
@@ -229,9 +233,15 @@ const QuizGameScreen = () => {
             setInput("");
             setCorrect(0);
             setInRound(true);
+            setCooldown(false);
             timerRef.current = 45;
             // startTimer();
         }, 2500);    
+    }
+
+    function handleInput(newInput){
+        if(cooldown) return;
+        setInput(newInput);
     }
 
     function pauseGame(){
@@ -351,7 +361,7 @@ const QuizGameScreen = () => {
                     <TextInput 
                         style={[styles.input, {color: getTextColor()}]}
                         ref={inputRef}
-                        onChangeText={setInput}
+                        onChangeText={(e) => handleInput(e)}
                         value={input}
                         autoCorrect={false}
                         spellCheck={false}

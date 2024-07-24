@@ -73,7 +73,7 @@ const HomeScreen = () => {
                 <TouchableOpacity style={styles.icon_container} onPress={() => navigation.navigate("Store")}>
                     <StoreIcon style={styles.icon}/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.icon_container}>
+                <TouchableOpacity style={styles.icon_container} onPress={() => navigation.navigate("Acknowledgements")}>
                     <DotsIcon style={styles.icon}/>
                 </TouchableOpacity>
             </View>
@@ -119,6 +119,8 @@ const styles = StyleSheet.create({
 
     option: {
         width: '50%',
+        backgroundColor: colors.lightPurple,
+        borderRadius: 5,
         shadowColor: '#111111',
         shadowOffset: {width: 2, height: 3},
         shadowOpacity: 0.4,
@@ -131,6 +133,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
+        
     },
 
     options_text: {
