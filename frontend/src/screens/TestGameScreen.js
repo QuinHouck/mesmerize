@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
 
+import Map from '../components/Map.js'
+
 import colors from '../util/colors.js';
 
 import Check from '../icons/Check.svg';
@@ -10,12 +12,15 @@ import X from '../icons/X.svg';
 const TestGameScreen = () => {
 
     const route = useRoute()
+
+    //pack is just the pack name
     const pack = route.params?.pack;
     const div = route.params?.div;
     const divOption = route.params?.divOption;
     const listDivName = route.params?.listDivName;
     const listDiv = route.params?.listDiv;
     const test_time = route.params?.time;
+    const has_maps = route.params?.has_maps;
     const items = route.params?.items;
 
     const [selected, setSelected] = useState(null);
@@ -148,6 +153,8 @@ const TestGameScreen = () => {
         if(tid) {
             clearInterval(tid);
         }
+        setMap(false);
+        setList(false);
         setEnded(true);
         setStarted(false);
     }
@@ -202,6 +209,11 @@ const TestGameScreen = () => {
         return num.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false});
     }
 
+    function backPressed(){
+        setMap(false);
+        setList(false);
+    }
+
     function getPicture(){
         switch(correct){
             case 1:
@@ -232,8 +244,8 @@ const TestGameScreen = () => {
     return (
         <SafeAreaView style={styles.main_container}>
              <View style={styles.top_container}>
-                <View style={[styles.top_left_container, showList ? {justifyContent: 'space-between'} : {justifyContent: 'flex-end'}]}>
-                    {showList && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-start'}]} onPress={() => setList(false)}>
+                <View style={[styles.top_left_container, (showList || showMap) ? {justifyContent: 'space-between'} : {justifyContent: 'flex-end'}]}>
+                    {(showList || showMap) && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-start'}]} onPress={backPressed}>
                         <Text style={styles.title_button_text}>Back</Text>
                     </TouchableOpacity>}
                     <Text style={styles.top_text}>{`${Math.floor((numCorrect/total)*100)}%`}</Text>
@@ -250,7 +262,7 @@ const TestGameScreen = () => {
                     <Text style={styles.top_text}>{`${numCorrect}/${total}`}</Text>
                 </View>
             </View>
-            {selected && !showList && !ended && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            {selected && !showList && !showMap && !ended && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.symbol_container}>
                     {getPicture()}
                 </View>
@@ -265,7 +277,7 @@ const TestGameScreen = () => {
                         <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={() => setList(true)}>
                             <Text style={styles.title_button_text}>List</Text>
                         </TouchableOpacity>
-                        {pack.divisions && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]}>
+                        {has_maps && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={() => setMap(true)}>
                             <Text style={styles.title_button_text}>Map</Text>
                         </TouchableOpacity>} 
                     </View>
@@ -286,7 +298,7 @@ const TestGameScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>}
-            {ended && !showList && <View style={styles.results_container}>
+            {ended && !showList && !showMap && <View style={styles.results_container}>
                 <View style={styles.missed_title_container}>
                     <Text style={styles.end_button_text}>What you missed:</Text>
                 </View>
@@ -348,6 +360,17 @@ const TestGameScreen = () => {
                     })}
                 </View>
             </ScrollView>}
+            {selected && showMap && listDiv !== null &&
+                <ScrollView>
+                
+                </ScrollView>
+            }
+
+            {selected && showMap && listDiv === null &&
+                <View style={styles.map_container}>
+                    <Map selected={answered} pack={pack} div={div} divOption={divOption} type={"Test"}/>
+                </View>
+            }
 
         </SafeAreaView>
     );
@@ -591,6 +614,12 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 15,
         fontWeight: '600'
+    },
+
+    map_container: {
+        // backgroundColor: 'red',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 
 });

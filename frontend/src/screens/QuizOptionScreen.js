@@ -177,7 +177,9 @@ const QuizOptionScreen = () => {
         if(selectedPackage.name !== option.name){
             setPackage(option.name);
             setQuestion(null);
-            setAnswer(null); 
+            setAnswer(null);
+            setDivOption(null);
+            setSelectedDiv(null);
         }
         setPackModal(false);
     }
