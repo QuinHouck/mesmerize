@@ -8,7 +8,9 @@ import NorthMap from '../images/countries/continents/NorthMap.js';
 import SouthMap from '../images/countries/continents/SouthMap.js';
 import OceaniaMap from '../images/countries/continents/OceaniaMap.js';
 
-const SvgComponent = ({selected, pack, div, divOption}) => {
+import PeriodicTable from '../images/periodic-table/PeriodicTable.js';
+
+const SvgComponent = ({selected, pack, div, divOption, type}) => {
 
     useEffect(() => {
         // console.log("Pack: ", pack);
@@ -35,6 +37,9 @@ const SvgComponent = ({selected, pack, div, divOption}) => {
                     case "SA":
                         return <SouthMap selected={selected}/>
                 }
+                break;
+            case "periodic-table":
+                return <PeriodicTable selected={selected} type={type}/>
         }
     }
 

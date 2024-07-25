@@ -137,6 +137,7 @@ const QuizGameScreen = () => {
         setInRound(true);
         setEnded(false);
         setLoading(false);
+        setCooldown(false);
         timerRef.current = 45;
     }
 
@@ -317,7 +318,7 @@ const QuizGameScreen = () => {
             case "map":
                 return (
                     <View style={{height: '100%', width: "100%", alignItems: 'center'}}>
-                        <Map selected={current} pack={pack} div={div} divOption={divOption} style={{width: '100%'}}/>
+                        <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{width: '100%'}}/>
                     </View>
                 );
             default: 
