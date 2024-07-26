@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import colors from '../util/colors.js';
 
@@ -167,7 +168,15 @@ const StoreScreen = () => {
                         if(selected !== p.name){
                             return (
                                 <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
-                                    <Text style={styles.package_title_text}>{p.title}</Text>
+                                    <LinearGradient 
+                                        colors={[colors.lightPurple, colors.lightPurpleShadow]} 
+                                        style={styles.option_inside} 
+                                        dither={false}
+                                        start={{x: 0.49, y: 0.3}}
+                                        end={{x: 0.5, y: 1}}
+                                    >
+                                        <Text style={styles.package_title_text}>{p.title}</Text>
+                                    </LinearGradient>
                                 </TouchableOpacity> 
                             ); 
                         } else {
@@ -193,7 +202,15 @@ const StoreScreen = () => {
                         if(selected !== p.name){
                             return (
                                 <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
-                                    <Text style={styles.package_title_text}>{p.title}</Text>
+                                    <LinearGradient 
+                                        colors={[colors.lightPurple, colors.lightPurpleShadow]} 
+                                        style={styles.option_inside} 
+                                        dither={false}
+                                        start={{x: 0.49, y: 0.3}}
+                                        end={{x: 0.5, y: 1}}
+                                    >
+                                        <Text style={styles.package_title_text}>{p.title}</Text>
+                                    </LinearGradient>
                                 </TouchableOpacity> 
                             ); 
                         } else {
@@ -285,10 +302,20 @@ const styles = StyleSheet.create({
     package_option: {
         width: '80%',
         height: 80,
+        borderRadius: 5,
         backgroundColor: colors.lightPurple,
-        alignItems: 'center',
-        justifyContent: 'center',
+        shadowColor: '#111111',
+        shadowOffset: {width: 2, height: 3},
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+    },
+
+    option_inside: {
         padding: 20,
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
         borderRadius: 5,
     },
 
