@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView, Dimensions } from 'react-native';
 
 import Map from '../components/Map.js'
 
@@ -9,16 +9,28 @@ import colors from '../util/colors.js';
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
+const screenWidth = Dimensions.get('window').width;
+
 const TestGameScreen = () => {
 
     const route = useRoute()
 
     //pack is just the pack name
     const pack = route.params?.pack;
+
+    //name of div if a division is selected (eg region)
     const div = route.params?.div;
+
+    //name of div if a division is selected (eg Africa)
     const divOption = route.params?.divOption;
+
+    //name of div to split the list (eg region)
     const listDivName = route.params?.listDivName;
+
+    //List of objects for the list
     const listDiv = route.params?.listDiv;
+
+
     const test_time = route.params?.time;
     const has_maps = route.params?.has_maps;
     const items = route.params?.items;
@@ -53,6 +65,10 @@ const TestGameScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
+        // console.log("Div: ", div);
+        // console.log("ListDivName: ", listDivName);
+        // console.log("divOption: ", divOption);
+        // console.log("listDiv: ", listDiv)
         getSelected();
     }, [started, isFocused]);
 
@@ -327,8 +343,9 @@ const TestGameScreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>}
-            {selected && showList && <ScrollView>
+            {selected && showList && <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.list_container}>
+                    {/* If the list cannot be divided or if a division was selected, display the whole list */}
                     {(!listDivName || div) && selected.map((obj, index) => {
                         return (
                             <View key={index} style={styles.list_object_container}>
@@ -336,11 +353,12 @@ const TestGameScreen = () => {
                             </View>
                         )
                     })}
+                    {/* If the list can be divided and a division wasn't selected, display the divided list */}
                     {(listDivName && !div) && listDiv.map((d) => {
                         const parts = selected.filter((e) => e[listDivName] === d.name);
                         const correctParts = answered.filter((e) => e[listDivName] === d.name);
                         return (
-                            <View style={styles.list_div_container}>
+                            <View key={d.name} style={styles.list_div_container}>
                                 <View style={styles.list_div_title}>
                                     <Text style={styles.list_div_title_text}>{d.title}</Text>
                                     <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
@@ -360,13 +378,29 @@ const TestGameScreen = () => {
                     })}
                 </View>
             </ScrollView>}
-            {selected && showMap && listDiv !== null &&
-                <ScrollView>
-                
+            {selected && showMap && div===null && listDiv !== null &&
+                <ScrollView
+                    horizontal={true}
+                    pagingEnabled={true}
+                    showsHorizontalScrollIndicator={false}
+                >
+                {listDiv.map((d) => {
+                    const parts = selected.filter((e) => e[listDivName] === d.name);
+                    const correctParts = answered.filter((e) => e[listDivName] === d.name);
+                    return (
+                        <View key={d.name} style={styles.scroll_map_container}>
+                            <View style={styles.list_div_title}>
+                                <Text style={styles.list_div_title_text}>{d.title}</Text>
+                                <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
+                            </View>
+                            <Map selected={answered} pack={pack} div={d.name} divOption={d.name} type={"Test"}/>
+                        </View>
+                    )
+                })}
                 </ScrollView>
             }
 
-            {selected && showMap && listDiv === null &&
+            {selected && showMap && (div !== null || listDiv === null) &&
                 <View style={styles.map_container}>
                     <Map selected={answered} pack={pack} div={div} divOption={divOption} type={"Test"}/>
                 </View>
@@ -532,7 +566,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderBottomWidth: 2,
-        paddingHorizontal: 5,
+        paddingHorizontal: 10,
         borderBottomColor: 'rgba(255,255,255,1)',
     },
 
@@ -621,5 +655,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+
+    scroll_map_container: {
+        width: screenWidth,
+        paddingTop: 20,
+    }
 
 });

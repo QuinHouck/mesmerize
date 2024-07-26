@@ -22,20 +22,25 @@ const SvgComponent = ({selected, pack, div, divOption, type}) => {
     function getMap(){
         switch(pack){
             case "countries":
-                let region = selected.region;
+                let region = "";
+                if(!Array.isArray(selected)){
+                    region = selected.region;
+                } else {
+                    region = divOption;
+                }
                 switch(region){
                     case "Africa":
-                        return <AfricaMap selected={selected}/>
+                        return <AfricaMap selected={selected} type={type}/>
                     case "NA":
-                        return <NorthMap selected={selected}/>
+                        return <NorthMap selected={selected} type={type}/>
                     case "Asia":
-                        return <AsiaMap selected={selected}/>
+                        return <AsiaMap selected={selected} type={type}/>
                     case "Europe":
-                        return <EuropeMap selected={selected}/>
+                        return <EuropeMap selected={selected} type={type}/>
                     case "Oceania":
-                        return <OceaniaMap selected={selected}/>
+                        return <OceaniaMap selected={selected} type={type}/>
                     case "SA":
-                        return <SouthMap selected={selected}/>
+                        return <SouthMap selected={selected} type={type}/>
                 }
                 break;
             case "periodic-table":
@@ -45,7 +50,7 @@ const SvgComponent = ({selected, pack, div, divOption, type}) => {
 
 
     return (
-        <View style={{height: '100%', width: "90%"}}>
+        <View style={{height: '100%', width: '90%'}}>
             {getMap()}
         </View>
     )
