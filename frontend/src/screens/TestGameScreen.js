@@ -135,7 +135,7 @@ const TestGameScreen = () => {
         const good = selected.some(e => {
             distance = getDistance(input, e.name);
             percent = distance/e.name.length;
-            if(percent < 0.2){
+            if(percent < 0.1){
                 realMatch = e;
                 const already = answered.some((a) => a === realMatch)
                 if(already){

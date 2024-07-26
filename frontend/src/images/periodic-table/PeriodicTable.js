@@ -120,7 +120,7 @@ function SvgComponent({selected, type}) {
           <Path id={110} d="M365 250H395V280H365z" style={getStyle(110)}/>
           <Path id={111} d="M400 250H430V280H400z" style={getStyle(111)}/>
           <Path id={21} d="M120 145H150V175H120z" style={getStyle(21)}/>
-          <Path id={39} d="M120 180H150V210H120z" style={getStyle()}/>
+          <Path id={39} d="M120 180H150V210H120z" style={getStyle(39)}/>
           <Path id={22} d="M155 145H185V175H155z" style={getStyle(22)}/>
           <Path id={40} d="M155 180H185V210H155z" style={getStyle(40)}/>
           <Path id={72} d="M155 215H185V245H155z" style={getStyle(72)}/>
