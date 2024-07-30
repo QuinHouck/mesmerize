@@ -4,6 +4,7 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 
 import Map from '../components/Map.js'
 
+import { getDistance } from '../util/extraFuncs.js';
 import colors from '../util/colors.js';
 
 import Check from '../icons/Check.svg';
@@ -183,42 +184,6 @@ const TestGameScreen = () => {
         setStarted(true);
         setEnded(false);
         // navigation.navigate("TestGame", {pack: pack, div: div, divOption: divOption, listDivName: listDivName, listDiv: listDiv, time: test_time, items: items});
-    }
-
-    function parseString(str){
-        if(str === "") return str;
-        str = str.toLowerCase();
-        str = str.replace(' ', '');
-        str = str.replace('-', '');
-        str = str.replace('\'', '');
-        str = str.replace('.', '');
-        return str;
-    }
-
-    //Function Taken from: https://www.tutorialspoint.com/levenshtein-distance-in-javascript
-    function getDistance(str1, str2){  
-        str1 = parseString(str1);
-        str2 = parseString(str2);
-
-        if(str1 === "") return 10;
-        const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
-        for (let i = 0; i <= str1.length; i += 1) {
-            track[0][i] = i;
-        }
-        for (let j = 0; j <= str2.length; j += 1) {
-            track[j][0] = j;
-        }
-        for (let j = 1; j <= str2.length; j += 1) {
-            for (let i = 1; i <= str1.length; i += 1) {
-                const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-                track[j][i] = Math.min(
-                    track[j][i - 1] + 1, // deletion
-                    track[j - 1][i] + 1, // insertion
-                    track[j - 1][i - 1] + indicator, // substitution
-                );
-            }
-        }
-        return track[str2.length][str1.length];
     }
 
     function addZeros(num){

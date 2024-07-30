@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigation, useIsFocused } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import LottieView from 'lottie-react-native';
@@ -16,6 +15,7 @@ const HomeScreen = () => {
 
     const navigation = useNavigation();
 
+    // Game options
     const options = [{text: "Multiple Choice", nav: ""}, {text: "Write Quiz", nav: "QuizOption"}, {text: "Write Test", nav: "TestOption"}]
 
     const [isLoading, setLoading] = useState(true);
@@ -24,6 +24,7 @@ const HomeScreen = () => {
 
     }, []);
 
+    //Called when Tinyshark logo stops animating
     function animationDone(){
         setLoading(false);
     }
