@@ -145,6 +145,23 @@ const TestGameScreen = () => {
                     correct = 1;
                     return true;
                 }
+            } else {
+                if(e.accepted){
+                    for(other of e.accepted){
+                        distance = getDistance(input, other);
+                        percent = distance/(other.length);
+                        if(percent < 0.1){
+                            realMatch = e;
+                            const already = answered.some((a) => a === realMatch)
+                            if(already){
+                                correct = 2;
+                            } else {
+                                correct = 1;
+                                return true;
+                            }
+                        }
+                    }
+                }
             }
         });
 
