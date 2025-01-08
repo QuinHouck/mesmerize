@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "Mesmerize",
-    "slug": "mesmerize",
+    "name": "Mesmerize: Quiz Yourself",
+    "slug": "mesmerize-quiz-yourself",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/icons/MesmerizeLogo.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
       "image": "./src/icons/MesmerizeLogo.png",
       "resizeMode": "contain",
@@ -35,7 +36,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "5766cc56-016e-463d-92c8-16a6527c3858"
+        "projectId": "e08a3f3f-3e36-4024-801f-12ef76cc2b47"
       }
     },
     "owner": "quinhouck",
