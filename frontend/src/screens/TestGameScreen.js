@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView, Dimensions } from 'react-native';
 
@@ -34,6 +34,7 @@ const TestGameScreen = () => {
 
     const test_time = route.params?.time;
     const has_maps = route.params?.has_maps;
+    const sort_attr = route.params?.sort_attr;
     const items = route.params?.items;
 
     const [selected, setSelected] = useState(null);
@@ -46,6 +47,7 @@ const TestGameScreen = () => {
 
     const [input, setInput] = useState("");
     const [lastInput, setLastInput] = useState("");
+    const [lastCorrect, setLastCorrect] = useState(null);
 
     const [correct, setCorrect] = useState(0);
 
@@ -59,9 +61,24 @@ const TestGameScreen = () => {
     const [showList, setList] = useState(false);
     const [showMap, setMap] = useState(false);
 
+    const listRef = useRef(null);
+    const [scrolled, setScrolled] = useState(false);
+
     const [started, setStarted] = useState(true);
     const [ended, setEnded] = useState(false);
-    
+
+    const rowRef = useCallback(node => {
+        if(node !== null && listRef.current && !scrolled){
+            node.measureLayout(
+                listRef.current,
+                (x, y) => {
+                    listRef.current?.scrollTo({ y, animated: true });
+                    setScrolled(true)
+                },
+                () => console.error("Failed to measure layout")
+            );
+        }
+    })
 
     const [isLoading, setLoading] = useState(true);
 
@@ -109,11 +126,14 @@ const TestGameScreen = () => {
             })
         }
 
-        setSelected(filtered);
-        setTotal(filtered.length);
+        const sorted = sortByAttribute(filtered);
+
+        setSelected(sorted);
+        setTotal(sorted.length);
         setAnswered([]);
         setInput("");
         setLastInput("");
+        setLastCorrect(null);
         setNumCorrect(0);
         setCorrect(0);
         setLoading(false);
@@ -125,63 +145,44 @@ const TestGameScreen = () => {
         return 'visible-password';
     }
 
-    async function handleSubmit(){
-        let distance = 10;
-        let percent = 10;
-        let end = false;
-
-        let realMatch = "";
-
+    async function handleSubmit() {
+        let realMatch = null;
         let correct = 3;
-        const good = selected.some(e => {
-            distance = getDistance(input, e.name);
-            percent = distance/e.name.length;
-            if(percent < 0.1){
-                realMatch = e;
-                const already = answered.some((a) => a === realMatch)
-                if(already){
-                    correct = 2;
-                } else {
-                    correct = 1;
-                    return true;
-                }
-            } else {
-                if(e.accepted){
-                    for(other of e.accepted){
-                        distance = getDistance(input, other);
-                        percent = distance/(other.length);
-                        if(percent < 0.1){
-                            realMatch = e;
-                            const already = answered.some((a) => a === realMatch)
-                            if(already){
-                                correct = 2;
-                            } else {
-                                correct = 1;
-                                return true;
-                            }
-                        }
-                    }
-                }
+        let end = false;
+    
+        const isMatch = (word, entry) => {
+            const distance = getDistance(input, word);
+            return distance / word.length < 0.1;
+        };
+    
+        for (const entry of selected) {
+            if (isMatch(entry.name, entry)) {
+                realMatch = entry;
+            } else if (entry.accepted?.some((alt) => isMatch(alt, entry))) {
+                realMatch = entry;
             }
-        });
-
-        if(correct === 1){
+    
+            if (realMatch) {
+                correct = answered.includes(realMatch) ? 2 : 1;
+                break;
+            }
+        }
+    
+        if (correct === 1) {
             setNumCorrect(numCorrect + 1);
-            setLastInput(realMatch.name);
             answered.push(realMatch);
-            if(numCorrect+1 === total) end = true;
-        } else if (correct === 2){
-            setLastInput(realMatch.name);
-        } else {
-            setLastInput(input);
+            setLastCorrect(realMatch[sort_attr]);
+            if (numCorrect + 1 === total) end = true;
         }
-        setCorrect(correct)
-        setInput("");  
-
-        if(end){
-            endGame();
-        }
+    
+        setScrolled(false);
+        setLastInput(realMatch?.name || input);
+        setCorrect(correct);
+        setInput("");
+    
+        if (end) endGame();
     }
+    
 
     function endGame(){
         if(tid) {
@@ -229,6 +230,25 @@ const TestGameScreen = () => {
             default:
                 return;
         }
+    }
+
+    function sortByAttribute(array, ascending = true) {
+        if(!sort_attr) return array;
+
+        return array.sort((a, b) => {
+            const valA = a[sort_attr];
+            const valB = b[sort_attr];
+    
+            if (typeof valA === "string" && typeof valB === "string") {
+                return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+    
+            if (typeof valA === "number" && typeof valB === "number") {
+                return ascending ? valA - valB : valB - valA;
+            }
+    
+            return 0;
+        });
     }
 
     if(isLoading){
@@ -325,12 +345,16 @@ const TestGameScreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>}
-            {selected && showList && <ScrollView showsVerticalScrollIndicator={false}>
+            {selected && showList && <ScrollView showsVerticalScrollIndicator={false} ref={listRef}>
                 <View style={styles.list_container}>
                     {/* If the list cannot be divided or if a division was selected, display the whole list */}
                     {(!listDivName || div) && selected.map((obj, index) => {
                         return (
-                            <View key={index} style={styles.list_object_container}>
+                            <View 
+                                key={index} 
+                                style={styles.list_object_container}
+                                ref={lastCorrect === obj[sort_attr] ? rowRef : null}
+                            >
                                 <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
                             </View>
                         )
@@ -338,17 +362,25 @@ const TestGameScreen = () => {
                     {/* If the list can be divided and a division wasn't selected, display the divided list */}
                     {(listDivName && !div) && listDiv.map((d) => {
                         const parts = selected.filter((e) => e[listDivName] === d.name);
+                        const sorted = sortByAttribute(parts)
                         const correctParts = answered.filter((e) => e[listDivName] === d.name);
                         return (
-                            <View key={d.name} style={styles.list_div_container}>
+                            <View 
+                                key={d.name} 
+                                style={styles.list_div_container} 
+                            >
                                 <View style={styles.list_div_title}>
                                     <Text style={styles.list_div_title_text}>{d.title}</Text>
                                     <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
                                 </View>
                                 <View>
-                                    {parts.map((obj) => {
+                                    {sorted.map((obj) => {
                                         return (
-                                            <View key={obj.name} style={styles.list_object_container}>
+                                            <View 
+                                                key={obj.name} 
+                                                style={styles.list_object_container}
+                                                ref={lastCorrect === obj[sort_attr] ? rowRef : null}
+                                            >
                                                 <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
                                             </View>
                                         )

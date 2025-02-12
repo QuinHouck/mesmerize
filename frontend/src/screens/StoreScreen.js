@@ -96,6 +96,7 @@ const StoreScreen = () => {
                 test_division: p.test_division,
                 has_maps: p.has_maps,
                 test_time: p.test_time,
+                sort_attr: p.sort_attr,
                 ranged: p.ranged,
                 num: response.data.length,
                 version: p.version,

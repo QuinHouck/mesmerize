@@ -103,7 +103,7 @@ const TestOptionScreen = () => {
 
         await AsyncStorage.setItem("lastTest", JSON.stringify(gameData));
 
-        navigation.navigate("TestGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, listDivName: listDivName, listDiv: listDiv, time: packageInfo.test_time, has_maps: packageInfo.has_maps, items: packageInfo.items});
+        navigation.navigate("TestGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, listDivName: listDivName, listDiv: listDiv, time: packageInfo.test_time, has_maps: packageInfo.has_maps, sort_attr: packageInfo.sort_attr, items: packageInfo.items});
     }
 
     async function handleDiv(division){
