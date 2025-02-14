@@ -84,7 +84,7 @@ const SvgComponent = ({selected, type}) => {
           id="OceaniaMap"
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${width} ${height}`}
-          transform={`matrix(${matrix})`}
+        //   transform={`matrix(${matrix})`}
           style={(type==="Quiz") ? {backgroundColor: '#91E8F8'} : {width: '100%', aspectRatio: 1}}
         >
             <Path
