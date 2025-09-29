@@ -1,5 +1,7 @@
 import 'react-native-gesture-handler';  // Ensure this is at the top of the file
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
@@ -7,6 +9,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+// Redux store
+import { store, persistor } from './src/store';
 
 import HomeScreen from './src/screens/HomeScreen';
 import QuizOptionScreen from './src/screens/QuizOptionScreen';
@@ -21,22 +26,25 @@ const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <GestureHandlerRootView>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{gestureEnabled: false, title: 'Screens'}}>
-          <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="QuizGame" component={QuizGameScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="QuizResults" component={QuizResultsScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="TestOption" component={TestOptionScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="TestGame" component={TestGameScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="Acknowledgements" component={Acknowledgements} />
-        </Stack.Navigator>
-        <StatusBar style="light" />
-      </NavigationContainer>
-    </GestureHandlerRootView>
-    
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <GestureHandlerRootView>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{gestureEnabled: false, title: 'Screens'}}>
+              <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="QuizGame" component={QuizGameScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="QuizResults" component={QuizResultsScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="TestOption" component={TestOptionScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="TestGame" component={TestGameScreen} />
+              <Stack.Screen options={{ headerShown: false }} name="Acknowledgements" component={Acknowledgements} />
+            </Stack.Navigator>
+            <StatusBar style="light" />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </PersistGate>
+    </Provider>
   );
 }
 

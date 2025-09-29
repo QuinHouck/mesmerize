@@ -1,152 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import colors from '../util/colors.js';
-
-import PackageService from '../services/package.service';
+import { usePackages } from '../hooks/useRedux';
+import { 
+  fetchAvailablePackages, 
+  downloadPackage, 
+  loadDownloadedPackages, 
+  uninstallPackage,
+  setCurrentPackage,
+  clearError 
+} from '../store/slices/packagesSlice';
 
 import DownloadIcon from '../icons/Download.svg';
 import UninstallIcon from '../icons/Uninstall.svg';
 import UpdateIcon from '../icons/Update.svg';
 
 const StoreScreen = () => {
-
-    const [available, setAvailable] = useState([]);
+    const navigation = useNavigation();
+    const { available, downloaded, loading, error, dispatch } = usePackages();
     const [selected, setSelected] = useState("");
 
-    const [downloaded, setDownloaded] = useState([]);
-
-    const navigation = useNavigation();
-
-    const [isLoading, setLoading] = useState(true);
-
     useEffect(() => {
-        // getAvailablePackages();
-        // getDownloaded();
         loadStore();
-        // AsyncStorage.removeItem("packs");
-    }, [selected]);
+    }, []);
 
-    async function loadStore(){
+    async function loadStore() {
         try {
-            const response = await PackageService.getAvailable();
-
-            let avail = response.data;
+            // Load available packages from server
+            await dispatch(fetchAvailablePackages());
             
-            let packs = await AsyncStorage.getItem("packs");
-            let newPacks = [];
-            if(packs){
-                packs = JSON.parse(packs);
-                let names = response.data.map((d) => {return d.name});
-                for(const pack of packs){
-                    let idx = names.indexOf(pack.name);
-                    let data = avail[idx];
-                    data.updateable = false;
-                    if(data.version !== pack.version){
-                        data.updateable = true;
-                    }
-                    newPacks.push(data);
-                }
-
-            }
-
-            setAvailable(avail);
-            setDownloaded(newPacks);
-
-        } catch(error) {
-            console.log("Error: ", error);
-            // console.log("Res: ", error.response);
+            // Load downloaded packages from AsyncStorage
+            await dispatch(loadDownloadedPackages());
+        } catch (error) {
+            console.log("Error loading store: ", error);
         }
     }
 
-    async function getAvailablePackages(){
+    async function handleDownloadPackage(packageInfo) {
         try {
-            const response = await PackageService.getAvailable();
-            // console.log(response.data);
-            setAvailable(response.data);
-        } catch(error) {
-            console.log("Error: ", error);
-            // console.log("Res: ", error.response);
-        }
-    }
-
-    async function getDownloaded(){
-        let packs = await AsyncStorage.getItem("packs");
-        if(packs){
-            packs = JSON.parse(packs);
-        }
-        // console.log(packs);
-        setDownloaded(packs);
-    }
-
-    async function downloadPackage(p){
-        try {
-            const response = await PackageService.getPackage(p.name);
-            // console.log(response.data);
-
-            const packageItems = {
-                title: p.title,
-                name: p.name,
-                attributes: p.attributes,
-                divisions: p.divisions,
-                accepted: p.accepted,
-                test_division: p.test_division,
-                has_maps: p.has_maps,
-                test_time: p.test_time,
-                sort_attr: p.sort_attr,
-                ranged: p.ranged,
-                num: response.data.length,
-                version: p.version,
-                items: response.data
-            }
-
-            // console.log(packageItems);
-            await AsyncStorage.setItem(packageItems.name, JSON.stringify(packageItems));
-            await addPackage(packageItems);
-            // console.log("Success!");
+            await dispatch(downloadPackage(packageInfo));
             setSelected("");
-            
-        } catch(error) {
-            console.log("Error: ", error);
-            // console.log("Res: ", error.response);
+        } catch (error) {
+            console.log("Error downloading package: ", error);
         }
     }
 
-    async function addPackage(newPack){
-        let packs = await AsyncStorage.getItem("packs");
-        if(!packs){
-            packs = [];
-        } else {
-            packs = JSON.parse(packs);
+    async function handleUninstallPackage(packageName) {
+        try {
+            await dispatch(uninstallPackage(packageName));
+            setSelected("");
+        } catch (error) {
+            console.log("Error uninstalling package: ", error);
         }
-
-        const data = {
-            title: newPack.title,
-            name: newPack.name,
-            version: newPack.version
-        }
-
-        let idx = packs.map(function(e) { return e.name; }).indexOf(newPack.name);
-        // console.log(idx);
-        if(idx !== -1){
-            packs[idx] = data;
-        } else {
-            packs.push(data);
-        }
-        await AsyncStorage.setItem("packs", JSON.stringify(packs));
     }
 
-    async function uninstall(pack){
-        await AsyncStorage.removeItem(pack.name);
-        let idx = downloaded.map((d) => {return d.name}).indexOf(pack.name);
-        let newDownloaded = downloaded;
-        newDownloaded.splice(idx,1);
-        await AsyncStorage.setItem("packs", JSON.stringify(newDownloaded));
-        setDownloaded(newDownloaded);
-        setSelected("");
+    // Show loading state
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.main_container}>
+                <View style={styles.top_container}>
+                    <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                        <Text style={styles.title_button_text}>Back</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title_text}>Store</Text>
+                    <View style={styles.title_button}/>
+                </View>
+                <View style={styles.loading_container}>
+                    <Text style={styles.loading_text}>Loading packages...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <SafeAreaView style={styles.main_container}>
+                <View style={styles.top_container}>
+                    <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+                        <Text style={styles.title_button_text}>Back</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title_text}>Store</Text>
+                    <View style={styles.title_button}/>
+                </View>
+                <View style={styles.error_container}>
+                    <Text style={styles.error_text}>Error: {error}</Text>
+                    <TouchableOpacity style={styles.retry_button} onPress={loadStore}>
+                        <Text style={styles.retry_text}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
     }
 
     return (
@@ -184,7 +131,7 @@ const StoreScreen = () => {
                             return (
                                 <TouchableOpacity key={p.name} style={styles.package_option_selected} onPress={() => setSelected("")}>
                                     <Text style={styles.package_title_selected_text}>{p.title}</Text>
-                                    <TouchableOpacity onPress={() => downloadPackage(p)}>
+                                    <TouchableOpacity onPress={() => handleDownloadPackage(p)}>
                                         <DownloadIcon style={styles.icon}/>
                                     </TouchableOpacity>
                                 </TouchableOpacity>
@@ -222,7 +169,7 @@ const StoreScreen = () => {
                                         {p.updateable && <TouchableOpacity onPress={() => downloadPackage(p)}>
                                             <UpdateIcon style={styles.icon}/>
                                         </TouchableOpacity>}
-                                        <TouchableOpacity onPress={() => uninstall(p)}>
+                                        <TouchableOpacity onPress={() => handleUninstallPackage(p.name)}>
                                             <UninstallIcon style={styles.icon}/>
                                         </TouchableOpacity>
                                     </View>
@@ -363,6 +310,45 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '500',
         
+    },
+
+    loading_container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    loading_text: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '500',
+    },
+
+    error_container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
+    },
+
+    error_text: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+    },
+
+    retry_button: {
+        backgroundColor: colors.lightPurple,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+    },
+
+    retry_text: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
     },
 
 });
