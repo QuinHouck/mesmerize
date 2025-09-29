@@ -29,7 +29,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "enableEdgeToEdge": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -45,6 +46,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/5766cc56-016e-463d-92c8-16a6527c3858"
-    }
+    },
+    "plugins": [
+      "expo-dev-client"
+    ]
   }
 }
