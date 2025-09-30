@@ -75,7 +75,7 @@ const gameSlice = createSlice({
         imageHeight,
         timeLimit,
       } = action.payload;
-      
+
       state.gameType = gameType;
       state.packageName = packageName;
       state.packageData = packageData;

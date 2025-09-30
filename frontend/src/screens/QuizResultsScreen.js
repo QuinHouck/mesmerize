@@ -4,13 +4,21 @@ import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaV
 import Modal from "react-native-modal";
 
 import colors from '../util/colors.js';
+import { useGame, useUser } from '../hooks/useRedux.js';
+import { resetGame, quickRestart } from '../store/slices/gameSlice.js';
+import { updateStatistics } from '../store/slices/userSlice.js';
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
 const QuizResultsScreen = () => {
+    // Redux hooks
+    const game = useGame();
+    const user = useUser();
+    const navigation = useNavigation();
 
-    const route = useRoute()
+    // Route params
+    const route = useRoute();
     const pack = route.params?.pack;
     const div = route.params?.div;
     const divOption = route.params?.divOption;
@@ -19,19 +27,21 @@ const QuizResultsScreen = () => {
     const answer = route.params?.answer;
     const answerType = route.params?.answerType;
     const items = route.params?.items;
-    const results = route.params?.results;
     const range = route.params?.range;
-    const images = route.params?.images;
 
+    // Local state for UI
     const [selectedImage, setImage] = useState(null);
     const [showingModal, setModal] = useState(false);
 
-    const navigation = useNavigation();
-
-    const [isLoading, setLoading] = useState(true);
+    // Derived state from Redux
+    const results = game.results || route.params?.results;
+    const images = game.images || route.params?.images;
+    const points = game.points;
+    const totalQuestions = game.totalQuestions;
 
     useEffect(() => {
         adjustWeights();
+        saveStatistics();
     }, []);
 
     function adjustWeights(){
@@ -52,7 +62,22 @@ const QuizResultsScreen = () => {
         }
     }
 
+    function saveStatistics(){
+        if (points !== undefined && totalQuestions !== undefined) {
+            const score = totalQuestions > 0 ? (points / totalQuestions) * 100 : 0;
+            const timeSpent = 45 * totalQuestions; // Rough estimate
+            
+            user.dispatch(updateStatistics({
+                gameType: 'quiz',
+                score,
+                timeSpent
+            }));
+        }
+    }
+
     async function handlePlay(){
+        // Reset game state for a new game
+        game.dispatch(quickRestart());
         navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, range: range, items: items});
     }
 

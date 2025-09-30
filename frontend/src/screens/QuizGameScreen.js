@@ -5,56 +5,65 @@ import Modal from "react-native-modal";
 
 import { getDistance } from '../util/extraFuncs.js';
 import colors from '../util/colors.js';
+import { useGame } from '../hooks/useRedux.js';
+import { 
+    initializeGame, 
+    submitAnswer, 
+    setCurrentInput, 
+    nextQuestion, 
+    pauseGame, 
+    resumeGame, 
+    endGame, 
+    updateTimeRemaining,
+    resetTimer,
+    clearTimer,
+    setTimer
+} from '../store/slices/gameSlice.js';
 
 import { getImages } from '../util/getImages';
 
 import Map from '../components/Map.js'
 
 const QuizGameScreen = () => {
-
-    const route = useRoute()
-    const pack = route.params?.pack;
-    const div = route.params?.div;
-    const divOption = route.params?.divOption;
-    const question = route.params?.question;
-    const questionType = route.params?.questionType;
-    const answer = route.params?.answer;
-    const answerType = route.params?.answerType;
-    const range = route.params?.range;
-    const items = route.params?.items;
-
-    const [selected, setSelected] = useState(null);
-    const [results, setResults] = useState([]);
-
-    const inputRef = React.useRef();
-
+    // Redux hooks
+    const game = useGame();
     const navigation = useNavigation();
     const isFocused = useIsFocused();
 
-    const [points, setPoints] = useState(0);
-    const [idx, setIndex] = useState(0);
+    // Get game data from Redux state instead of route params
+    const pack = game.packageName;
+    const div = game.division;
+    const divOption = game.divisionOption;
+    const question = game.question;
+    const questionType = game.questionType;
+    const answer = game.answer;
+    const answerType = game.answerType;
+    const range = game.range;
 
-    const [input, setInput] = useState("");
-
+    // Local state for UI-specific things
     const [correct, setCorrect] = useState(0);
-
     const [cooldown, setCooldown] = useState(false);
-
-    const [time, setTime] = useState(45);
-    const [tid, setTid] = useState(null);
-    const timerRef = useRef(time);
-
-    const [isPaused, setIsPaused] = useState(false);
-    const [inRound, setInRound] = useState(false);
-    const [ended, setEnded] = useState(false);
-
     const [isLoading, setLoading] = useState(true);
+    const timerRef = useRef(45);
+    const inputRef = React.useRef();
 
-    const [images, setImages] = useState(null);
-    const [imageHeight, setImageHeight] = useState('50%');
+    // Derived state from Redux
+    const selected = game.selectedItems;
+    const results = game.results;
+    const points = game.points;
+    const idx = game.currentIndex;
+    const input = game.currentInput;
+    const time = game.timeRemaining;
+    const isPaused = game.isPaused;
+    const inRound = game.isActive;
+    const ended = game.isEnded;
+    const images = game.images;
+    const imageHeight = game.imageHeight;
 
     useEffect(() => {
-        getSelected();
+        if (isFocused) {
+            initializeGameState();
+        }
     }, [isFocused]);
 
     useEffect(() => {
@@ -64,108 +73,46 @@ const QuizGameScreen = () => {
             if (timerRef.current < 0) {
                 handleSubmit(false);
                 clearInterval(timerId);
-                
-                // console.log("Ended");
             } else {
-                setTime(timerRef.current);
+                game.dispatch(updateTimeRemaining(timerRef.current));
             }
         }, 1000);
-        setTid(timerId);
+        game.dispatch(setTimer(timerId));
         return () => {
-            // console.log("cleared");
             clearInterval(timerId);
-            if(tid) clearInterval(tid);
+            game.dispatch(clearTimer());
         };
     }, [inRound, ended, isPaused]);
 
-    async function getSelected(){
+    async function initializeGameState(){
         if(!isFocused){
             setLoading(true);
             return;
         }
 
-        let filtered = items;
+        // Game is already initialized in QuizOptionScreen, just load images if needed
+        let images = game.images;
+        let imageHeight = game.imageHeight;
 
-        if(div && divOption){
-            filtered = items.filter((item) => {
-                return item[div] === divOption;
-            })
+        if(questionType === "image" && !images){
+            const {imgs, height} = await getImages(game.selectedItems, pack);
+            images = imgs;
+            imageHeight = height;
+            
+            // Update the game state with loaded images
+            game.dispatch(initializeGame({
+                ...game,
+                images,
+                imageHeight,
+            }));
         }
 
-        if(questionType === "map"){
-            filtered = filtered.filter((item) => {
-                return item.mappable === true;
-            })
-        }
-
-        if(range.ranged){
-            filtered = filtered.filter((item) => {
-                let num = item[range["attr"]];
-                return (num <= range.end && num >= range.start);
-            })
-        }
-
-        // const shuffled = filtered.sort(() => 0.5 - Math.random());
-        const num = Math.min(10, filtered.length);
-        const chosen = getChosen(filtered, num);
-        // const chosen = shuffled.slice(0, num);
-
-        // console.log(chosen);
-
-        if(questionType === "image"){
-            const {imgs, height} = await getImages(chosen, pack);
-            setImages(imgs);
-            setImageHeight(height);
-        }
-
-        let res = [];
-        chosen.forEach((item) => {
-            const data = {
-                question: item[question],
-                answer: item[answer],
-                input: "",
-                name: item.name,
-                correct: false
-            }
-            res.push(data);
-        });
-
-        setResults(res);
-        setSelected(chosen);
-        setInput("");
-        setPoints(0);
-        setIndex(0);
         setCorrect(0);
-        setInRound(true);
-        setEnded(false);
         setLoading(false);
         setCooldown(false);
         timerRef.current = 45;
     }
 
-    function getChosen(filtered, num){
-        let weights = [];
-        let total = 0;
-        for(const item of filtered){
-            total = total + item.weight;
-            weights.push(total);
-        }
-
-        let chosen = []
-        while(chosen.length < num){
-            let random  = Math.random() * total;
-            for(i=0; i<weights.length; i++){
-                if(weights[i] > random){
-                    break;
-                }
-            }
-            if(!chosen.includes(filtered[i])){
-                chosen.push(filtered[i]);
-            }
-        }
-        chosen = chosen.sort(() => 0.5 - Math.random());
-        return chosen;
-    }
         
 
     function getKeyboard() {
@@ -179,29 +126,24 @@ const QuizGameScreen = () => {
     async function handleSubmit(time_done){
         if(cooldown && time_done) return;
         setCooldown(true);
-        setInRound(false);
+        game.dispatch(pauseGame());
+        
         let distance = 10;
         let percent = 10;
 
         if(answerType === 'string'){
             distance = await getDistance(input, selected[idx][answer]);
             percent = distance/(selected[idx][answer].length);
-            // console.log("Percent: ", percent);
         } else if(answerType === 'number'){
-            // console.log(input, typeof(Number(input)));
-            // console.log(selected[idx][answer], typeof(selected[idx][answer]));
             if(Number(input) === Number(selected[idx][answer])){
                 distance = 0;
                 percent = 0;
             }
         }
         
-
         let correct = false;
         let correctId = 1;
         if(percent < 0.2){
-            // console.log("Correct")
-            setPoints(points+1);
             correct = true;
             correctId = 2;
         } else {
@@ -209,9 +151,7 @@ const QuizGameScreen = () => {
                 for(other of selected[idx].accepted){
                     distance = getDistance(input, other);
                     percent = distance/(selected[idx][answer].length);
-                    // console.log("Percent: ", percent);
                     if(percent < 0.2){
-                        setPoints(points+1);
                         correct = true;
                         correctId = 2;
                         break;
@@ -220,47 +160,51 @@ const QuizGameScreen = () => {
             }
         }
 
-        setCorrect(correctId)
+        setCorrect(correctId);
 
-        results[idx].input = input;
-        results[idx].correct = correct;
+        // Submit answer to Redux
+        game.dispatch(submitAnswer({
+            input,
+            isCorrect: correct,
+            distance,
+            percent
+        }));
 
-        setInput(selected[idx][answer].toString());
+        game.dispatch(setCurrentInput(selected[idx][answer].toString()));
 
         setTimeout(() => {
             if(idx+1 >= selected.length){
                 endGame();
                 return;
             }
-            setIndex(idx+1);
-            setInput("");
+            game.dispatch(nextQuestion());
+            game.dispatch(setCurrentInput(""));
             setCorrect(0);
-            setInRound(true);
+            game.dispatch(resumeGame());
             setCooldown(false);
             timerRef.current = 45;
-            // startTimer();
+            game.dispatch(resetTimer());
         }, 2500);    
     }
 
     function handleInput(newInput){
         if(cooldown) return;
-        setInput(newInput);
+        game.dispatch(setCurrentInput(newInput));
     }
 
-    function pauseGame(){
-        if(tid) {
-            clearInterval(tid);
-        };
-        setIsPaused(true);
+    function handlePauseGame(){
+        game.dispatch(clearTimer());
+        game.dispatch(pauseGame());
+    }
+
+    function handleResumeGame(){
+        game.dispatch(resumeGame());
     }
 
     function endGame(){
-        if(tid) {
-            clearInterval(tid);
-        }
-        setInRound(false);
-        setEnded(true);
-        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: items, results: results, range: range, images: images});
+        game.dispatch(clearTimer());
+        game.dispatch(endGame());
+        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: game.selectedItems, results: results, range: range, images: images});
     }
 
 
@@ -304,7 +248,7 @@ const QuizGameScreen = () => {
     return (
         <SafeAreaView style={styles.main_container}>
              <View style={styles.top_container}>
-                <TouchableOpacity style={styles.title_button} onPress={pauseGame}>
+                <TouchableOpacity style={styles.title_button} onPress={handlePauseGame}>
                     <Text style={styles.title_button_text}>Pause</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Write Quiz</Text>
@@ -344,12 +288,12 @@ const QuizGameScreen = () => {
             <Modal 
                 isVisible={isPaused}
                 coverScreen={true}
-                onBackdropPress={() => setIsPaused(false)}
+                onBackdropPress={handleResumeGame}
                 style={styles.modal_container}
             >
                 <View style={styles.modal_middle_container}>
                     <Text style={[styles.resume_button_text, {fontSize: 30}]}>Paused</Text>
-                    <TouchableOpacity style={styles.resume_button} onPress={() => setIsPaused(false)}>
+                    <TouchableOpacity style={styles.resume_button} onPress={handleResumeGame}>
                         <Text style={styles.resume_button_text}>Resume</Text>
                     </TouchableOpacity>
                 </View>

@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation, useIsFocused } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import Modal from "react-native-modal";
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 import colors from '../util/colors.js';
+import { usePackages, useUser, useGame } from '../hooks/useRedux.js';
+import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice.js';
+import { setLastQuizSettings } from '../store/slices/userSlice.js';
+import { initializeGame } from '../store/slices/gameSlice.js';
 
 import DropDown from '../icons/DropDown.svg';
 
 const QuizOptionScreen = () => {
+    // Redux hooks
+    const packages = usePackages();
+    const user = useUser();
+    const game = useGame();
+    const navigation = useNavigation();
 
-    const [downloaded, setDownloaded] = useState([]);
-    const [selectedPackage, setPackage] = useState(null);
-
-    const [packageInfo, setPackageInfo] = useState(null)
-
+    // Local state for UI
     const [selectedQuestion, setQuestion] = useState(null);
     const [questionType, setQuestionType] = useState(null);
     const [selectedAnswer, setAnswer] = useState(null);
@@ -32,69 +36,54 @@ const QuizOptionScreen = () => {
     const [showDivModal, setDivModal] = useState(false);
     const [showPackModal, setPackModal] = useState(false);
 
-
-    const navigation = useNavigation();
-
-    const [isLoading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if(selectedPackage){
-            getPackageData();
-        }
-    }, [selectedPackage]);
+    // Derived state from Redux
+    const downloaded = packages.downloaded;
+    const selectedPackage = packages.currentPackage;
+    const packageInfo = selectedPackage;
+    const isLoading = packages.loading;
 
     useEffect(() => {
-        getDownloaded();
+        // Load downloaded packages from Redux
+        packages.dispatch(loadDownloadedPackages());
     }, []);
 
-    async function getDownloaded(){
-        let packs = await AsyncStorage.getItem("packs");
-        if(packs && packs !== "[]"){
-            packs = JSON.parse(packs);
-            setDownloaded(packs);
-        } else {
-            setLoading(false);
-            return;
-        }
-
-        let last = await AsyncStorage.getItem("lastQuiz");
-        if(!last){
-            if(packs.length !== 0) setPackage(packs[0].name);  
-        } else {
-            last = JSON.parse(last);
-            if(packs.map((p) => {return p.name}).includes(last.pack)){
-                setPackage(last.pack);
-                setSelectedDiv(last.div);
-                setDivOption(last.divOptionName);
-                setQuestion(last.question);
-                setQuestionType(last.questionType);
-                setAnswer(last.answer);
-                setAnswerType(last.answerType);
-            } else {
-                setPackage(packs[0].name);
-                await AsyncStorage.removeItem("lastQuiz");
+    useEffect(() => {
+        // Load last quiz settings from user state
+        if (user.lastQuizSettings && downloaded.length > 0) {
+            const lastSettings = user.lastQuizSettings;
+            const availablePackages = downloaded.map(p => p.name);
+            
+            if (availablePackages.includes(lastSettings.pack)) {
+                // Find and set the package
+                const packageData = downloaded.find(p => p.name === lastSettings.pack);
+                if (packageData) {
+                    packages.dispatch(setCurrentPackage(packageData));
+                    setSelectedDiv(lastSettings.div);
+                    setDivOption(lastSettings.divOptionName);
+                    setQuestion(lastSettings.question);
+                    setQuestionType(lastSettings.questionType);
+                    setAnswer(lastSettings.answer);
+                    setAnswerType(lastSettings.answerType);
+                }
             }
+        } else if (downloaded.length > 0 && !selectedPackage) {
+            // Set first package as default if none selected
+            packages.dispatch(setCurrentPackage(downloaded[0]));
         }
-    }
+    }, [downloaded, user.lastQuizSettings]);
 
-    async function getPackageData(){
-        try {
-            const saved_info = await AsyncStorage.getItem(selectedPackage);
-            const info = JSON.parse(saved_info);
-            setPackageInfo(info);
+    useEffect(() => {
+        // Set range end when package changes
+        if (packageInfo) {
             setRanged(false);
-            setEnd(info.num);
-            // console.log(info);
-            setLoading(false);
-            // console.log("Info: ", info.divisions[0]);
-        } catch (e){
-            console.log(e.message);
-            console.log("Could not find package");
+            setEnd(packageInfo.num);
         }
-    }
+    }, [packageInfo]);
 
     async function handleStart(){
-        if(!selectedQuestion || !selectedAnswer || (selectedAnswer===selectedQuestion)) return;
+        if(!selectedQuestion || !selectedAnswer || (selectedAnswer===selectedQuestion)){
+            return;
+        }
 
         let divName = null;
         if(selectedDiv) divName = selectedDiv.name;
@@ -103,7 +92,7 @@ const QuizOptionScreen = () => {
         if(selectedDivOption) divOptionName = selectedDivOption.name;
 
         const gameData = {
-            pack: selectedPackage,
+            pack: selectedPackage.name,
             div: selectedDiv,
             divOptionName: selectedDivOption,
             question: selectedQuestion,
@@ -112,13 +101,13 @@ const QuizOptionScreen = () => {
             answerType: answerType
         }
 
-        await AsyncStorage.setItem("lastQuiz", JSON.stringify(gameData));
+        // Save to Redux user state instead of AsyncStorage
+        user.dispatch(setLastQuizSettings(gameData));
 
-        let newItems = [];
-        for(const item of packageInfo.items){
-            item.weight = 1;
-            newItems.push(item);
-        }
+        let newItems = packageInfo.items.map(item => ({
+            ...item,
+            weight: 1
+        }));
 
         let range = {
             ranged: ranged,
@@ -127,7 +116,85 @@ const QuizOptionScreen = () => {
             attr: packageInfo.ranged
         }
 
-        navigation.navigate("QuizGame", {pack: packageInfo.name, div: divName, divOption: divOptionName, question: selectedQuestion, questionType: questionType, answer: selectedAnswer, answerType: answerType, range: range, items: newItems});
+        // Filter items based on game settings
+        let filtered = newItems;
+
+        if(divName && divOptionName){
+            filtered = newItems.filter((item) => {
+                return item[divName] === divOptionName;
+            })
+        }
+
+        if(questionType === "map"){
+            filtered = filtered.filter((item) => {
+                return item.mappable === true;
+            })
+        }
+
+        if(range.ranged){
+            filtered = filtered.filter((item) => {
+                let num = item[range["attr"]];
+                return (num <= range.end && num >= range.start);
+            })
+        }
+
+        const num = Math.min(10, filtered.length);
+        const chosen = getChosen(filtered, num);
+
+        // Initialize game state in Redux before navigation
+        game.dispatch(initializeGame({
+            gameType: 'quiz',
+            packageName: packageInfo.name,
+            packageData: packageInfo,
+            question: selectedQuestion,
+            questionType: questionType,
+            answer: selectedAnswer,
+            answerType: answerType,
+            division: divName,
+            divisionOption: divOptionName,
+            range: range,
+            selectedItems: chosen,
+            images: null, // Will be loaded in QuizGameScreen if needed
+            imageHeight: '50%',
+            timeLimit: 45,
+        }));
+
+        navigation.navigate("QuizGame");
+    }
+
+    function getChosen(filtered, num) {      
+        // Create a working copy so we don't mutate the original
+        let available = [...filtered];
+        let chosen = [];
+        
+        while(chosen.length < num && available.length > 0) {
+            // Calculate cumulative weights for remaining items
+            let weights = [];
+            let total = 0;
+            for(const item of available) {
+                const weight = item.weight ?? 1;
+                total += weight;
+                weights.push(total);
+            }
+            
+            // Select random item based on weight
+            let random = Math.random() * total;
+            let selectedIndex = 0;
+            for(let i = 0; i < weights.length; i++) {
+                if(weights[i] > random) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Add selected item and remove from available pool
+            chosen.push(available[selectedIndex]);
+            available.splice(selectedIndex, 1);
+        }
+        
+        // Shuffle the final selection
+        chosen = chosen.sort(() => 0.5 - Math.random());
+        return chosen;
     }
 
     async function handleAll(){
@@ -175,7 +242,7 @@ const QuizOptionScreen = () => {
 
     async function handlePackOption(option){
         if(selectedPackage.name !== option.name){
-            setPackage(option.name);
+            packages.dispatch(setCurrentPackage(option));
             setQuestion(null);
             setAnswer(null);
             setDivOption(null);
@@ -186,7 +253,6 @@ const QuizOptionScreen = () => {
 
     async function handleRange(){
         setRangeModal(true);
-
     }
 
     async function handleCloseRange(submitted){
@@ -202,7 +268,7 @@ const QuizOptionScreen = () => {
         setEnd(values[1]);
     }
 
-    if(isLoading){
+    if(isLoading || !packageInfo){
         // console.log("Loading");
         return (
             <SafeAreaView style={styles.main_container}>
@@ -238,7 +304,7 @@ const QuizOptionScreen = () => {
                 <View style={styles.title_button}/>
             </View>
             <View style={styles.package_container}>
-                <Text style={styles.title_text}>{packageInfo.title}</Text>
+                <Text style={styles.title_text}>{packageInfo?.title}</Text>
                 {downloaded.length > 1 && <TouchableOpacity style={styles.button_container} onPress={() => setPackModal(true)}>
                     <DropDown style={styles.button_icon}/>
                 </TouchableOpacity>}
@@ -247,14 +313,14 @@ const QuizOptionScreen = () => {
                 <TouchableOpacity style={(!selectedDiv && !ranged) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
                     <Text style={(selectedDiv === null && !ranged) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
                 </TouchableOpacity>
-                {packageInfo.divisions && packageInfo.divisions.map((division) => {
+                {packageInfo?.divisions && packageInfo?.divisions.map((division) => {
                     return (
                         <TouchableOpacity key={division.title} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
                             <Text style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_title_selected : styles.division_button_title}>{(selectedDivOption) ? selectedDivOption.title : division.title}</Text>
                         </TouchableOpacity>
                     )
                 })}
-                {packageInfo.ranged && 
+                {packageInfo?.ranged && 
                 <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
                     {(selectedDiv === null && ranged) ? 
                         <Text style={styles.division_button_title_selected}>{`${start} - ${end}`}</Text>
