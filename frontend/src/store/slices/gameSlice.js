@@ -3,7 +3,6 @@ import { createSlice } from '@reduxjs/toolkit';
 // Initial state
 const initialState = {
   // Game configuration
-  gameType: null, // 'quiz' or 'test'
   packageName: null,
   packageData: null,
   
@@ -36,13 +35,7 @@ const initialState = {
   correctAnswers: 0,
   totalQuestions: 0,
   
-  // Timer
-  timeRemaining: 45,
   timeLimit: 45,
-  timerId: null,
-  
-  // Input
-  currentInput: '',
   
   // Images (for image-based questions)
   images: null,
@@ -60,9 +53,7 @@ const gameSlice = createSlice({
     // Game initialization
     initializeGame: (state, action) => {
       const {
-        gameType,
         packageName,
-        packageData,
         question,
         questionType,
         answer,
@@ -76,21 +67,18 @@ const gameSlice = createSlice({
         timeLimit,
       } = action.payload;
 
-      state.gameType = gameType;
-      state.packageName = packageName;
-      state.packageData = packageData;
-      state.question = question;
-      state.questionType = questionType;
-      state.answer = answer;
-      state.answerType = answerType;
-      state.division = division;
-      state.divisionOption = divisionOption;
+      state.packageName = packageName; // name of package
+      state.question = question; // Attribute name of question  
+      state.questionType = questionType; // Type of question (image, text, number, etc.)
+      state.answer = answer; // Attribute name of answer
+      state.answerType = answerType; // Type of answer
+      state.division = division; // Division name
+      state.divisionOption = divisionOption; // Division option name
       state.range = range;
       state.selectedItems = selectedItems;
       state.images = images;
       state.imageHeight = imageHeight;
       state.timeLimit = timeLimit || 45;
-      state.timeRemaining = timeLimit || 45;
       
       // Initialize results array
       state.results = selectedItems.map((item) => ({
@@ -102,66 +90,14 @@ const gameSlice = createSlice({
       }));
       
       // Reset game state
-      state.isActive = true;
-      state.isPaused = false;
-      state.isEnded = false;
-      state.currentIndex = 0;
       state.points = 0;
       state.correctAnswers = 0;
       state.totalQuestions = selectedItems.length;
-      state.currentInput = '';
-      state.error = null;
-    },
-    
-    // Game control
-    startGame: (state) => {
-      state.isActive = true;
-      state.isPaused = false;
-      state.isEnded = false;
-    },
-    
-    pauseGame: (state) => {
-      state.isPaused = true;
-      state.isActive = false;
-    },
-    
-    resumeGame: (state) => {
-      state.isPaused = false;
-      state.isActive = true;
-    },
-    
-    endGame: (state) => {
-      state.isActive = false;
-      state.isEnded = true;
-      state.isPaused = false;
-    },
-    
-    // Question navigation
-    nextQuestion: (state) => {
-      if (state.currentIndex < state.totalQuestions - 1) {
-        state.currentIndex += 1;
-        state.currentInput = '';
-      }
-    },
-    
-    previousQuestion: (state) => {
-      if (state.currentIndex > 0) {
-        state.currentIndex -= 1;
-        state.currentInput = '';
-      }
-    },
-    
-    goToQuestion: (state, action) => {
-      const index = action.payload;
-      if (index >= 0 && index < state.totalQuestions) {
-        state.currentIndex = index;
-        state.currentInput = '';
-      }
     },
     
     // Answer handling
     submitAnswer: (state, action) => {
-      const { input, isCorrect, distance, percent } = action.payload;
+      const { input, isCorrect } = action.payload;
       const currentResult = state.results[state.currentIndex];
       
       currentResult.input = input;

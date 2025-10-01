@@ -9,15 +9,6 @@ import { useGame } from '../hooks/useRedux.js';
 import { 
     initializeGame, 
     submitAnswer, 
-    setCurrentInput, 
-    nextQuestion, 
-    pauseGame, 
-    resumeGame, 
-    endGame, 
-    updateTimeRemaining,
-    resetTimer,
-    clearTimer,
-    setTimer
 } from '../store/slices/gameSlice.js';
 
 import { getImages } from '../util/getImages';
@@ -39,26 +30,34 @@ const QuizGameScreen = () => {
     const answer = game.answer;
     const answerType = game.answerType;
     const range = game.range;
+    const timeLimit = game.timeLimit;
 
     // Local state for UI-specific things
-    const [correct, setCorrect] = useState(0);
-    const [cooldown, setCooldown] = useState(false);
-    const [isLoading, setLoading] = useState(true);
-    const timerRef = useRef(45);
-    const inputRef = React.useRef();
+    const [correct, setCorrect] = useState(0); // 0 = no correct answer, 1 = wrong answer, 2 = correct answer
+
+    const [isLoading, setLoading] = useState(true); // Loading initial data
+    const [isPaused, setIsPaused] = useState(false); // Manually paused or not
+    const [isUpdating, setIsUpdating] = useState(false); // If the user has already answered the question and waiting for state update
+    const [gameEnded, setGameEnded] = useState(false); // If the game has ended
+    
+    const [timeLeft, setTimeLeft] = useState(timeLimit);
+    const intervalRef = useRef(null);
 
     // Derived state from Redux
     const selected = game.selectedItems;
-    const results = game.results;
+    const totalQuestions = selected.length;
     const points = game.points;
-    const idx = game.currentIndex;
-    const input = game.currentInput;
-    const time = game.timeRemaining;
-    const isPaused = game.isPaused;
-    const inRound = game.isActive;
-    const ended = game.isEnded;
+
+    const [idx, setCurrentIndex] = useState(0); // Index of the question out of selected items
+    const [input, setInput] = useState(""); // Whats currently in the input bar
+
     const images = game.images;
     const imageHeight = game.imageHeight;
+
+    const inputRef = useRef(null);
+
+    const correctThreshold = 0.2;
+    const questionCooldown = 2500;
 
     useEffect(() => {
         if (isFocused) {
@@ -67,22 +66,33 @@ const QuizGameScreen = () => {
     }, [isFocused]);
 
     useEffect(() => {
-        if(!inRound || ended || isPaused) return;
-        const timerId = setInterval(() => {
-            timerRef.current -= 1;
-            if (timerRef.current < 0) {
-                handleSubmit(false);
-                clearInterval(timerId);
-            } else {
-                game.dispatch(updateTimeRemaining(timerRef.current));
+        if (isPaused || isUpdating || gameEnded) {
+            // Clear interval when paused or updating or game is ended
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
             }
-        }, 1000);
-        game.dispatch(setTimer(timerId));
+        } else if (timeLeft > 0) {
+            // Start interval when not paused
+            intervalRef.current = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        clearInterval(intervalRef.current);
+                        handleSubmit();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+      
+          // Cleanup on unmount
         return () => {
-            clearInterval(timerId);
-            game.dispatch(clearTimer());
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
         };
-    }, [inRound, ended, isPaused]);
+    }, [isPaused, isUpdating, gameEnded]);
 
     async function initializeGameState(){
         if(!isFocused){
@@ -107,13 +117,14 @@ const QuizGameScreen = () => {
             }));
         }
 
+        setCurrentIndex(0);
+        setInput("");
         setCorrect(0);
         setLoading(false);
-        setCooldown(false);
-        timerRef.current = 45;
-    }
-
-        
+        setIsUpdating(false);
+        setTimeLeft(timeLimit);
+        setIsPaused(false);
+    }   
 
     function getKeyboard() {
         if(answerType === "number") return 'number-pad';
@@ -123,14 +134,14 @@ const QuizGameScreen = () => {
         return 'visible-password';
     }
 
-    async function handleSubmit(time_done){
-        if(cooldown && time_done) return;
-        setCooldown(true);
-        game.dispatch(pauseGame());
+    async function handleSubmit(){
+        if(isUpdating) return;
+        setIsUpdating(true);
         
         let distance = 10;
         let percent = 10;
 
+        // Check if the answer is correct
         if(answerType === 'string'){
             distance = await getDistance(input, selected[idx][answer]);
             percent = distance/(selected[idx][answer].length);
@@ -141,18 +152,19 @@ const QuizGameScreen = () => {
             }
         }
         
-        let correct = false;
+        let correctLocal = false;
         let correctId = 1;
-        if(percent < 0.2){
-            correct = true;
+        if(percent < correctThreshold){
+            correctLocal = true;
             correctId = 2;
         } else {
+            // Check if the answer is in the accepted list
             if(selected[idx].accepted && answerType === 'string'){
                 for(other of selected[idx].accepted){
                     distance = getDistance(input, other);
                     percent = distance/(selected[idx][answer].length);
-                    if(percent < 0.2){
-                        correct = true;
+                    if(percent < correctThreshold){
+                        correctLocal = true;
                         correctId = 2;
                         break;
                     }
@@ -165,46 +177,47 @@ const QuizGameScreen = () => {
         // Submit answer to Redux
         game.dispatch(submitAnswer({
             input,
-            isCorrect: correct,
-            distance,
-            percent
+            isCorrect: correctLocal,
         }));
 
-        game.dispatch(setCurrentInput(selected[idx][answer].toString()));
+        // Make the input the correct answer formatted correctly
+        setInput(selected[idx][answer].toString())
 
         setTimeout(() => {
             if(idx+1 >= selected.length){
                 endGame();
                 return;
             }
-            game.dispatch(nextQuestion());
-            game.dispatch(setCurrentInput(""));
+            nextQuestion();
             setCorrect(0);
-            game.dispatch(resumeGame());
-            setCooldown(false);
-            timerRef.current = 45;
-            game.dispatch(resetTimer());
-        }, 2500);    
+            setIsUpdating(false);
+            setTimeLeft(timeLimit);
+        }, questionCooldown);    
+    }
+
+    function nextQuestion() {
+        if (idx < totalQuestions - 1) {
+          setCurrentIndex(idx + 1);
+          setInput("");
+        }
     }
 
     function handleInput(newInput){
-        if(cooldown) return;
-        game.dispatch(setCurrentInput(newInput));
+        if(isUpdating) return;
+        setInput(newInput);
     }
 
     function handlePauseGame(){
-        game.dispatch(clearTimer());
-        game.dispatch(pauseGame());
+        setIsPaused(true);
     }
 
     function handleResumeGame(){
-        game.dispatch(resumeGame());
+        setIsPaused(false);
     }
 
     function endGame(){
-        game.dispatch(clearTimer());
-        game.dispatch(endGame());
-        navigation.navigate("QuizResults", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, items: game.selectedItems, results: results, range: range, images: images});
+        setGameEnded(true);
+        navigation.navigate("QuizResults");
     }
 
 
@@ -266,7 +279,7 @@ const QuizGameScreen = () => {
                         <Text style={styles.stats_left_text}>{`${idx+1}/${selected.length}`}</Text>
                     </View>
                     <View style={styles.stats_left}>
-                        <Text style={styles.stats_left_text}>{`00:${time.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false})}`}</Text>
+                        <Text style={styles.stats_left_text}>{`00:${timeLeft.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false})}`}</Text>
                     </View>
                 </View>
                 <View style={styles.answer_container}>
@@ -278,9 +291,9 @@ const QuizGameScreen = () => {
                         autoCorrect={false}
                         spellCheck={false}
                         keyboardType={getKeyboard()}
+                        blurOnSubmit={false} //TODO: Find solution to deprecation, textinput must keep focus on submit, submitBehavior wont work
                         returnKeyType={answerType === 'number' ? 'done' : 'go'}
-                        blurOnSubmit={false}
-                        onSubmitEditing={() => handleSubmit(true)}
+                        onSubmitEditing={() => handleSubmit()}
                         autoFocus
                     />
                 </View>
