@@ -25,26 +25,26 @@ const HomeScreen = () => {
     }, []);
 
     //Called when Tinyshark logo stops animating
-    function animationDone(){
-        setLoading(false);
-    }
+    // function animationDone(){
+    //     setLoading(false);
+    // }
 
-    if(isLoading){
-        return (
-            <SafeAreaView style={[styles.main_container, {backgroundColor: 'white'}]}>
-                <View style={styles.animation_container}>
-                    <LottieView
-                        autoPlay
-                        style={styles.animation}
-                        source={require('./TinySharkLogoAnimated.json')}
-                        loop={false}
-                        onAnimationFinish={animationDone}
-                    >
-                    </LottieView>
-                </View>
-            </SafeAreaView>
-        )
-    }
+    // if(isLoading){
+    //     return (
+    //         <SafeAreaView style={[styles.main_container, {backgroundColor: 'white'}]}>
+    //             <View style={styles.animation_container}>
+    //                 <LottieView
+    //                     autoPlay
+    //                     style={styles.animation}
+    //                     source={require('./TinySharkLogoAnimated.json')}
+    //                     loop={false}
+    //                     onAnimationFinish={animationDone}
+    //                 >
+    //                 </LottieView>
+    //             </View>
+    //         </SafeAreaView>
+    //     )
+    // }
 
     return (
         <SafeAreaView style={styles.main_container}>

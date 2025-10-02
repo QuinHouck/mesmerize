@@ -7,6 +7,7 @@ import { getDistance } from '../util/extraFuncs.js';
 import colors from '../util/colors.js';
 import { useGame } from '../hooks/useRedux.js';
 import { 
+    atGameEnd,
     initializeGame, 
     submitAnswer, 
 } from '../store/slices/gameSlice.js';
@@ -105,7 +106,9 @@ const QuizGameScreen = () => {
         let imageHeight = game.imageHeight;
 
         if(questionType === "image" && !images){
+            console.log("pre images")
             const {imgs, height} = await getImages(game.selectedItems, pack);
+            console.log(imgs)
             images = imgs;
             imageHeight = height;
             
@@ -177,6 +180,7 @@ const QuizGameScreen = () => {
         // Submit answer to Redux
         game.dispatch(submitAnswer({
             input,
+            idx,
             isCorrect: correctLocal,
         }));
 
@@ -217,6 +221,7 @@ const QuizGameScreen = () => {
 
     function endGame(){
         setGameEnded(true);
+        game.dispatch(atGameEnd())
         navigation.navigate("QuizResults");
     }
 

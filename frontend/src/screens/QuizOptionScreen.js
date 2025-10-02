@@ -42,6 +42,8 @@ const QuizOptionScreen = () => {
     const packageInfo = selectedPackage;
     const isLoading = packages.loading;
 
+    const maxQuestions = 10;
+
     useEffect(() => {
         // Load downloaded packages from Redux
         packages.dispatch(loadDownloadedPackages());
@@ -52,7 +54,7 @@ const QuizOptionScreen = () => {
         if (user.lastQuizSettings && downloaded.length > 0) {
             const lastSettings = user.lastQuizSettings;
             const availablePackages = downloaded.map(p => p.name);
-            
+
             if (availablePackages.includes(lastSettings.pack)) {
                 // Find and set the package
                 const packageData = downloaded.find(p => p.name === lastSettings.pack);
@@ -80,16 +82,16 @@ const QuizOptionScreen = () => {
         }
     }, [packageInfo]);
 
-    async function handleStart(){
-        if(!selectedQuestion || !selectedAnswer || (selectedAnswer===selectedQuestion)){
+    async function handleStart() {
+        if (!selectedQuestion || !selectedAnswer || (selectedAnswer === selectedQuestion)) {
             return;
         }
 
         let divName = null;
-        if(selectedDiv) divName = selectedDiv.name;
+        if (selectedDiv) divName = selectedDiv.name;
 
         let divOptionName = null;
-        if(selectedDivOption) divOptionName = selectedDivOption.name;
+        if (selectedDivOption) divOptionName = selectedDivOption.name;
 
         const gameData = {
             pack: selectedPackage.name,
@@ -119,28 +121,26 @@ const QuizOptionScreen = () => {
         // Filter items based on game settings
         let filtered = newItems;
 
-        if(divName && divOptionName){
+        if (divName && divOptionName) {
             filtered = newItems.filter((item) => {
                 return item[divName] === divOptionName;
             })
         }
 
-        if(questionType === "map"){
+        if (questionType === "map") {
             filtered = filtered.filter((item) => {
                 return item.mappable === true;
             })
         }
 
-        if(range.ranged){
+        if (range.ranged) {
             filtered = filtered.filter((item) => {
                 let num = item[range["attr"]];
                 return (num <= range.end && num >= range.start);
             })
         }
 
-        const num = Math.min(10, filtered.length);
-        const chosen = getChosen(filtered, num);
-
+        const num = Math.min(maxQuestions, filtered.length);
         // Initialize game state in Redux before navigation
         game.dispatch(initializeGame({
             gameType: 'quiz',
@@ -153,95 +153,57 @@ const QuizOptionScreen = () => {
             division: divName,
             divisionOption: divOptionName,
             range: range,
-            selectedItems: chosen,
+            filteredItems: filtered,
             images: null, // Will be loaded in QuizGameScreen if needed
             imageHeight: '50%',
             timeLimit: 45,
+            totalQuestions: num,
         }));
 
         navigation.navigate("QuizGame");
     }
 
-    function getChosen(filtered, num) {      
-        // Create a working copy so we don't mutate the original
-        let available = [...filtered];
-        let chosen = [];
-        
-        while(chosen.length < num && available.length > 0) {
-            // Calculate cumulative weights for remaining items
-            let weights = [];
-            let total = 0;
-            for(const item of available) {
-                const weight = item.weight ?? 1;
-                total += weight;
-                weights.push(total);
-            }
-            
-            // Select random item based on weight
-            let random = Math.random() * total;
-            let selectedIndex = 0;
-            for(let i = 0; i < weights.length; i++) {
-                if(weights[i] > random) {
-                    selectedIndex = i;
-                    break;
-                }
-            }
-            
-            // Add selected item and remove from available pool
-            chosen.push(available[selectedIndex]);
-            available.splice(selectedIndex, 1);
-        }
-        
-        // Shuffle the final selection
-        chosen = chosen.sort(() => 0.5 - Math.random());
-        return chosen;
-    }
-
-    async function handleAll(){
-
-    }
-
-    async function handleAnswer(att){
+    async function handleAnswer(att) {
         setAnswer(att.name);
         setAnswerType(att.type);
     }
 
-    async function handleQuestion(att){
+    async function handleQuestion(att) {
         setQuestion(att.name);
         setQuestionType(att.type);
     }
 
-    async function handleDiv(division){
-        if(!division){
+    async function handleDiv(division) {
+        if (!division) {
             setSelectedDiv(null);
             setDivOption(null);
         } else {
             setSelectedDiv(division);
             setDivModal(true);
-        } 
+        }
         setRanged(false);
     }
 
-    async function handleDivCancel(){
-        if(!selectedDivOption){
+    async function handleDivCancel() {
+        if (!selectedDivOption) {
             setSelectedDiv(null);
         }
 
         setDivModal(false);
     }
 
-    async function handleDivOption(option){
+    async function handleDivOption(option) {
         setDivOption(option);
         setRanged(false);
         setDivModal(false);
     }
 
-    async function handlePackCancel(){
+    async function handlePackCancel() {
         setPackModal(false);
     }
 
-    async function handlePackOption(option){
-        if(selectedPackage.name !== option.name){
+    async function handlePackOption(option) {
+        if (selectedPackage.name !== option.name) {
             packages.dispatch(setCurrentPackage(option));
             setQuestion(null);
             setAnswer(null);
@@ -251,24 +213,24 @@ const QuizOptionScreen = () => {
         setPackModal(false);
     }
 
-    async function handleRange(){
+    async function handleRange() {
         setRangeModal(true);
     }
 
-    async function handleCloseRange(submitted){
-        if(submitted){
+    async function handleCloseRange(submitted) {
+        if (submitted) {
             setRanged(true);
             setSelectedDiv(null);
         }
         setRangeModal(false);
     }
 
-    function handleSlider(values){
+    function handleSlider(values) {
         setStart(values[0]);
         setEnd(values[1]);
     }
 
-    if(isLoading || !packageInfo){
+    if (isLoading || !packageInfo) {
         // console.log("Loading");
         return (
             <SafeAreaView style={styles.main_container}>
@@ -277,7 +239,7 @@ const QuizOptionScreen = () => {
         );
     };
 
-    if(downloaded.length === 0){
+    if (downloaded.length === 0) {
         return (
             <SafeAreaView style={styles.main_container}>
                 <View style={styles.top_container}>
@@ -285,7 +247,7 @@ const QuizOptionScreen = () => {
                         <Text style={styles.title_button_text}>Back</Text>
                     </TouchableOpacity>
                     <Text style={styles.title_text}>Write Quiz</Text>
-                    <View style={styles.title_button}/>
+                    <View style={styles.title_button} />
                 </View>
                 <View style={styles.empty_container}>
                     <Text style={styles.empty_text}>Go to the store to download your first package!</Text>
@@ -301,12 +263,12 @@ const QuizOptionScreen = () => {
                     <Text style={styles.title_button_text}>Back</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Write Quiz</Text>
-                <View style={styles.title_button}/>
+                <View style={styles.title_button} />
             </View>
             <View style={styles.package_container}>
                 <Text style={styles.title_text}>{packageInfo?.title}</Text>
                 {downloaded.length > 1 && <TouchableOpacity style={styles.button_container} onPress={() => setPackModal(true)}>
-                    <DropDown style={styles.button_icon}/>
+                    <DropDown style={styles.button_icon} />
                 </TouchableOpacity>}
             </View>
             <View style={styles.division_container}>
@@ -320,15 +282,15 @@ const QuizOptionScreen = () => {
                         </TouchableOpacity>
                     )
                 })}
-                {packageInfo?.ranged && 
-                <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
-                    {(selectedDiv === null && ranged) ? 
-                        <Text style={styles.division_button_title_selected}>{`${start} - ${end}`}</Text>
-                        :
-                        <Text style={styles.division_button_title}>Range</Text>
-                    }
-                    {/* <Text style={(selectedDiv === null && ranged) ? styles.division_button_title_selected : styles.division_button_title}>Range</Text> */}
-                </TouchableOpacity>}
+                {packageInfo?.ranged &&
+                    <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
+                        {(selectedDiv === null && ranged) ?
+                            <Text style={styles.division_button_title_selected}>{`${start} - ${end}`}</Text>
+                            :
+                            <Text style={styles.division_button_title}>Range</Text>
+                        }
+                        {/* <Text style={(selectedDiv === null && ranged) ? styles.division_button_title_selected : styles.division_button_title}>Range</Text> */}
+                    </TouchableOpacity>}
             </View>
             <View style={styles.qa_container}>
                 <View style={styles.qa_half_container}>
@@ -337,7 +299,7 @@ const QuizOptionScreen = () => {
                     </View>
                     <View style={styles.qa_half_option_container}>
                         {packageInfo && packageInfo.attributes.map((att) => {
-                            if(att.question){
+                            if (att.question) {
                                 return (
                                     <TouchableOpacity key={att.name} style={(att.name === selectedQuestion) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleQuestion(att)}>
                                         <Text style={(att.name === selectedQuestion) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
@@ -353,7 +315,7 @@ const QuizOptionScreen = () => {
                     </View>
                     <View style={styles.qa_half_option_container}>
                         {packageInfo && packageInfo.attributes.map((att) => {
-                            if(att.answer){
+                            if (att.answer) {
                                 return (
                                     <TouchableOpacity key={att.name} style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleAnswer(att)}>
                                         <Text style={(att.name === selectedAnswer) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
@@ -369,7 +331,7 @@ const QuizOptionScreen = () => {
                     <Text style={styles.start_text}>Start</Text>
                 </TouchableOpacity>
             </View>
-            <Modal 
+            <Modal
                 isVisible={showDivModal}
                 coverScreen={true}
                 onBackdropPress={handleDivCancel}
@@ -385,7 +347,7 @@ const QuizOptionScreen = () => {
                     })}
                 </View>
             </Modal>
-            <Modal 
+            <Modal
                 isVisible={showPackModal}
                 coverScreen={true}
                 onBackdropPress={handlePackCancel}
@@ -401,7 +363,7 @@ const QuizOptionScreen = () => {
                     })}
                 </View>
             </Modal>
-            <Modal 
+            <Modal
                 isVisible={showRangeModal}
                 coverScreen={true}
                 onBackdropPress={() => handleCloseRange(false)}
@@ -428,7 +390,7 @@ const QuizOptionScreen = () => {
                             height: 5,
                         }}
                     />
-                    <TouchableOpacity style={[styles.modal_options_button, {backgroundColor: colors.darkPurple}]} onPress={() => handleCloseRange(true)}>
+                    <TouchableOpacity style={[styles.modal_options_button, { backgroundColor: colors.darkPurple }]} onPress={() => handleCloseRange(true)}>
                         <Text style={styles.modal_options_text}>Submit</Text>
                     </TouchableOpacity>
                 </View>
@@ -555,7 +517,7 @@ const styles = StyleSheet.create({
         height: '100%',
         width: '50%',
         backgroundColor: colors.whitePurple
-    }, 
+    },
 
     qa_half_title: {
         padding: 10,

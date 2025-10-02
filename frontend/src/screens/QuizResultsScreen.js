@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
+import { useNavigation, useIsFocused } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 import Modal from "react-native-modal";
 
@@ -17,55 +17,34 @@ const QuizResultsScreen = () => {
     const user = useUser();
     const navigation = useNavigation();
 
-    // Route params
-    const route = useRoute();
-    const pack = route.params?.pack;
-    const div = route.params?.div;
-    const divOption = route.params?.divOption;
-    const question = route.params?.question;
-    const questionType = route.params?.questionType;
-    const answer = route.params?.answer;
-    const answerType = route.params?.answerType;
-    const items = route.params?.items;
-    const range = route.params?.range;
+    const pack = game.packageName;
+    const div = game.division;
+    const divOption = game.divisionOption;
+    const question = game.question;
+    const questionType = game.questionType;
+    const answer = game.answer;
+    const answerType = game.answerType;
+    const range = game.range;
+    const timeLimit = game.timeLimit;
 
     // Local state for UI
     const [selectedImage, setImage] = useState(null);
     const [showingModal, setModal] = useState(false);
 
     // Derived state from Redux
-    const results = game.results || route.params?.results;
-    const images = game.images || route.params?.images;
+    const results = game.results;
+    const images = game.images;
     const points = game.points;
     const totalQuestions = game.totalQuestions;
 
-    useEffect(() => {
-        adjustWeights();
-        saveStatistics();
-    }, []);
+    // useEffect(() => {
+    //     saveStatistics();
+    // }, []);
 
-    function adjustWeights(){
-        for(const item of results){
-            const idx = items.map((e) => { return e.name }).indexOf(item.name);
-            let newItem = items[idx];
-            let newWeight = newItem.weight;
-
-            if(item.correct){
-                newWeight = Math.max(newWeight-20, 1);
-            } else {
-                if(item.input !== ""){
-                    newWeight = 60;
-                }
-            }
-            newItem.weight = newWeight;
-            items[idx] = newItem;
-        }
-    }
 
     function saveStatistics(){
-        if (points !== undefined && totalQuestions !== undefined) {
-            const score = totalQuestions > 0 ? (points / totalQuestions) * 100 : 0;
-            const timeSpent = 45 * totalQuestions; // Rough estimate
+        if (points !== undefined && totalQuestions !== undefined && totalQuestions > 0) {
+            const score = (points / totalQuestions) * 100;
             
             user.dispatch(updateStatistics({
                 gameType: 'quiz',
@@ -78,7 +57,7 @@ const QuizResultsScreen = () => {
     async function handlePlay(){
         // Reset game state for a new game
         game.dispatch(quickRestart());
-        navigation.navigate("QuizGame", {pack: pack, div: div, divOption: divOption, question: question, questionType: questionType, answer: answer, answerType: answerType, range: range, items: items});
+        navigation.navigate("QuizGame");
     }
 
     async function handleImage(image){
