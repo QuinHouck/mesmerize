@@ -37,15 +37,28 @@ export const useGame = () => {
   };
 };
 
+// Game-related hooks
+export const useNetwork = () => {
+  const network = useAppSelector(state => state.network);
+  const dispatch = useAppDispatch();
+  
+  return {
+    ...network,
+    dispatch,
+  };
+};
+
 // Combined hook for common operations
 export const useApp = () => {
   const packages = usePackages();
   const user = useUser();
   const game = useGame();
+  const network = useNetwork();
   
   return {
     packages,
     user,
     game,
+    network,
   };
 };

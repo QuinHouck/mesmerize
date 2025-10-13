@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import NetInfo from '@react-native-community/netinfo';
 
 import colors from '../util/colors.js';
-import { usePackages } from '../hooks/useRedux';
+import { usePackages, useNetwork } from '../hooks/useRedux';
 import { 
   fetchAvailablePackages, 
   downloadPackage, 
   loadDownloadedPackages, 
   uninstallPackage,
-  setCurrentPackage,
-  clearError 
 } from '../store/slices/packagesSlice';
+import { setOnlineStatus } from '../store/slices/networkSlice';
 
 import DownloadIcon from '../icons/Download.svg';
 import UninstallIcon from '../icons/Uninstall.svg';
@@ -20,8 +20,10 @@ import UpdateIcon from '../icons/Update.svg';
 
 const StoreScreen = () => {
     const navigation = useNavigation();
+    const { isInternetReachable, dispatch: networkDispatch } = useNetwork();
     const { available, downloaded, loading, error, dispatch } = usePackages();
-    const [selected, setSelected] = useState("");
+    const [ selected, setSelected ] = useState("");
+    const [ checkingNetwork, setCheckingNetwork ] = useState(false);
 
     useEffect(() => {
         loadStore();
@@ -57,23 +59,45 @@ const StoreScreen = () => {
         }
     }
 
-    // Show loading state
-    if (loading) {
-        return (
-            <SafeAreaView style={styles.main_container}>
-                <View style={styles.top_container}>
-                    <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.title_button_text}>Back</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.title_text}>Store</Text>
-                    <View style={styles.title_button}/>
-                </View>
-                <View style={styles.loading_container}>
-                    <Text style={styles.loading_text}>Loading packages...</Text>
-                </View>
-            </SafeAreaView>
-        );
+    async function handleCheckAgain() {
+        setCheckingNetwork(true);
+        try {
+            // Re-fetch network status
+            const state = await NetInfo.fetch();
+            networkDispatch(setOnlineStatus({
+                isConnected: state.isConnected,
+                isInternetReachable: state.isInternetReachable,
+                type: state.type,
+            }));
+            
+            // If we're back online, try to load the store
+            if (state.isInternetReachable) {
+                await loadStore();
+            }
+        } catch (error) {
+            console.log("Error checking network: ", error);
+        } finally {
+            setCheckingNetwork(false);
+        }
     }
+
+    // Show loading state
+    // if (loading) {
+    //     return (
+    //         <SafeAreaView style={styles.main_container}>
+    //             <View style={styles.top_container}>
+    //                 <TouchableOpacity style={styles.title_button} onPress={() => navigation.goBack()}>
+    //                     <Text style={styles.title_button_text}>Back</Text>
+    //                 </TouchableOpacity>
+    //                 <Text style={styles.title_text}>Store</Text>
+    //                 <View style={styles.title_button}/>
+    //             </View>
+    //             <View style={styles.loading_container}>
+    //                 <Text style={styles.loading_text}>Loading packages...</Text>
+    //             </View>
+    //         </SafeAreaView>
+    //     );
+    // }
 
     // Show error state
     if (error) {
@@ -95,6 +119,10 @@ const StoreScreen = () => {
             </SafeAreaView>
         );
     }
+    
+    // Filter available packages to only show those not downloaded
+    const downloadedNames = downloaded.map(d => d.name);
+    const availableNotDownloaded = available.filter(p => !downloadedNames.includes(p.name));
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -109,38 +137,55 @@ const StoreScreen = () => {
             <View style={styles.store_text_container}>
                 <Text style={styles.store_text}>Available</Text>
             </View>
-            <ScrollView contentContainerStyle={styles.scroll_container}>
-                <View style={styles.package_options_container}>
-                   {available.map((p) => {
-                        if(downloaded.map((d) => {return d.name}).includes(p.name)) return;
-                        if(selected !== p.name){
-                            return (
-                                <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
-                                    <LinearGradient 
-                                        colors={[colors.lightPurple, colors.lightPurpleShadow]} 
-                                        style={styles.option_inside} 
-                                        dither={false}
-                                        start={{x: 0.49, y: 0.3}}
-                                        end={{x: 0.5, y: 1}}
-                                    >
-                                        <Text style={styles.package_title_text}>{p.title}</Text>
-                                    </LinearGradient>
-                                </TouchableOpacity> 
-                            ); 
-                        } else {
-                            return (
-                                <TouchableOpacity key={p.name} style={styles.package_option_selected} onPress={() => setSelected("")}>
-                                    <Text style={styles.package_title_selected_text}>{p.title}</Text>
-                                    <TouchableOpacity onPress={() => handleDownloadPackage(p)}>
-                                        <DownloadIcon style={styles.icon}/>
-                                    </TouchableOpacity>
-                                </TouchableOpacity>
-                            ); 
-                        }
-                        
-                    })} 
+            {!isInternetReachable ? (
+                <View style={styles.offline_container}>
+                    <Text style={styles.offline_title}>Offline</Text>
+                    <TouchableOpacity 
+                        style={styles.retry_button} 
+                        onPress={handleCheckAgain}
+                        disabled={checkingNetwork}
+                    >
+                        <Text style={styles.retry_text}>
+                            {checkingNetwork ? 'Checking...' : 'Check Again'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
-            </ScrollView>
+            ) : availableNotDownloaded.length === 0 ? (
+                <View style={styles.offline_container}>
+                    <Text style={styles.offline_text}>No packages available to download</Text>
+                </View>
+            ) : (
+                <ScrollView contentContainerStyle={styles.scroll_container}>
+                    <View style={styles.package_options_container}>
+                        {availableNotDownloaded.map((p) => {
+                            if(selected !== p.name){
+                                return (
+                                    <TouchableOpacity key={p.name} style={styles.package_option} onPress={() => setSelected(p.name)}>
+                                        <LinearGradient 
+                                            colors={[colors.lightPurple, colors.lightPurpleShadow]} 
+                                            style={styles.option_inside} 
+                                            dither={false}
+                                            start={{x: 0.49, y: 0.3}}
+                                            end={{x: 0.5, y: 1}}
+                                        >
+                                            <Text style={styles.package_title_text}>{p.title}</Text>
+                                        </LinearGradient>
+                                    </TouchableOpacity> 
+                                ); 
+                            } else {
+                                return (
+                                    <TouchableOpacity key={p.name} style={styles.package_option_selected} onPress={() => setSelected("")}>
+                                        <Text style={styles.package_title_selected_text}>{p.title}</Text>
+                                        <TouchableOpacity onPress={() => handleDownloadPackage(p)}>
+                                            <DownloadIcon style={styles.icon}/>
+                                        </TouchableOpacity>
+                                    </TouchableOpacity>
+                                ); 
+                            }
+                        })} 
+                    </View>
+                </ScrollView>
+            )}
             <View style={styles.store_text_container}>
                 <Text style={styles.store_text}>Downloaded</Text>
             </View>
@@ -198,7 +243,7 @@ const styles = StyleSheet.create({
     },
 
     secondary_container: {
-        
+        flex: 1
     },
 
     top_container: {
@@ -324,6 +369,15 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
 
+    offline_container: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
+        padding: 10,
+    },
+
     error_container: {
         flex: 1,
         alignItems: 'center',
@@ -351,4 +405,17 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
+    offline_title: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+
+    offline_text: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+    },
 });

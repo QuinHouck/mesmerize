@@ -7,6 +7,7 @@ import { combineReducers } from '@reduxjs/toolkit';
 import packagesReducer from './slices/packagesSlice';
 import userReducer from './slices/userSlice';
 import gameReducer from './slices/gameSlice';
+import networkReducer from './slices/networkSlice';
 
 // Configure persistence
 const persistConfig = {
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   packages: packagesReducer,
   user: userReducer,
   game: gameReducer,
+  network: networkReducer,
 });
 
 // Create persisted reducer
