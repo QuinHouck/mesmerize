@@ -60,6 +60,17 @@ const QuizResultsScreen = () => {
         navigation.navigate("QuizGame");
     }
 
+    async function handleMenu(){
+        // Reset game state when going back to menu
+        game.dispatch(resetGame());
+        
+        // Reset navigation stack to remove QuizGame and QuizResults from history
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "Home" }, { name: "QuizOption" }],
+        });
+    }
+
     async function handleImage(image){
         setImage(image);
         setModal(true);
@@ -71,10 +82,30 @@ const QuizResultsScreen = () => {
     }
 
 
+    // Safety check: if no results, navigate back
+    if (!results || results.length === 0) {
+        return (
+            <SafeAreaView style={styles.main_container}>
+                <View style={styles.top_container}>
+                    <TouchableOpacity style={styles.title_button} onPress={handleMenu}>
+                        <Text style={styles.title_button_text}>Menu</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.title_text}>Write Quiz Results</Text>
+                    <View style={styles.title_button}/>
+                </View>
+                <View style={styles.results_container}>
+                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                        <Text style={{fontSize: 18, fontWeight: '600'}}>No results available</Text>
+                    </View>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.main_container}>
             <View style={styles.top_container}>
-                <TouchableOpacity style={styles.title_button} onPress={() => navigation.navigate("QuizOption")}>
+                <TouchableOpacity style={styles.title_button} onPress={handleMenu}>
                     <Text style={styles.title_button_text}>Menu</Text>
                 </TouchableOpacity>
                 <Text style={styles.title_text}>Write Quiz Results</Text>
@@ -99,7 +130,7 @@ const QuizResultsScreen = () => {
                     return (
                         <View key={item.question ? item.question : item.answer} style={styles.row_item_container}>
                             {(questionType !== "map") && <View style={styles.row_item}>
-                                {questionType === "image" ?
+                                {questionType === "image" && images && images[item["name"]] ?
                                     <TouchableOpacity style={styles.row_image_container} onPress={() => handleImage(images[item["name"]])}>
                                         <Image 
                                             style={{height: 25, aspectRatio: images[item["name"]].ar}}

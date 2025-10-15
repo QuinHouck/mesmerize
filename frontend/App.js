@@ -68,7 +68,13 @@ function AppContent() {
   return (
     <GestureHandlerRootView>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{gestureEnabled: false, title: 'Screens'}}>
+        <Stack.Navigator 
+          screenOptions={{
+            gestureEnabled: false, 
+            title: 'Screens',
+            animation: "fade",
+          }}
+        >
           <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Store" component={StoreScreen} />
           <Stack.Screen options={{ headerShown: false }} name="QuizOption" component={QuizOptionScreen} />

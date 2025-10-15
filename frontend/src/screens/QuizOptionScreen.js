@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigation, useIsFocused } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
-import Modal from "react-native-modal";
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import { useNavigation } from '@react-navigation/core';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Modal from "react-native-modal";
 
-import colors from '../util/colors.js';
-import { usePackages, useUser, useGame } from '../hooks/useRedux.js';
+import { useGame, usePackages, useUser } from '../hooks/useRedux.js';
+import { initializeGame } from '../store/slices/gameSlice.js';
 import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice.js';
 import { setLastQuizSettings } from '../store/slices/userSlice.js';
-import { initializeGame } from '../store/slices/gameSlice.js';
+import colors from '../util/colors.js';
 
 import DropDown from '../icons/DropDown.svg';
 
@@ -141,6 +141,7 @@ const QuizOptionScreen = () => {
         }
 
         const num = Math.min(maxQuestions, filtered.length);
+
         // Initialize game state in Redux before navigation
         game.dispatch(initializeGame({
             gameType: 'quiz',
@@ -231,10 +232,11 @@ const QuizOptionScreen = () => {
     }
 
     if (isLoading || !packageInfo) {
-        // console.log("Loading");
         return (
             <SafeAreaView style={styles.main_container}>
-
+                <View style={styles.loading_container}>
+                    <Text style={styles.loading_text}>Loading...</Text>
+                </View>
             </SafeAreaView>
         );
     };
@@ -438,6 +440,18 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         paddingVertical: 3,
         paddingHorizontal: 5,
+    },
+
+    loading_container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    loading_text: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: '600',
     },
 
     package_container: {

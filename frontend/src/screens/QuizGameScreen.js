@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
+import { useIsFocused, useNavigation } from '@react-navigation/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
 
-import { getDistance } from '../util/extraFuncs.js';
-import colors from '../util/colors.js';
 import { useGame } from '../hooks/useRedux.js';
-import { 
+import {
     atGameEnd,
-    initializeGame, 
-    submitAnswer, 
+    setImages,
+    submitAnswer,
 } from '../store/slices/gameSlice.js';
+import colors from '../util/colors.js';
+import { getDistance } from '../util/extraFuncs.js';
 
 import { getImages } from '../util/getImages';
 
-import Map from '../components/Map.js'
+import Map from '../components/Map.js';
 
 const QuizGameScreen = () => {
     // Redux hooks
@@ -40,7 +40,7 @@ const QuizGameScreen = () => {
     const [isPaused, setIsPaused] = useState(false); // Manually paused or not
     const [isUpdating, setIsUpdating] = useState(false); // If the user has already answered the question and waiting for state update
     const [gameEnded, setGameEnded] = useState(false); // If the game has ended
-    
+
     const [timeLeft, setTimeLeft] = useState(timeLimit);
     const intervalRef = useRef(null);
 
@@ -86,8 +86,8 @@ const QuizGameScreen = () => {
                 });
             }, 1000);
         }
-      
-          // Cleanup on unmount
+
+        // Cleanup on unmount
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -95,26 +95,26 @@ const QuizGameScreen = () => {
         };
     }, [isPaused, isUpdating, gameEnded]);
 
-    async function initializeGameState(){
-        if(!isFocused){
+    async function initializeGameState() {
+        if (!isFocused) {
             setLoading(true);
             return;
         }
+
+        // Keep loading state true until everything is ready
+        setLoading(true);
 
         // Game is already initialized in QuizOptionScreen, just load images if needed
         let images = game.images;
         let imageHeight = game.imageHeight;
 
-        if(questionType === "image" && !images){
-            console.log("pre images")
-            const {imgs, height} = await getImages(game.selectedItems, pack);
-            console.log(imgs)
+        if (questionType === "image" && !images) {
+            const { imgs, height } = await getImages(game.selectedItems, pack);
             images = imgs;
             imageHeight = height;
-            
-            // Update the game state with loaded images
-            game.dispatch(initializeGame({
-                ...game,
+
+            // Update only the images without reinitializing the game
+            game.dispatch(setImages({
                 images,
                 imageHeight,
             }));
@@ -123,50 +123,53 @@ const QuizGameScreen = () => {
         setCurrentIndex(0);
         setInput("");
         setCorrect(0);
-        setLoading(false);
         setIsUpdating(false);
         setTimeLeft(timeLimit);
         setIsPaused(false);
-    }   
+        setGameEnded(false);
+
+        // Only set loading to false after everything is initialized
+        setLoading(false);
+    }
 
     function getKeyboard() {
-        if(answerType === "number") return 'number-pad';
+        if (answerType === "number") return 'number-pad';
 
-        if(Platform.OS === 'ios') return 'ascii-capable';
+        if (Platform.OS === 'ios') return 'ascii-capable';
 
         return 'visible-password';
     }
 
-    async function handleSubmit(){
-        if(isUpdating) return;
+    async function handleSubmit() {
+        if (isUpdating) return;
         setIsUpdating(true);
-        
+
         let distance = 10;
         let percent = 10;
 
         // Check if the answer is correct
-        if(answerType === 'string'){
+        if (answerType === 'string') {
             distance = await getDistance(input, selected[idx][answer]);
-            percent = distance/(selected[idx][answer].length);
-        } else if(answerType === 'number'){
-            if(Number(input) === Number(selected[idx][answer])){
+            percent = distance / (selected[idx][answer].length);
+        } else if (answerType === 'number') {
+            if (Number(input) === Number(selected[idx][answer])) {
                 distance = 0;
                 percent = 0;
             }
         }
-        
+
         let correctLocal = false;
         let correctId = 1;
-        if(percent < correctThreshold){
+        if (percent < correctThreshold) {
             correctLocal = true;
             correctId = 2;
         } else {
             // Check if the answer is in the accepted list
-            if(selected[idx].accepted && answerType === 'string'){
-                for(other of selected[idx].accepted){
+            if (selected[idx].accepted && answerType === 'string') {
+                for (other of selected[idx].accepted) {
                     distance = getDistance(input, other);
-                    percent = distance/(selected[idx][answer].length);
-                    if(percent < correctThreshold){
+                    percent = distance / (selected[idx][answer].length);
+                    if (percent < correctThreshold) {
                         correctLocal = true;
                         correctId = 2;
                         break;
@@ -188,7 +191,7 @@ const QuizGameScreen = () => {
         setInput(selected[idx][answer].toString())
 
         setTimeout(() => {
-            if(idx+1 >= selected.length){
+            if (idx + 1 >= selected.length) {
                 endGame();
                 return;
             }
@@ -196,38 +199,38 @@ const QuizGameScreen = () => {
             setCorrect(0);
             setIsUpdating(false);
             setTimeLeft(timeLimit);
-        }, questionCooldown);    
+        }, questionCooldown);
     }
 
     function nextQuestion() {
         if (idx < totalQuestions - 1) {
-          setCurrentIndex(idx + 1);
-          setInput("");
+            setCurrentIndex(idx + 1);
+            setInput("");
         }
     }
 
-    function handleInput(newInput){
-        if(isUpdating) return;
+    function handleInput(newInput) {
+        if (isUpdating) return;
         setInput(newInput);
     }
 
-    function handlePauseGame(){
+    function handlePauseGame() {
         setIsPaused(true);
     }
 
-    function handleResumeGame(){
+    function handleResumeGame() {
         setIsPaused(false);
     }
 
-    function endGame(){
+    function endGame() {
         setGameEnded(true);
         game.dispatch(atGameEnd())
         navigation.navigate("QuizResults");
     }
 
 
-    function getTextColor(){
-        switch(correct){
+    function getTextColor() {
+        switch (correct) {
             case 0:
                 return colors.darkGrey;
             case 1:
@@ -237,35 +240,42 @@ const QuizGameScreen = () => {
         }
     }
 
-    function renderQuestion(current){
-        switch(questionType){
+    function renderQuestion(current) {
+        switch (questionType) {
             case "image":
-                return <Image 
-                    style={{height: imageHeight, aspectRatio: images[selected[idx]["name"]].ar}}
+                // Safety check: ensure images are loaded and current item exists
+                if (!images || !selected[idx] || !images[selected[idx]["name"]]) {
+                    return <Text style={styles.question_text}>Loading image...</Text>;
+                }
+                return <Image
+                    style={{ height: imageHeight, aspectRatio: images[selected[idx]["name"]].ar }}
                     source={images[selected[idx]["name"]].image}
                 />;
             case "map":
                 return (
-                    <View style={{height: '100%', width: "100%", alignItems: 'center'}}>
-                        <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{width: '100%'}}/>
+                    <View style={{ height: '100%', width: "100%", alignItems: 'center' }}>
+                        <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{ width: '100%' }} />
                     </View>
                 );
-            default: 
+            default:
                 return <Text style={styles.question_text}>{selected[idx][question]}</Text>;
         }
     }
 
-    if(isLoading){
+    // Safety check: if game state is invalid/reset, show loading
+    if (isLoading || !selected || selected.length === 0) {
         return (
             <SafeAreaView style={styles.main_container}>
-
+                <View style={styles.loading_container}>
+                    <Text style={styles.loading_text}>Loading...</Text>
+                </View>
             </SafeAreaView>
         );
     };
 
     return (
         <SafeAreaView style={styles.main_container}>
-             <View style={styles.top_container}>
+            <View style={styles.top_container}>
                 <TouchableOpacity style={styles.title_button} onPress={handlePauseGame}>
                     <Text style={styles.title_button_text}>Pause</Text>
                 </TouchableOpacity>
@@ -281,15 +291,15 @@ const QuizGameScreen = () => {
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
                         <Text style={styles.stats_left_text}>{`${points} pts`}</Text>
-                        <Text style={styles.stats_left_text}>{`${idx+1}/${selected.length}`}</Text>
+                        <Text style={styles.stats_left_text}>{`${idx + 1}/${selected.length}`}</Text>
                     </View>
                     <View style={styles.stats_left}>
-                        <Text style={styles.stats_left_text}>{`00:${timeLeft.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false})}`}</Text>
+                        <Text style={styles.stats_left_text}>{`00:${timeLeft.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false })}`}</Text>
                     </View>
                 </View>
                 <View style={styles.answer_container}>
-                    <TextInput 
-                        style={[styles.input, {color: getTextColor()}]}
+                    <TextInput
+                        style={[styles.input, { color: getTextColor() }]}
                         ref={inputRef}
                         onChangeText={(e) => handleInput(e)}
                         value={input}
@@ -303,14 +313,14 @@ const QuizGameScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>}
-            <Modal 
+            <Modal
                 isVisible={isPaused}
                 coverScreen={true}
                 onBackdropPress={handleResumeGame}
                 style={styles.modal_container}
             >
                 <View style={styles.modal_middle_container}>
-                    <Text style={[styles.resume_button_text, {fontSize: 30}]}>Paused</Text>
+                    <Text style={[styles.resume_button_text, { fontSize: 30 }]}>Paused</Text>
                     <TouchableOpacity style={styles.resume_button} onPress={handleResumeGame}>
                         <Text style={styles.resume_button_text}>Resume</Text>
                     </TouchableOpacity>
@@ -379,9 +389,9 @@ const styles = StyleSheet.create({
         fontWeight: '700'
     },
 
-    question_image:{
+    question_image: {
         height: '50%',
-        aspectRatio: 2/1,
+        aspectRatio: 2 / 1,
     },
 
     stats_container: {
@@ -415,6 +425,20 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         fontSize: 18,
         fontWeight: '600'
+    },
+
+    // Loading
+
+    loading_container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    loading_text: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: '600',
     },
 
     // Paused

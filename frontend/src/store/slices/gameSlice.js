@@ -140,6 +140,7 @@ const gameSlice = createSlice({
 // Export actions
 export const {
   initializeGame,
+  setImages,
   submitAnswer,
   atGameEnd,
   setError,

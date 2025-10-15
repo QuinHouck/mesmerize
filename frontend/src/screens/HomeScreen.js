@@ -1,6 +1,6 @@
-import { useNavigation } from '@react-navigation/core';
+import { useNavigation, useIsFocused } from '@react-navigation/core';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import LottieView from 'lottie-react-native';
@@ -15,6 +15,8 @@ import env from '../config/env.js';
 const HomeScreen = () => {
 
     const navigation = useNavigation();
+    const isFocused = useIsFocused();
+    const isInitialMount = useRef(true);
 
     // Game options
     const options = [{ text: "Multiple Choice", nav: "" }, { text: "Write Quiz", nav: "QuizOption" }, { text: "Write Test", nav: "TestOption" }]
@@ -22,8 +24,19 @@ const HomeScreen = () => {
     const [isLoading, setLoading] = useState(true);
 
     useEffect(() => {
-
-    }, []);
+        // Reset navigation stack when returning to Home (but not on initial mount)
+        if (isFocused && !isInitialMount.current) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "Home" }],
+            });
+        }
+        
+        // After first render, mark as not initial mount
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+        }
+    }, [isFocused]);
 
     //Called when Tinyshark logo stops animating
     function animationDone() {
