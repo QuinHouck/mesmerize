@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import LottieView from 'lottie-react-native';
 
 import colors from '../util/colors.js';
 
-import Logo from '../icons/MesmerizeText.svg';
-import StoreIcon from '../icons/Store.svg';
 import DotsIcon from '../icons/Dots.svg';
+import StoreIcon from '../icons/Store.svg';
+
+import env from '../config/env.js';
 
 const HomeScreen = () => {
 
     const navigation = useNavigation();
 
     // Game options
-    const options = [{text: "Multiple Choice", nav: ""}, {text: "Write Quiz", nav: "QuizOption"}, {text: "Write Test", nav: "TestOption"}]
+    const options = [{ text: "Multiple Choice", nav: "" }, { text: "Write Quiz", nav: "QuizOption" }, { text: "Write Test", nav: "TestOption" }]
 
     const [isLoading, setLoading] = useState(true);
 
@@ -25,26 +26,26 @@ const HomeScreen = () => {
     }, []);
 
     //Called when Tinyshark logo stops animating
-    // function animationDone(){
-    //     setLoading(false);
-    // }
+    function animationDone() {
+        setLoading(false);
+    }
 
-    // if(isLoading){
-    //     return (
-    //         <SafeAreaView style={[styles.main_container, {backgroundColor: 'white'}]}>
-    //             <View style={styles.animation_container}>
-    //                 <LottieView
-    //                     autoPlay
-    //                     style={styles.animation}
-    //                     source={require('./TinySharkLogoAnimated.json')}
-    //                     loop={false}
-    //                     onAnimationFinish={animationDone}
-    //                 >
-    //                 </LottieView>
-    //             </View>
-    //         </SafeAreaView>
-    //     )
-    // }
+    if (isLoading && env.environment === 'production') {
+        return (
+            <SafeAreaView style={[styles.main_container, { backgroundColor: 'white' }]}>
+                <View style={styles.animation_container}>
+                    <LottieView
+                        autoPlay
+                        style={styles.animation}
+                        source={require('./TinySharkLogoAnimated.json')}
+                        loop={false}
+                        onAnimationFinish={animationDone}
+                    >
+                    </LottieView>
+                </View>
+            </SafeAreaView>
+        )
+    }
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -54,15 +55,15 @@ const HomeScreen = () => {
             </View>
             <View style={styles.options_container}>
                 {options.map((option) => {
-                    if(option.nav === "") return;
+                    if (option.nav === "") return;
                     return (
                         <TouchableOpacity key={option.nav} style={styles.option} onPress={() => navigation.navigate(option.nav)}>
-                            <LinearGradient 
-                                colors={[colors.lightPurple, colors.lightPurpleShadow]} 
-                                style={styles.option_inside} 
+                            <LinearGradient
+                                colors={[colors.lightPurple, colors.lightPurpleShadow]}
+                                style={styles.option_inside}
                                 dither={false}
-                                start={{x: 0.49, y: 0.3}}
-                                end={{x: 0.5, y: 1}}
+                                start={{ x: 0.49, y: 0.3 }}
+                                end={{ x: 0.5, y: 1 }}
                             >
                                 <Text style={styles.options_text}>{option.text}</Text>
                             </LinearGradient>
@@ -72,10 +73,10 @@ const HomeScreen = () => {
             </View>
             <View style={styles.bottom_container}>
                 <TouchableOpacity style={styles.icon_container} onPress={() => navigation.navigate("Store")}>
-                    <StoreIcon style={styles.icon}/>
+                    <StoreIcon style={styles.icon} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.icon_container} onPress={() => navigation.navigate("Acknowledgements")}>
-                    <DotsIcon style={styles.icon}/>
+                    <DotsIcon style={styles.icon} />
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.lightPurple,
         borderRadius: 5,
         shadowColor: '#111111',
-        shadowOffset: {width: 2, height: 3},
+        shadowOffset: { width: 2, height: 3 },
         shadowOpacity: 0.4,
         shadowRadius: 5,
     },
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
-        
+
     },
 
     options_text: {

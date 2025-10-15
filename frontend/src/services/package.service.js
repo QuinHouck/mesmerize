@@ -1,7 +1,7 @@
 import axios from 'axios';
+import env from '../config/env';
 
-// const packageBaseURL = `http://3.91.197.7:8080/api/packages`;
-const packageBaseURL = `http://10.0.0.70:8080/api/packages`;
+const packageBaseURL = `${env.apiUrl}/api/packages`;
 
 class PackageService {
 

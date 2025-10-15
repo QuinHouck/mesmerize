@@ -4,9 +4,17 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start --go",
+    "start:dev": "cross-env APP_ENV=development expo start --go",
+    "start:prod": "cross-env APP_ENV=production expo start --go",
     "android": "expo start --android",
+    "android:dev": "cross-env APP_ENV=development expo start --android",
+    "android:prod": "cross-env APP_ENV=production expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "ios:dev": "cross-env APP_ENV=development expo start --ios",
+    "ios:prod": "cross-env APP_ENV=production expo start --ios",
+    "web": "expo start --web",
+    "web:dev": "cross-env APP_ENV=development expo start --web",
+    "web:prod": "cross-env APP_ENV=production expo start --web"
   },
   "dependencies": {
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
@@ -18,6 +26,7 @@
     "@reduxjs/toolkit": "^2.9.0",
     "axios": "^1.12.2",
     "expo": "~53.0.23",
+    "expo-constants": "^18.0.9",
     "expo-dev-client": "~5.2.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
@@ -36,7 +45,8 @@
     "redux-persist": "^6.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "cross-env": "^7.0.3"
   },
   "private": true
 }
