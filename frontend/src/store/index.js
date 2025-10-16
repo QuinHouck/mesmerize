@@ -8,6 +8,7 @@ import packagesReducer from './slices/packagesSlice';
 import userReducer from './slices/userSlice';
 import gameReducer from './slices/gameSlice';
 import networkReducer from './slices/networkSlice';
+import testReducer from './slices/testSlice';
 
 // Configure persistence
 const persistConfig = {
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   user: userReducer,
   game: gameReducer,
   network: networkReducer,
+  test: testReducer,
 });
 
 // Create persisted reducer

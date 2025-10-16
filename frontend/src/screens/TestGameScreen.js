@@ -1,104 +1,67 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView, Dimensions } from 'react-native';
+import { Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import { useTest } from '../hooks/useRedux.js';
 
-import Map from '../components/Map.js'
+import Map from '../components/Map.js';
+import TestNamePanel from '../components/TestNamePanel.js';
+import TestCardsPanel from '../components/TestCardsPanel.js';
+import TestListPanel from '../components/TestListPanel.js';
 
-import { getDistance } from '../util/extraFuncs.js';
 import colors from '../util/colors.js';
 
-import Check from '../icons/Check.svg';
-import X from '../icons/X.svg';
+import {
+    setCurrentView,
+    endTest,
+    quickRestartTest,
+} from '../store/slices/testSlice.js';
 
 const screenWidth = Dimensions.get('window').width;
 
+/**
+ * TestGameScreen - Main test game container
+ * Manages timer, pause/end controls, and renders appropriate view panel
+ */
 const TestGameScreen = () => {
-
-    const route = useRoute()
-
-    //pack is just the pack name
-    const pack = route.params?.pack;
-
-    //name of div if a division is selected (eg region)
-    const div = route.params?.div;
-
-    //name of div if a division is selected (eg Africa)
-    const divOption = route.params?.divOption;
-
-    //name of div to split the list (eg region)
-    const listDivName = route.params?.listDivName;
-
-    //List of objects for the list
-    const listDiv = route.params?.listDiv;
-
-
-    const test_time = route.params?.time;
-    const has_maps = route.params?.has_maps;
-    const sort_attr = route.params?.sort_attr;
-    const items = route.params?.items;
-
-    const [selected, setSelected] = useState(null);
-    const [answered, setAnswered] = useState([]);
-
-    const inputRef = React.useRef();
-
     const navigation = useNavigation();
     const isFocused = useIsFocused();
+    const test = useTest();
+    // Redux state
+    const pack = test.packageName;
+    const test_time = test.timeLimit;
 
-    const [input, setInput] = useState("");
-    const [lastInput, setLastInput] = useState("");
-    const [lastCorrect, setLastCorrect] = useState(null);
+    const totalItems = test.totalItems;
+    const totalPoints = test.totalPoints;
+    const pointsEarned = test.pointsEarned;
+    const totalDiscovered = test.discoveredItems.length;
 
-    const [correct, setCorrect] = useState(0);
-
-    const [numCorrect, setNumCorrect] = useState(0);
-    const [total, setTotal] = useState(0);
+    const currentView = test.currentView;
+    const gameEnded = test.gameEnded;
+    const gameStarted = test.gameStarted;
 
     const [time, setTime] = useState(test_time);
     const [tid, setTid] = useState(null);
     const timerRef = useRef(time);
 
-    const [showList, setList] = useState(false);
-    const [showMap, setMap] = useState(false);
-
-    const listRef = useRef(null);
-    const [scrolled, setScrolled] = useState(false);
-
-    const [started, setStarted] = useState(true);
-    const [ended, setEnded] = useState(false);
-
-    const rowRef = useCallback(node => {
-        if(node !== null && listRef.current && !scrolled){
-            node.measureLayout(
-                listRef.current,
-                (x, y) => {
-                    listRef.current?.scrollTo({ y, animated: true });
-                    setScrolled(true)
-                },
-                () => console.error("Failed to measure layout")
-            );
-        }
-    })
-
-    const [isLoading, setLoading] = useState(true);
-
+    /**
+     * Initialize test when component mounts or becomes focused
+     */
     useEffect(() => {
-        // console.log("Div: ", div);
-        // console.log("ListDivName: ", listDivName);
-        // console.log("divOption: ", divOption);
-        // console.log("listDiv: ", listDiv)
-        getSelected();
-    }, [started, isFocused]);
 
+    }, [gameStarted, isFocused]);
+
+    /**
+     * Start and manage timer
+     */
     useEffect(() => {
-        if(!started) return;
+        if (!gameStarted) return;
         timerRef.current = test_time;
         const timerId = setInterval(() => {
-            if(ended) return;
+            if (gameEnded) return;
             timerRef.current -= 1;
             if (timerRef.current < 0) {
                 clearInterval(timerId);
-                handleSubmit();
+                endGame();
             } else {
                 setTime(timerRef.current);
             }
@@ -106,324 +69,85 @@ const TestGameScreen = () => {
         setTid(timerId);
         return () => {
             clearInterval(timerId);
-            if(tid) clearInterval(tid);
+            if (tid) clearInterval(tid);
         };
-    }, [started]);
+    }, [gameStarted]);
 
-    async function getSelected(){
-        if(!isFocused){
-            setLoading(true);
-            return;
-        }
 
-        if(!started) return;
-
-        let filtered = items;
-
-        if(div && divOption){
-            filtered = items.filter((item) => {
-                return item[div] === divOption;
-            })
-        }
-
-        const sorted = sortByAttribute(filtered);
-
-        setSelected(sorted);
-        setTotal(sorted.length);
-        setAnswered([]);
-        setInput("");
-        setLastInput("");
-        setLastCorrect(null);
-        setNumCorrect(0);
-        setCorrect(0);
-        setLoading(false);
+    /**
+     * Formats numbers with leading zeros for timer display
+     */
+    function addZeros(num) {
+        return num.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
     }
 
-    function getKeyboard() {
-        if(Platform.OS === 'ios') return 'ascii-capable';
-
-        return 'visible-password';
-    }
-
-    async function handleSubmit() {
-        let realMatch = null;
-        let correct = 3;
-        let end = false;
-    
-        const isMatch = (word, entry) => {
-            const distance = getDistance(input, word);
-            return distance / word.length < 0.1;
-        };
-    
-        for (const entry of selected) {
-            if (isMatch(entry.name, entry)) {
-                realMatch = entry;
-            } else if (entry.accepted?.some((alt) => isMatch(alt, entry))) {
-                realMatch = entry;
-            }
-    
-            if (realMatch) {
-                correct = answered.includes(realMatch) ? 2 : 1;
-                break;
-            }
-        }
-    
-        if (correct === 1) {
-            setNumCorrect(numCorrect + 1);
-            answered.push(realMatch);
-            setLastCorrect(realMatch[sort_attr]);
-            if (numCorrect + 1 === total) end = true;
-        }
-    
-        setScrolled(false);
-        setLastInput(realMatch?.name || input);
-        setCorrect(correct);
-        setInput("");
-    
-        if (end) endGame();
-    }
-    
-
-    function endGame(){
-        if(tid) {
+    /**
+     * Ends the test game
+     */
+    function endGame() {
+        if (tid) {
             clearInterval(tid);
         }
-        setMap(false);
-        setList(false);
-        setEnded(true);
-        setStarted(false);
+        test.dispatch(endTest());
+        navigation.navigate("TestResults");
     }
 
-    function returnMenu(){
-        navigation.navigate("TestOption", {pack: pack, div: div, divOption: divOption, items: items});
+
+    /**
+     * Handles view changes
+     */
+    function handleViewChange(newView) {
+        test.dispatch(setCurrentView(newView));
     }
 
-    function playAgain(){
-        setStarted(true);
-        setEnded(false);
-        // navigation.navigate("TestGame", {pack: pack, div: div, divOption: divOption, listDivName: listDivName, listDiv: listDiv, time: test_time, items: items});
-    }
+    /**
+     * Renders the appropriate panel based on current view
+     */
+    function renderCurrentView() {
 
-    function addZeros(num){
-        return num.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false});
-    }
-
-    function backPressed(){
-        setMap(false);
-        setList(false);
-    }
-
-    function getPicture(){
-        switch(correct){
-            case 1:
+        switch (currentView) {
+            case 'cards':
                 return (
-                    <Check style={[styles.symbol, {color: "green"}]}/>
+                    <TestCardsPanel />
                 );
-            case 2:
+            case 'list':
                 return (
-                    <Check style={[styles.symbol, {color: "yellow"}]}/>
+                    <TestListPanel />
                 );
-            case 3:
-                return (
-                    <X style={[styles.symbol, {color: "red"}]}/>
-                );
+            case 'map':
+                return renderMapView();
+            case 'name':
             default:
-                return;
+                return (
+                    <TestNamePanel />
+                );
         }
     }
-
-    function sortByAttribute(array, ascending = true) {
-        if(!sort_attr) return array;
-
-        return array.sort((a, b) => {
-            const valA = a[sort_attr];
-            const valB = b[sort_attr];
-    
-            if (typeof valA === "string" && typeof valB === "string") {
-                return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            }
-    
-            if (typeof valA === "number" && typeof valB === "number") {
-                return ascending ? valA - valB : valB - valA;
-            }
-    
-            return 0;
-        });
-    }
-
-    if(isLoading){
-        return (
-            <SafeAreaView style={styles.main_container}>
-
-            </SafeAreaView>
-        );
-    };
 
     return (
         <SafeAreaView style={styles.main_container}>
-             <View style={styles.top_container}>
-                <View style={[styles.top_left_container, (showList || showMap) ? {justifyContent: 'space-between'} : {justifyContent: 'flex-end'}]}>
-                    {(showList || showMap) && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-start'}]} onPress={backPressed}>
-                        <Text style={styles.title_button_text}>Back</Text>
-                    </TouchableOpacity>}
-                    <Text style={styles.top_text}>{`${Math.floor((numCorrect/total)*100)}%`}</Text>
+            {/* Top Bar with Timer and Controls */}
+            <View style={styles.top_container}>
+                <View style={[styles.top_left_container, currentView === 'map' ? { justifyContent: 'space-between' } : { justifyContent: 'flex-end' }]}>
+
                 </View>
                 <View style={styles.top_mid_container}>
                     <View style={styles.timer_circle}>
-                        <Text style={styles.timer_text}>{`${addZeros(Math.floor(time/60))}:${addZeros(time%60)}`}</Text>
+                        <Text style={styles.timer_text}>{`${addZeros(Math.floor(time / 60))}:${addZeros(time % 60)}`}</Text>
                     </View>
                 </View>
-                <View style={[styles.top_right_container, ended ? {justifyContent: 'flex-end'} : {}]}>
-                    {!ended && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={endGame}>
+                <View style={[styles.top_right_container, gameEnded ? { justifyContent: 'flex-end' } : {}]}>
+                    <TouchableOpacity style={[styles.title_button, { alignSelf: 'flex-end' }]} onPress={endGame}>
                         <Text style={styles.title_button_text}>End</Text>
-                    </TouchableOpacity>}
-                    <Text style={styles.top_text}>{`${numCorrect}/${total}`}</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
-            {selected && !showList && !showMap && !ended && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                <View style={styles.symbol_container}>
-                    {getPicture()}
-                </View>
-                <View style={styles.stats_container}>
-                    <View style={styles.stats_left}>
-                        <View style={{borderColor: 'white', borderBottomWidth: 2, width: '100%'}}>
-                            <Text style={styles.stats_left_text}>Last Answer</Text>
-                        </View>
-                        <Text style={styles.stats_left_text}>{lastInput}</Text>
-                    </View>
-                    <View style={[styles.stats_left, {paddingBottom: 10}]}>
-                        <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={() => setList(true)}>
-                            <Text style={styles.title_button_text}>List</Text>
-                        </TouchableOpacity>
-                        {has_maps && <TouchableOpacity style={[styles.title_button, {alignSelf: 'flex-end'}]} onPress={() => setMap(true)}>
-                            <Text style={styles.title_button_text}>Map</Text>
-                        </TouchableOpacity>} 
-                    </View>
-                </View>
-                <View style={styles.answer_container}>
-                    <TextInput 
-                        style={styles.input}
-                        ref={inputRef}
-                        onChangeText={setInput}
-                        value={input}
-                        autoCorrect={false}
-                        spellCheck={false}
-                        keyboardType={getKeyboard()}
-                        returnKeyType='go'
-                        blurOnSubmit={false}
-                        onSubmitEditing={handleSubmit}
-                        autoFocus
-                    />
-                </View>
-            </KeyboardAvoidingView>}
-            {ended && !showList && !showMap && <View style={styles.results_container}>
-                <View style={styles.missed_title_container}>
-                    <Text style={styles.end_button_text}>What you missed:</Text>
-                </View>
-                {(selected.length !== answered.length) ? 
-                <ScrollView style={styles.missed_container}>
-                    {selected.map((item) => {
-                        if(!answered.includes(item)){
-                            return (
-                                <Text key={item._id} style={styles.missed_item}>{item.name}</Text>
-                            )
-                        }
-                    })}
-                    
-                </ScrollView>
-                :
-                <View style={styles.perfect_container}>
-                    <Text style={styles.perfect_text}>Perfect!</Text>
-                </View>
-                }
-                <View style={styles.end_button_container}>
-                    <TouchableOpacity style={styles.end_button} onPress={returnMenu}>
-                        <Text style={styles.end_button_text}>Menu</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.end_button} onPress={playAgain}>
-                        <Text style={styles.end_button_text}>Play Again</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>}
-            {selected && showList && <ScrollView showsVerticalScrollIndicator={false} ref={listRef}>
-                <View style={styles.list_container}>
-                    {/* If the list cannot be divided or if a division was selected, display the whole list */}
-                    {(!listDivName || div) && selected.map((obj, index) => {
-                        return (
-                            <View 
-                                key={index} 
-                                style={styles.list_object_container}
-                                ref={lastCorrect === obj[sort_attr] ? rowRef : null}
-                            >
-                                <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
-                            </View>
-                        )
-                    })}
-                    {/* If the list can be divided and a division wasn't selected, display the divided list */}
-                    {(listDivName && !div) && listDiv.map((d) => {
-                        const parts = selected.filter((e) => e[listDivName] === d.name);
-                        const sorted = sortByAttribute(parts)
-                        const correctParts = answered.filter((e) => e[listDivName] === d.name);
-                        return (
-                            <View 
-                                key={d.name} 
-                                style={styles.list_div_container} 
-                            >
-                                <View style={styles.list_div_title}>
-                                    <Text style={styles.list_div_title_text}>{d.title}</Text>
-                                    <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
-                                </View>
-                                <View>
-                                    {sorted.map((obj) => {
-                                        return (
-                                            <View 
-                                                key={obj.name} 
-                                                style={styles.list_object_container}
-                                                ref={lastCorrect === obj[sort_attr] ? rowRef : null}
-                                            >
-                                                <Text style={styles.list_object}>{answered.includes(obj) ? obj.name : ""}</Text>
-                                            </View>
-                                        )
-                                    })} 
-                                </View>
-                                
-                            </View>
-                        )
-                    })}
-                </View>
-            </ScrollView>}
-            {selected && showMap && div===null && listDiv !== null &&
-                <ScrollView
-                    horizontal={true}
-                    pagingEnabled={true}
-                    showsHorizontalScrollIndicator={false}
-                >
-                {listDiv.map((d) => {
-                    const parts = selected.filter((e) => e[listDivName] === d.name);
-                    const correctParts = answered.filter((e) => e[listDivName] === d.name);
-                    return (
-                        <View key={d.name} style={styles.scroll_map_container}>
-                            <View style={styles.list_div_title}>
-                                <Text style={styles.list_div_title_text}>{d.title}</Text>
-                                <Text style={styles.list_div_title_text}>{`${correctParts.length}/${parts.length}`}</Text>
-                            </View>
-                            <Map selected={answered} pack={pack} div={d.name} divOption={d.name} type={"Test"}/>
-                        </View>
-                    )
-                })}
-                </ScrollView>
-            }
 
-            {selected && showMap && (div !== null || listDiv === null) &&
-                <View style={styles.map_container}>
-                    <Map selected={answered} pack={pack} div={div} divOption={divOption} type={"Test"}/>
-                </View>
-            }
-
+            {/* Render Current View */}
+            {renderCurrentView()}
         </SafeAreaView>
     );
-
-}
+};
 
 export default TestGameScreen;
 
@@ -434,14 +158,24 @@ const styles = StyleSheet.create({
         backgroundColor: "#222222",
     },
 
+    loading_container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    loading_text: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: '600',
+    },
+
     top_container: {
         flexDirection: 'row',
         height: 100,
         width: '100%',
         justifyContent: 'space-between',
-        // paddingHorizontal: 30,
         paddingVertical: 10,
-        // backgroundColor: colors.lightPurple,
         zIndex: 10,
     },
 
@@ -465,7 +199,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderRadius: 50,
         height: '100%',
-        aspectRatio: 1/1,
+        aspectRatio: 1 / 1,
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -491,12 +225,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    title_text: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: '700',
-    },
-
     title_button: {
         width: 60,
         justifyContent: 'center',
@@ -514,96 +242,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
     },
 
-    second_container: {
-        width: '100%',
-        flex: 1,
-    },
-
-    symbol_container: {
-        flex: 5,
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
-    symbol: {
-        height: '40%',
-        aspectRatio: 1,
-    },
-
-    stats_container: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 15,
-    },
-
-    stats_left: {
-        gap: 15,
-        minWidth: '25%',
-        marginBottom: 5
-    },
-
-    stats_left_text: {
-        color: 'white',
-        fontSize: 15,
-        fontWeight: '600',
-        borderBottomWidth: 3,
-        borderBottomColor: 'white',
-        paddingLeft: 15,
-    },
-
-    answer_container: {
-        backgroundColor: colors.lightPurple,
-        padding: 10,
-    },
-
-    input: {
-        backgroundColor: 'white',
-        padding: 5,
-        borderRadius: 5,
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#222222'
-    },
-
-    list_container: {
-        width: '100%',
-        gap: 10,
-    },
-
-    list_div_container: {
-        width: '100%',
-        marginVertical: 5,
-    },
-
-    list_div_title: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderBottomWidth: 2,
-        paddingHorizontal: 10,
-        borderBottomColor: 'rgba(255,255,255,1)',
-    },
-
-    list_div_title_text: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-
-    list_object_container: {
-        width: '100%',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.5)',
-        marginLeft: 15,
-    },
-
-    list_object: {
-        color: 'white',
-        paddingVertical: 5
-    },
-
-    // Results
-
+    // Results Screen
     results_container: {
         flex: 1,
         gap: 5,
@@ -664,8 +303,8 @@ const styles = StyleSheet.create({
         fontWeight: '600'
     },
 
+    // Map View
     map_container: {
-        // backgroundColor: 'red',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -673,6 +312,19 @@ const styles = StyleSheet.create({
     scroll_map_container: {
         width: screenWidth,
         paddingTop: 20,
-    }
+    },
 
+    list_div_title: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 2,
+        paddingHorizontal: 10,
+        borderBottomColor: 'rgba(255,255,255,1)',
+    },
+
+    list_div_title_text: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+    },
 });

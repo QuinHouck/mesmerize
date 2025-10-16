@@ -37,6 +37,17 @@ export const useGame = () => {
   };
 };
 
+// test-related hooks
+export const useTest = () => {
+  const test = useAppSelector(state => state.test);
+  const dispatch = useAppDispatch();
+  
+  return {
+    ...test,
+    dispatch,
+  };
+};
+
 // Game-related hooks
 export const useNetwork = () => {
   const network = useAppSelector(state => state.network);
@@ -53,12 +64,14 @@ export const useApp = () => {
   const packages = usePackages();
   const user = useUser();
   const game = useGame();
+  const test = useTest();
   const network = useNetwork();
   
   return {
     packages,
     user,
     game,
+    test,
     network,
   };
 };
