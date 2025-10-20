@@ -1,17 +1,21 @@
-import React, { useState, useRef } from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    View, 
-    TouchableOpacity, 
-    TextInput, 
+import React, { useRef, useState } from 'react';
+import {
     KeyboardAvoidingView,
-    Platform 
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useTest } from '../hooks/useRedux.js';
+import {
+    discoverItem,
+    setCurrentView
+} from '../store/slices/testSlice.js';
 
-import { getDistance } from '../util/extraFuncs.js';
 import colors from '../util/colors.js';
+import { getDistance } from '../util/extraFuncs.js';
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
@@ -20,19 +24,31 @@ import X from '../icons/X.svg';
  * TestNamePanel - Component for guessing item names in test mode
  * Users enter guesses and items are discovered if they match within distance threshold
  */
-const TestNamePanel = () => {
+const TestNamePanel = React.memo(() => {
     const [input, setInput] = useState("");
     const [lastInput, setLastInput] = useState("");
     const [feedback, setFeedback] = useState(null); // null, 'correct', 'already', 'wrong'
-    
+
+    const test = useTest();
+
     const inputRef = useRef(null);
+
+    const items = test.filteredItems;
+    const discoveredItems = test.discoveredItems;
 
     /**
      * Gets the appropriate keyboard type for the platform
      */
     function getKeyboard() {
-        if(Platform.OS === 'ios') return 'ascii-capable';
+        if (Platform.OS === 'ios') return 'ascii-capable';
         return 'visible-password';
+    }
+
+    /**
+     * Handles view changes
+     */
+    function handleViewChange(newView) {
+        test.dispatch(setCurrentView(newView));
     }
 
     /**
@@ -76,7 +92,7 @@ const TestNamePanel = () => {
                 // New discovery
                 setFeedback('correct');
                 setLastInput(matchedItem.name);
-                onItemDiscovered(matchedItem);
+                test.dispatch(discoverItem(matchedItem));
             }
         } else {
             // No match
@@ -92,21 +108,21 @@ const TestNamePanel = () => {
      * Renders the feedback symbol (checkmark or X) based on last guess
      */
     function getFeedbackSymbol() {
-        switch(feedback) {
+        switch (feedback) {
             case 'correct':
-                return <Check style={[styles.symbol, {color: "green"}]} />;
+                return <Check style={[styles.symbol, { color: "green" }]} />;
             case 'already':
-                return <Check style={[styles.symbol, {color: "orange"}]} />;
+                return <Check style={[styles.symbol, { color: "orange" }]} />;
             case 'wrong':
-                return <X style={[styles.symbol, {color: "red"}]} />;
+                return <X style={[styles.symbol, { color: "red" }]} />;
             default:
                 return null;
         }
     }
 
     return (
-        <KeyboardAvoidingView 
-            style={styles.container} 
+        <KeyboardAvoidingView
+            style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             {/* Feedback Symbol Display */}
@@ -117,21 +133,21 @@ const TestNamePanel = () => {
             {/* Stats and Navigation */}
             <View style={styles.stats_container}>
                 <View style={styles.stats_left}>
-                    <View style={{borderColor: 'white', borderBottomWidth: 2, width: '100%'}}>
+                    <View style={{ borderColor: 'white', borderBottomWidth: 2, width: '100%' }}>
                         <Text style={styles.stats_left_text}>Last Answer</Text>
                     </View>
                     <Text style={styles.stats_left_text}>{lastInput}</Text>
                 </View>
-                <View style={[styles.stats_left, {paddingBottom: 10}]}>
-                    <TouchableOpacity 
-                        style={[styles.button]} 
-                        onPress={() => onViewChange('list')}
+                <View style={[styles.stats_left, { paddingBottom: 10 }]}>
+                    <TouchableOpacity
+                        style={[styles.button]}
+                        onPress={() => handleViewChange('list')}
                     >
                         <Text style={styles.button_text}>List</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.button]} 
-                        onPress={() => onViewChange('cards')}
+                    <TouchableOpacity
+                        style={[styles.button]}
+                        onPress={() => handleViewChange('cards')}
                     >
                         <Text style={styles.button_text}>Cards</Text>
                     </TouchableOpacity>
@@ -148,7 +164,7 @@ const TestNamePanel = () => {
 
             {/* Input Field */}
             <View style={styles.answer_container}>
-                <TextInput 
+                <TextInput
                     style={styles.input}
                     ref={inputRef}
                     onChangeText={setInput}
@@ -164,7 +180,7 @@ const TestNamePanel = () => {
             </View>
         </KeyboardAvoidingView>
     );
-};
+});
 
 export default TestNamePanel;
 
@@ -239,4 +255,6 @@ const styles = StyleSheet.create({
         color: '#222222'
     },
 });
+
+TestNamePanel.displayName = 'TestNamePanel';
 

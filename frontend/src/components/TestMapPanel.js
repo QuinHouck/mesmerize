@@ -1,29 +1,33 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import {
     StyleSheet,
-    Text,
     View,
-    TouchableOpacity,
-    TextInput,
-    KeyboardAvoidingView,
-    Platform
 } from 'react-native';
+
+import { useTest } from '../hooks/useRedux.js';
+import Map from './Map.js';
 
 import colors from '../util/colors.js';
 
 /**
- * TestNamePanel - Component for guessing item names in test mode
- * Users enter guesses and items are discovered if they match within distance threshold
+ * TestMapPanel - Component for displaying discovered items on a map
  */
-const TestMapPanel = () => {
-
+const TestMapPanel = React.memo(() => {
+    const test = useTest();
+    
+    const discoveredItems = test.discoveredItems;
+    const pack = test.packageName;
+    const div = test.division;
+    const divOption = test.divisionOption;
 
     return (
         <View style={styles.map_container}>
             <Map selected={discoveredItems} pack={pack} div={div} divOption={divOption} type={"Test"} />
         </View>
     );
-};
+});
+
+TestMapPanel.displayName = 'TestMapPanel';
 
 export default TestMapPanel;
 

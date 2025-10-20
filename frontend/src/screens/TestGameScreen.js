@@ -37,7 +37,7 @@ const TestGameScreen = () => {
 
     const currentView = test.currentView;
     const gameEnded = test.gameEnded;
-    const gameStarted = test.gameStarted;
+    const testStarted = test.testStarted;
 
     const [time, setTime] = useState(test_time);
     const [tid, setTid] = useState(null);
@@ -48,13 +48,13 @@ const TestGameScreen = () => {
      */
     useEffect(() => {
 
-    }, [gameStarted, isFocused]);
+    }, [testStarted, isFocused]);
 
     /**
      * Start and manage timer
      */
     useEffect(() => {
-        if (!gameStarted) return;
+        if (!testStarted) return;
         timerRef.current = test_time;
         const timerId = setInterval(() => {
             if (gameEnded) return;
@@ -71,7 +71,7 @@ const TestGameScreen = () => {
             clearInterval(timerId);
             if (tid) clearInterval(tid);
         };
-    }, [gameStarted]);
+    }, [testStarted]);
 
 
     /**
@@ -89,7 +89,8 @@ const TestGameScreen = () => {
             clearInterval(tid);
         }
         test.dispatch(endTest());
-        navigation.navigate("TestResults");
+        navigation.navigate("TestOption");
+        // navigation.navigate("TestResults");
     }
 
 

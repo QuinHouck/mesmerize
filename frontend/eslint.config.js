@@ -1,0 +1,137 @@
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
+const reactNative = require('eslint-plugin-react-native');
+const babelParser = require('@babel/eslint-parser');
+const globals = require('globals');
+
+module.exports = [
+  {
+    files: ['**/*.{js,jsx}'],
+    languageOptions: {
+      parser: babelParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        requireConfigFile: false,
+        babelOptions: {
+          presets: ['@babel/preset-react'],
+        },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+        // React Native globals
+        __DEV__: 'readonly',
+        fetch: 'readonly',
+        navigator: 'readonly',
+        FormData: 'readonly',
+        XMLHttpRequest: 'readonly',
+      },
+    },
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      'react-native': reactNative,
+    },
+    rules: {
+      // ESLint recommended rules
+      'constructor-super': 'error',
+      'for-direction': 'error',
+      'getter-return': 'error',
+      'no-async-promise-executor': 'error',
+      'no-case-declarations': 'error',
+      'no-class-assign': 'error',
+      'no-compare-neg-zero': 'error',
+      'no-cond-assign': 'error',
+      'no-const-assign': 'error',
+      'no-constant-condition': 'error',
+      'no-control-regex': 'error',
+      'no-debugger': 'error',
+      'no-delete-var': 'error',
+      'no-dupe-args': 'error',
+      'no-dupe-class-members': 'error',
+      'no-dupe-else-if': 'error',
+      'no-dupe-keys': 'error',
+      'no-duplicate-case': 'error',
+      'no-empty': 'error',
+      'no-empty-character-class': 'error',
+      'no-empty-pattern': 'error',
+      'no-ex-assign': 'error',
+      'no-extra-boolean-cast': 'error',
+      'no-fallthrough': 'error',
+      'no-func-assign': 'error',
+      'no-global-assign': 'error',
+      'no-import-assign': 'error',
+      'no-inner-declarations': 'error',
+      'no-invalid-regexp': 'error',
+      'no-irregular-whitespace': 'error',
+      'no-loss-of-precision': 'error',
+      'no-misleading-character-class': 'error',
+      'no-mixed-spaces-and-tabs': 'error',
+      'no-new-symbol': 'error',
+      'no-nonoctal-decimal-escape': 'error',
+      'no-obj-calls': 'error',
+      'no-octal': 'error',
+      'no-prototype-builtins': 'error',
+      'no-redeclare': 'error',
+      'no-regex-spaces': 'error',
+      'no-self-assign': 'error',
+      'no-setter-return': 'error',
+      'no-shadow-restricted-names': 'error',
+      'no-sparse-arrays': 'error',
+      'no-this-before-super': 'error',
+      'no-unexpected-multiline': 'error',
+      'no-unreachable': 'error',
+      'no-unsafe-finally': 'error',
+      'no-unsafe-negation': 'error',
+      'no-unsafe-optional-chaining': 'error',
+      'no-unused-labels': 'error',
+      'no-useless-backreference': 'error',
+      'no-useless-catch': 'error',
+      'no-useless-escape': 'error',
+      'no-with': 'error',
+      'require-yield': 'error',
+      'use-isnan': 'error',
+      'valid-typeof': 'error',
+
+      // React recommended rules
+      'react/display-name': 'error',
+      'react/jsx-key': 'error',
+      'react/jsx-no-comment-textnodes': 'error',
+      'react/jsx-no-duplicate-props': 'error',
+      'react/jsx-no-target-blank': 'error',
+      'react/jsx-no-undef': 'error',
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
+      'react/no-children-prop': 'error',
+      'react/no-danger-with-children': 'error',
+      'react/no-deprecated': 'error',
+      'react/no-direct-mutation-state': 'error',
+      'react/no-find-dom-node': 'error',
+      'react/no-is-mounted': 'error',
+      'react/no-render-return-value': 'error',
+      'react/no-string-refs': 'error',
+      'react/no-unescaped-entities': 'error',
+      'react/no-unknown-property': 'error',
+      'react/require-render-return': 'error',
+
+      // Custom rules
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'warn',
+      'no-unused-vars': 'warn',
+      'no-undef': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+  },
+];
+
+

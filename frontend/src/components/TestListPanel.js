@@ -1,11 +1,13 @@
 import React from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    View, 
-    TouchableOpacity, 
-    ScrollView 
+import {
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
+import { useTest } from '../hooks/useRedux.js';
+import { setCurrentView } from '../store/slices/testSlice.js';
 
 import colors from '../util/colors.js';
 
@@ -13,13 +15,17 @@ import colors from '../util/colors.js';
  * TestListPanel - Component for displaying list of discovered items with their scores
  * Shows progress, correct attributes, and navigation options
  */
-const TestListPanel = ({ 
-    discoveredItems,
-    totalItems,
-    results,
-    attributes,
-    onViewChange 
-}) => {
+const TestListPanel = React.memo(() => {
+    const test = useTest();
+
+    const discoveredItems = test.discoveredItems;
+    const totalItems = test.totalItems;
+    const results = test.results;
+    const attributes = test.selectedAttributes;
+
+    function onViewChange(view) {
+        test.dispatch(setCurrentView(view));
+    }
     /**
      * Calculates total correct attributes across all discovered items
      */
@@ -60,10 +66,10 @@ const TestListPanel = ({
     function getItemScore(itemName) {
         const result = results?.find(r => r.itemName === itemName);
         if (!result) return { correct: 0, total: 0 };
-        
+
         const correctCount = result.answers.filter(a => a.correct).length;
         const totalCount = result.answers.length;
-        
+
         return { correct: correctCount, total: totalCount };
     }
 
@@ -72,7 +78,7 @@ const TestListPanel = ({
      */
     function renderListItem(item, index) {
         const { correct, total } = getItemScore(item.name);
-        
+
         return (
             <View key={item._id || index} style={styles.list_item}>
                 <Text style={styles.item_name}>{item.name}</Text>
@@ -109,14 +115,14 @@ const TestListPanel = ({
 
             {/* Navigation Buttons */}
             <View style={styles.button_container}>
-                <TouchableOpacity 
-                    style={styles.nav_button} 
+                <TouchableOpacity
+                    style={styles.nav_button}
                     onPress={() => onViewChange('name')}
                 >
                     <Text style={styles.button_text}>Names</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    style={styles.nav_button} 
+                <TouchableOpacity
+                    style={styles.nav_button}
                     onPress={() => onViewChange('cards')}
                 >
                     <Text style={styles.button_text}>Cards</Text>
@@ -124,7 +130,9 @@ const TestListPanel = ({
             </View>
         </View>
     );
-};
+});
+
+TestListPanel.displayName = 'TestListPanel';
 
 export default TestListPanel;
 

@@ -1,17 +1,25 @@
-import React, { useState, useRef } from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    View, 
-    TouchableOpacity, 
-    TextInput, 
-    ScrollView,
+import React, { useRef, useState } from 'react';
+import {
+    Dimensions,
     Platform,
-    Dimensions 
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
-import { getDistance } from '../util/extraFuncs.js';
+import { useTest } from '../hooks/useRedux.js';
+
 import colors from '../util/colors.js';
+import { getDistance } from '../util/extraFuncs.js';
+
+import {
+    setCurrentItemIndex,
+    setCurrentView,
+    submitAttributeAnswer
+} from '../store/slices/testSlice.js';
 
 import Check from '../icons/Check.svg';
 
@@ -21,18 +29,20 @@ const screenWidth = Dimensions.get('window').width;
  * TestCardsPanel - Component for filling out attributes of discovered items
  * Displays a horizontal carousel of cards for each discovered item
  */
-const TestCardsPanel = ({ 
-    discoveredItems,
-    attributes,
-    results,
-    onAttributeSubmit,
-    onViewChange 
-}) => {
+const TestCardsPanel = React.memo(() => {
     const [currentCardIndex, setCurrentCardIndex] = useState(0);
     const scrollViewRef = useRef(null);
 
-    const currentItem = discoveredItems[currentCardIndex];
-    const currentResult = results?.find(r => r.itemName === currentItem?.name);
+    const test = useTest();
+
+    const attributes = test.selectedAttributes;
+    const discoveredItems = test.discoveredItems;
+    const results = test.results;
+
+    const currentItemIndex = test.currentItemIndex;
+    const currentItem = discoveredItems[currentItemIndex];
+    const currentResult = results[currentItemIndex];
+
 
     /**
      * Gets the appropriate keyboard type based on attribute type
@@ -41,6 +51,13 @@ const TestCardsPanel = ({
         if (attrType === 'number') return 'number-pad';
         if (Platform.OS === 'ios') return 'ascii-capable';
         return 'visible-password';
+    }
+
+    /**
+     * Handles view changes
+     */
+    function handleViewChange(newView) {
+        test.dispatch(setCurrentView(newView));
     }
 
     /**
@@ -53,7 +70,11 @@ const TestCardsPanel = ({
                 animated: true
             });
         }
-        setCurrentCardIndex(index);
+        handleCardChange(index);
+    }
+
+    function handleCardChange(index) {
+        test.dispatch(setCurrentItemIndex(index));
     }
 
     /**
@@ -76,14 +97,14 @@ const TestCardsPanel = ({
     function handleAttributeSubmit(item, attribute, input) {
         const correctAnswer = item[attribute.name];
         const isCorrect = checkAnswer(input, correctAnswer, attribute.type);
-        
-        onAttributeSubmit({
+
+        test.dispatch(submitAttributeAnswer({
             itemName: item.name,
             attributeName: attribute.name,
             input,
             isCorrect,
             correctAnswer
-        });
+        }));
     }
 
     /**
@@ -112,7 +133,7 @@ const TestCardsPanel = ({
             if (!isDisabled && localInput.trim()) {
                 const isAnswerCorrect = checkAnswer(localInput, item[attribute.name], attribute.type);
                 handleAttributeSubmit(item, attribute, localInput);
-                
+
                 // If wrong, show red border briefly then clear
                 if (!isAnswerCorrect) {
                     setShowWrong(true);
@@ -157,7 +178,7 @@ const TestCardsPanel = ({
      */
     function renderCard(item, index) {
         const itemResult = results?.find(r => r.itemName === item.name);
-        
+
         return (
             <View key={item._id || index} style={styles.card}>
                 {/* Card Header */}
@@ -169,18 +190,18 @@ const TestCardsPanel = ({
                 <ScrollView style={styles.attributes_scroll}>
                     {attributes.map(attr => {
                         // Only show string and number attributes
-                        if (attr.type !== 'string' && attr.type !== 'number') return null;
-                        
+                        if ((attr.type !== 'string' && attr.type !== 'number') || attr.name === 'name') return null;
+
                         const answerData = itemResult?.answers.find(
                             a => a.attributeName === attr.name
                         );
-                        
+
                         return (
-                            <AttributeInput 
+                            <AttributeInput
                                 key={attr.name}
-                                item={item} 
-                                attribute={attr} 
-                                answerData={answerData} 
+                                item={item}
+                                attribute={attr}
+                                answerData={answerData}
                             />
                         );
                     })}
@@ -198,9 +219,9 @@ const TestCardsPanel = ({
                     </Text>
                 </View>
                 <View style={styles.button_container}>
-                    <TouchableOpacity 
-                        style={styles.nav_button} 
-                        onPress={() => onViewChange('name')}
+                    <TouchableOpacity
+                        style={styles.nav_button}
+                        onPress={() => handleViewChange('name')}
                     >
                         <Text style={styles.button_text}>← Names</Text>
                     </TouchableOpacity>
@@ -242,22 +263,24 @@ const TestCardsPanel = ({
 
             {/* Navigation Buttons */}
             <View style={styles.button_container}>
-                <TouchableOpacity 
-                    style={styles.nav_button} 
-                    onPress={() => onViewChange('name')}
+                <TouchableOpacity
+                    style={styles.nav_button}
+                    onPress={() => handleViewChange('name')}
                 >
                     <Text style={styles.button_text}>← Names</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    style={styles.nav_button} 
-                    onPress={() => onViewChange('list')}
+                <TouchableOpacity
+                    style={styles.nav_button}
+                    onPress={() => handleViewChange('list')}
                 >
                     <Text style={styles.button_text}>List →</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
-};
+});
+
+TestCardsPanel.displayName = 'TestCardsPanel';
 
 export default TestCardsPanel;
 
