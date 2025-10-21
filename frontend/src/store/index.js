@@ -6,7 +6,7 @@ import { combineReducers } from '@reduxjs/toolkit';
 // Import our slices
 import packagesReducer from './slices/packagesSlice';
 import userReducer from './slices/userSlice';
-import gameReducer from './slices/gameSlice';
+import quizReducer from './slices/quizSlice';
 import networkReducer from './slices/networkSlice';
 import testReducer from './slices/testSlice';
 
@@ -21,7 +21,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   packages: packagesReducer,
   user: userReducer,
-  game: gameReducer,
+  quiz: quizReducer,
   network: networkReducer,
   test: testReducer,
 });

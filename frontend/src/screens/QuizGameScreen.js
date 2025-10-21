@@ -3,22 +3,22 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
 
-import { useGame } from '../hooks/useRedux.js';
+import { useQuiz } from '../hooks/useRedux';
 import {
     atGameEnd,
     setImages,
     submitAnswer,
-} from '../store/slices/gameSlice.js';
-import colors from '../util/colors.js';
-import { getDistance } from '../util/extraFuncs.js';
+} from '../store/slices/quizSlice';
+import colors from '../util/colors';
+import { getDistance } from '../util/extraFuncs';
 
 import { getImages } from '../util/getImages';
 
-import Map from '../components/Map.js';
+import Map from '../components/Map';
 
 const QuizGameScreen = () => {
     // Redux hooks
-    const game = useGame();
+    const game = useQuiz();
     const navigation = useNavigation();
     const isFocused = useIsFocused();
 

@@ -2,6 +2,8 @@ const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const reactNative = require('eslint-plugin-react-native');
 const babelParser = require('@babel/eslint-parser');
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const globals = require('globals');
 
 module.exports = [
@@ -125,6 +127,63 @@ module.exports = [
       'no-undef': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+  },
+  // TypeScript configuration
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+        // React Native globals
+        __DEV__: 'readonly',
+        fetch: 'readonly',
+        navigator: 'readonly',
+        FormData: 'readonly',
+        XMLHttpRequest: 'readonly',
+      },
+    },
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      'react-native': reactNative,
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      // Extend the same rules from JS config
+      ...module.exports[0].rules,
+      
+      // Disable some base rules that conflict with TypeScript
+      'no-unused-vars': 'off',
+      'no-undef': 'off', // TypeScript handles this
+      'no-redeclare': 'off',
+      
+      // TypeScript-specific rules
+      '@typescript-eslint/no-unused-vars': ['warn', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      
+      // Turn off prop-types for TypeScript
+      'react/prop-types': 'off',
     },
     settings: {
       react: {

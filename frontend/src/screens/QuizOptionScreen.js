@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
 
-import { useGame, usePackages, useUser } from '../hooks/useRedux.js';
-import { initializeGame } from '../store/slices/gameSlice.js';
-import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice.js';
-import { setLastQuizSettings } from '../store/slices/userSlice.js';
-import colors from '../util/colors.js';
+import { useQuiz, usePackages, useUser } from '../hooks/useRedux';
+import { initializeGame } from '../store/slices/quizSlice';
+import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
+import { setLastQuizSettings } from '../store/slices/userSlice';
+import colors from '../util/colors';
 
 import DropDown from '../icons/DropDown.svg';
 
@@ -16,7 +16,7 @@ const QuizOptionScreen = () => {
     // Redux hooks
     const packages = usePackages();
     const user = useUser();
-    const game = useGame();
+    const game = useQuiz();
     const navigation = useNavigation();
 
     // Local state for UI

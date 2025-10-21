@@ -15,8 +15,9 @@
     "web": "expo start --web",
     "web:dev": "cross-env APP_ENV=development expo start --web",
     "web:prod": "cross-env APP_ENV=production expo start --web",
-    "lint": "eslint src --ext .js,.jsx",
-    "lint:fix": "eslint src --ext .js,.jsx --fix"
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
@@ -36,7 +37,7 @@
     "lottie-react-native": "7.2.2",
     "metro-react-native-babel-transformer": "^0.77.0",
     "react": "19.0.0",
-    "react-native": "0.79.5",
+    "react-native": "^0.79.6",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-safe-area-context": "5.4.0",
@@ -49,12 +50,17 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/eslint-parser": "^7.28.4",
+    "@types/node": "^24.9.0",
+    "@types/react": "~19.0.10",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "cross-env": "^7.0.3",
     "eslint": "^9.38.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-native": "^5.0.0",
-    "globals": "^16.4.0"
+    "globals": "^16.4.0",
+    "typescript": "~5.8.3"
   },
   "private": true
 }

@@ -3,17 +3,17 @@ import { useNavigation, useIsFocused } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 import Modal from "react-native-modal";
 
-import colors from '../util/colors.js';
-import { useGame, useUser } from '../hooks/useRedux.js';
-import { resetGame, quickRestart } from '../store/slices/gameSlice.js';
-import { updateStatistics } from '../store/slices/userSlice.js';
+import colors from '../util/colors';
+import { useQuiz, useUser } from '../hooks/useRedux';
+import { resetGame, quickRestart } from '../store/slices/quizSlice';
+import { updateStatistics } from '../store/slices/userSlice';
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
 const QuizResultsScreen = () => {
     // Redux hooks
-    const game = useGame();
+    const game = useQuiz();
     const user = useUser();
     const navigation = useNavigation();
 

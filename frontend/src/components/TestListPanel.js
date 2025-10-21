@@ -6,10 +6,10 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { useTest } from '../hooks/useRedux.js';
-import { setCurrentView } from '../store/slices/testSlice.js';
+import { useTest } from '../hooks/useRedux';
+import { setCurrentView } from '../store/slices/testSlice';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 
 /**
  * TestListPanel - Component for displaying list of discovered items with their scores

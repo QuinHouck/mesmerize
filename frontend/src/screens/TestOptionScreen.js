@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import Modal from "react-native-modal";
-import { useTest, usePackages, useUser } from '../hooks/useRedux.js';
+import { useTest, usePackages, useUser } from '../hooks/useRedux';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes } from '../store/slices/testSlice';
-import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice.js';
+import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
 import { setLastTestSettings } from '../store/slices/userSlice';
 
 import DropDown from '../icons/DropDown.svg';
@@ -118,7 +118,8 @@ const TestOptionScreen = () => {
             div: selectedDiv,
             divOptionName: selectedDivOption,
             filteredItems: filteredItems,
-            timeLimit: packageInfo.test_time || 300
+            timeLimit: packageInfo.test_time || 300,
+            selectedAttributes: selectedAttributes,
         }));
 
 

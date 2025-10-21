@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useIsFocused, useRoute } from '@react-navigation/core';
 import { Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView, Dimensions } from 'react-native';
-import { useTest } from '../hooks/useRedux.js';
+import { useTest } from '../hooks/useRedux';
 
-import Map from '../components/Map.js';
-import TestNamePanel from '../components/TestNamePanel.js';
-import TestCardsPanel from '../components/TestCardsPanel.js';
-import TestListPanel from '../components/TestListPanel.js';
+import Map from '../components/Map';
+import TestNamePanel from '../components/TestNamePanel';
+import TestCardsPanel from '../components/TestCardsPanel';
+import TestListPanel from '../components/TestListPanel';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 
 import {
     setCurrentView,
     endTest,
     quickRestartTest,
-} from '../store/slices/testSlice.js';
+} from '../store/slices/testSlice';
 
 const screenWidth = Dimensions.get('window').width;
 

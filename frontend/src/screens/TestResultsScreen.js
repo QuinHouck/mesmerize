@@ -3,13 +3,13 @@ import { useNavigation, useIsFocused } from '@react-navigation/core';
 import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
 import Modal from "react-native-modal";
 
-import colors from '../util/colors.js';
-import { useGame, useUser } from '../hooks/useRedux.js';
-import { resetTest, quickRestart } from '../store/slices/testSlice.js';
+import colors from '../util/colors';
+import { useTest, useUser } from '../hooks/useRedux';
+import { resetTest, quickRestart } from '../store/slices/testSlice';
 
 const TestResultsScreen = () => {
     // Redux hooks
-    const test = useGame();
+    const test = useTest();
     const user = useUser();
     const navigation = useNavigation();
 

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollVi
 import { LinearGradient } from 'expo-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 import { usePackages, useNetwork } from '../hooks/useRedux';
 import { 
   fetchAvailablePackages, 

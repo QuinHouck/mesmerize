@@ -11,25 +11,9 @@ export const resetResults = (items, attributes) => {
                 answer: item[attribute.name],
                 input: '',
                 correct: false,
+                answered: false,
             })),
     }));
-};
-
-/**
- * Creates a result entry for a single discovered item
- */
-export const createItemResult = (item, attributes) => {
-    return {
-        itemName: item.name,
-        answers: attributes
-            .filter(attr => attr.type === 'string' || attr.type === 'number')
-            .map((attribute) => ({
-                attributeName: attribute.name,
-                answer: item[attribute.name],
-                input: '',
-                correct: false,
-            })),
-    };
 };
 
 /**

@@ -5,12 +5,12 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 
 import LottieView from 'lottie-react-native';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 
 import DotsIcon from '../icons/Dots.svg';
 import StoreIcon from '../icons/Store.svg';
 
-import env from '../config/env.js';
+import env from '../config/env';
 
 const HomeScreen = () => {
 

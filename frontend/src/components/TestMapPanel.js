@@ -4,10 +4,10 @@ import {
     View,
 } from 'react-native';
 
-import { useTest } from '../hooks/useRedux.js';
-import Map from './Map.js';
+import { useTest } from '../hooks/useRedux';
+import Map from './Map';
 
-import colors from '../util/colors.js';
+import colors from '../util/colors';
 
 /**
  * TestMapPanel - Component for displaying discovered items on a map

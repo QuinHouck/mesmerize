@@ -10,16 +10,16 @@ import {
     View
 } from 'react-native';
 
-import { useTest } from '../hooks/useRedux.js';
+import { useTest } from '../hooks/useRedux';
 
-import colors from '../util/colors.js';
-import { getDistance } from '../util/extraFuncs.js';
+import colors from '../util/colors';
+import { getDistance } from '../util/extraFuncs';
 
 import {
     setCurrentItemIndex,
     setCurrentView,
     submitAttributeAnswer
-} from '../store/slices/testSlice.js';
+} from '../store/slices/testSlice';
 
 import Check from '../icons/Check.svg';
 

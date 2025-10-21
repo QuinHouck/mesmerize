@@ -8,7 +8,7 @@ export const useAppSelector = useSelector;
 export const usePackages = () => {
   const packages = useAppSelector(state => state.packages);
   const dispatch = useAppDispatch();
-  
+
   return {
     ...packages,
     dispatch,
@@ -19,7 +19,7 @@ export const usePackages = () => {
 export const useUser = () => {
   const user = useAppSelector(state => state.user);
   const dispatch = useAppDispatch();
-  
+
   return {
     ...user,
     dispatch,
@@ -27,12 +27,12 @@ export const useUser = () => {
 };
 
 // Game-related hooks
-export const useGame = () => {
-  const game = useAppSelector(state => state.game);
+export const useQuiz = () => {
+  const quiz = useAppSelector(state => state.quiz);
   const dispatch = useAppDispatch();
-  
+
   return {
-    ...game,
+    ...quiz,
     dispatch,
   };
 };
@@ -41,7 +41,7 @@ export const useGame = () => {
 export const useTest = () => {
   const test = useAppSelector(state => state.test);
   const dispatch = useAppDispatch();
-  
+
   return {
     ...test,
     dispatch,
@@ -52,7 +52,7 @@ export const useTest = () => {
 export const useNetwork = () => {
   const network = useAppSelector(state => state.network);
   const dispatch = useAppDispatch();
-  
+
   return {
     ...network,
     dispatch,
@@ -63,14 +63,14 @@ export const useNetwork = () => {
 export const useApp = () => {
   const packages = usePackages();
   const user = useUser();
-  const game = useGame();
+  const quiz = useQuiz();
   const test = useTest();
   const network = useNetwork();
-  
+
   return {
     packages,
     user,
-    game,
+    quiz,
     test,
     network,
   };
