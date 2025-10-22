@@ -16,10 +16,12 @@ import { getImages } from '../util/getImages';
 
 import Map from '../components/Map';
 
-const QuizGameScreen = () => {
+import type { QuizGameScreenNavigationProp } from '../types/navigation';
+
+const QuizGameScreen: React.FC = () => {
     // Redux hooks
     const game = useQuiz();
-    const navigation = useNavigation();
+    const navigation = useNavigation<QuizGameScreenNavigationProp>();
     const isFocused = useIsFocused();
 
     // Get game data from Redux state instead of route params
@@ -34,28 +36,28 @@ const QuizGameScreen = () => {
     const timeLimit = game.timeLimit;
 
     // Local state for UI-specific things
-    const [correct, setCorrect] = useState(0); // 0 = no correct answer, 1 = wrong answer, 2 = correct answer
+    const [correct, setCorrect] = useState<number>(0); // 0 = no correct answer, 1 = wrong answer, 2 = correct answer
 
-    const [isLoading, setLoading] = useState(true); // Loading initial data
-    const [isPaused, setIsPaused] = useState(false); // Manually paused or not
-    const [isUpdating, setIsUpdating] = useState(false); // If the user has already answered the question and waiting for state update
-    const [gameEnded, setGameEnded] = useState(false); // If the game has ended
+    const [isLoading, setLoading] = useState<boolean>(true); // Loading initial data
+    const [isPaused, setIsPaused] = useState<boolean>(false); // Manually paused or not
+    const [isUpdating, setIsUpdating] = useState<boolean>(false); // If the user has already answered the question and waiting for state update
+    const [gameEnded, setGameEnded] = useState<boolean>(false); // If the game has ended
 
-    const [timeLeft, setTimeLeft] = useState(timeLimit);
-    const intervalRef = useRef(null);
+    const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Derived state from Redux
     const selected = game.selectedItems;
     const totalQuestions = selected.length;
     const points = game.points;
 
-    const [idx, setCurrentIndex] = useState(0); // Index of the question out of selected items
-    const [input, setInput] = useState(""); // Whats currently in the input bar
+    const [idx, setCurrentIndex] = useState<number>(0); // Index of the question out of selected items
+    const [input, setInput] = useState<string>(""); // Whats currently in the input bar
 
     const images = game.images;
     const imageHeight = game.imageHeight;
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<TextInput>(null);
 
     const correctThreshold = 0.2;
     const questionCooldown = 2500;
@@ -78,7 +80,7 @@ const QuizGameScreen = () => {
             intervalRef.current = setInterval(() => {
                 setTimeLeft(prev => {
                     if (prev <= 1) {
-                        clearInterval(intervalRef.current);
+                        if (intervalRef.current) clearInterval(intervalRef.current);
                         handleSubmit();
                         return 0;
                     }
@@ -95,7 +97,7 @@ const QuizGameScreen = () => {
         };
     }, [isPaused, isUpdating, gameEnded]);
 
-    async function initializeGameState() {
+    const initializeGameState = async (): Promise<void> => {
         if (!isFocused) {
             setLoading(true);
             return;
@@ -105,18 +107,18 @@ const QuizGameScreen = () => {
         setLoading(true);
 
         // Game is already initialized in QuizOptionScreen, just load images if needed
-        let images = game.images;
-        let imageHeight = game.imageHeight;
+        let imgs = game.images;
+        let imgHeight = game.imageHeight;
 
-        if (questionType === "image" && !images) {
-            const { imgs, height } = await getImages(game.selectedItems, pack);
-            images = imgs;
-            imageHeight = height;
+        if (questionType === "image" && !imgs && pack) {
+            const { imgs: loadedImgs, height } = await getImages(game.selectedItems, pack);
+            imgs = loadedImgs;
+            imgHeight = height;
 
             // Update only the images without reinitializing the game
             game.dispatch(setImages({
-                images,
-                imageHeight,
+                images: imgs,
+                imageHeight: imgHeight,
             }));
         }
 
@@ -130,18 +132,18 @@ const QuizGameScreen = () => {
 
         // Only set loading to false after everything is initialized
         setLoading(false);
-    }
+    };
 
-    function getKeyboard() {
+    const getKeyboard = (): 'number-pad' | 'ascii-capable' | 'visible-password' => {
         if (answerType === "number") return 'number-pad';
 
         if (Platform.OS === 'ios') return 'ascii-capable';
 
         return 'visible-password';
-    }
+    };
 
-    async function handleSubmit() {
-        if (isUpdating) return;
+    const handleSubmit = async (): Promise<void> => {
+        if (isUpdating || !answer) return;
         setIsUpdating(true);
 
         let distance = 10;
@@ -166,7 +168,7 @@ const QuizGameScreen = () => {
         } else {
             // Check if the answer is in the accepted list
             if (selected[idx].accepted && answerType === 'string') {
-                for (other of selected[idx].accepted) {
+                for (const other of selected[idx].accepted) {
                     distance = getDistance(input, other);
                     percent = distance / (selected[idx][answer].length);
                     if (percent < correctThreshold) {
@@ -188,7 +190,7 @@ const QuizGameScreen = () => {
         }));
 
         // Make the input the correct answer formatted correctly
-        setInput(selected[idx][answer].toString())
+        setInput(selected[idx][answer].toString());
 
         setTimeout(() => {
             if (idx + 1 >= selected.length) {
@@ -200,36 +202,35 @@ const QuizGameScreen = () => {
             setIsUpdating(false);
             setTimeLeft(timeLimit);
         }, questionCooldown);
-    }
+    };
 
-    function nextQuestion() {
+    const nextQuestion = (): void => {
         if (idx < totalQuestions - 1) {
             setCurrentIndex(idx + 1);
             setInput("");
         }
-    }
+    };
 
-    function handleInput(newInput) {
+    const handleInput = (newInput: string): void => {
         if (isUpdating) return;
         setInput(newInput);
-    }
+    };
 
-    function handlePauseGame() {
+    const handlePauseGame = (): void => {
         setIsPaused(true);
-    }
+    };
 
-    function handleResumeGame() {
+    const handleResumeGame = (): void => {
         setIsPaused(false);
-    }
+    };
 
-    function endGame() {
+    const endGame = (): void => {
         setGameEnded(true);
-        game.dispatch(atGameEnd())
+        game.dispatch(atGameEnd());
         navigation.navigate("QuizResults");
-    }
+    };
 
-
-    function getTextColor() {
+    const getTextColor = (): string => {
         switch (correct) {
             case 0:
                 return colors.darkGrey;
@@ -237,10 +238,14 @@ const QuizGameScreen = () => {
                 return '#ed0e0e';
             case 2:
                 return '#2ebf44';
+            default:
+                return colors.darkGrey;
         }
-    }
+    };
 
-    function renderQuestion(current) {
+    const renderQuestion = (): React.ReactNode => {
+        if (!question) return null;
+        
         switch (questionType) {
             case "image":
                 // Safety check: ensure images are loaded and current item exists
@@ -254,13 +259,13 @@ const QuizGameScreen = () => {
             case "map":
                 return (
                     <View style={{ height: '100%', width: "100%", alignItems: 'center' }}>
-                        <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{ width: '100%' }} />
+                        {/* <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{ width: '100%' }} /> */}
                     </View>
                 );
             default:
                 return <Text style={styles.question_text}>{selected[idx][question]}</Text>;
         }
-    }
+    };
 
     // Safety check: if game state is invalid/reset, show loading
     if (isLoading || !selected || selected.length === 0) {
@@ -271,7 +276,7 @@ const QuizGameScreen = () => {
                 </View>
             </SafeAreaView>
         );
-    };
+    }
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -284,9 +289,9 @@ const QuizGameScreen = () => {
                     <Text style={styles.title_button_text}>End</Text>
                 </TouchableOpacity>
             </View>
-            {selected && <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <KeyboardAvoidingView style={styles.second_container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.question_container}>
-                    {renderQuestion(selected[idx])}
+                    {renderQuestion()}
                 </View>
                 <View style={styles.stats_container}>
                     <View style={styles.stats_left}>
@@ -306,13 +311,13 @@ const QuizGameScreen = () => {
                         autoCorrect={false}
                         spellCheck={false}
                         keyboardType={getKeyboard()}
-                        blurOnSubmit={false} //TODO: Find solution to deprecation, textinput must keep focus on submit, submitBehavior wont work
+                        blurOnSubmit={false}
                         returnKeyType={answerType === 'number' ? 'done' : 'go'}
                         onSubmitEditing={() => handleSubmit()}
                         autoFocus
                     />
                 </View>
-            </KeyboardAvoidingView>}
+            </KeyboardAvoidingView>
             <Modal
                 isVisible={isPaused}
                 coverScreen={true}
@@ -328,8 +333,7 @@ const QuizGameScreen = () => {
             </Modal>
         </SafeAreaView>
     );
-
-}
+};
 
 export default QuizGameScreen;
 
@@ -472,6 +476,5 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
     },
-
-
 });
+

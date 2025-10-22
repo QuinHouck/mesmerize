@@ -1,50 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigation, useIsFocused } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView } from 'react-native';
+import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/core';
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
 
 import colors from '../util/colors';
-import { useQuiz, useUser } from '../hooks/useRedux';
+import { useQuiz } from '../hooks/useRedux';
 import { resetGame, quickRestart } from '../store/slices/quizSlice';
-import { updateStatistics } from '../store/slices/userSlice';
 
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
-const QuizResultsScreen = () => {
+import type { QuizResultsScreenNavigationProp } from '../types/navigation';
+import type { QuizResult } from '../types/quiz';
+
+interface ImageData {
+    ar: number;
+    image: any;
+}
+
+const QuizResultsScreen: React.FC = () => {
     // Redux hooks
     const game = useQuiz();
-    const user = useUser();
-    const navigation = useNavigation();
+    const navigation = useNavigation<QuizResultsScreenNavigationProp>();
 
-    const pack = game.packageName;
-    const div = game.division;
-    const divOption = game.divisionOption;
-    const question = game.question;
     const questionType = game.questionType;
-    const answer = game.answer;
-    const answerType = game.answerType;
-    const range = game.range;
-    const timeLimit = game.timeLimit;
 
     // Local state for UI
-    const [selectedImage, setImage] = useState(null);
-    const [showingModal, setModal] = useState(false);
+    const [selectedImage, setImage] = useState<ImageData | null>(null);
+    const [showingModal, setModal] = useState<boolean>(false);
 
     // Derived state from Redux
     const results = game.results;
     const images = game.images;
-    const points = game.points;
-    const totalQuestions = game.totalQuestions;
 
-
-    async function handlePlay(){
+    const handlePlay = (): void => {
         // Reset game state for a new game
         game.dispatch(quickRestart());
         navigation.navigate("QuizGame");
-    }
+    };
 
-    async function handleMenu(){
+    const handleMenu = (): void => {
         // Reset game state when going back to menu
         game.dispatch(resetGame());
         
@@ -53,18 +48,17 @@ const QuizResultsScreen = () => {
             index: 0,
             routes: [{ name: "Home" }, { name: "QuizOption" }],
         });
-    }
+    };
 
-    async function handleImage(image){
+    const handleImage = (image: ImageData): void => {
         setImage(image);
         setModal(true);
-    }
+    };
 
-    async function handleClose(){
+    const handleClose = (): void => {
         setImage(null);
         setModal(false);
-    }
-
+    };
 
     // Safety check: if no results, navigate back
     if (!results || results.length === 0) {
@@ -110,15 +104,15 @@ const QuizResultsScreen = () => {
                         <Text style={styles.row_title_text}>Correct</Text>
                     </View>
                 </View>
-                {results.map((item) => {
+                {results.map((item: QuizResult) => {
                     return (
                         <View key={item.question ? item.question : item.answer} style={styles.row_item_container}>
                             {(questionType !== "map") && <View style={styles.row_item}>
-                                {questionType === "image" && images && images[item["name"]] ?
-                                    <TouchableOpacity style={styles.row_image_container} onPress={() => handleImage(images[item["name"]])}>
+                                {questionType === "image" && images && item.itemName && images[item.itemName] ?
+                                    <TouchableOpacity style={styles.row_image_container} onPress={() => handleImage(images[item.itemName])}>
                                         <Image 
-                                            style={{height: 25, aspectRatio: images[item["name"]].ar}}
-                                            source={images[item["name"]].image}
+                                            style={{height: 25, aspectRatio: images[item.itemName].ar}}
+                                            source={images[item.itemName].image}
                                         />  
                                     </TouchableOpacity>
                                     :
@@ -157,16 +151,13 @@ const QuizResultsScreen = () => {
                 <TouchableOpacity style={styles.modal_image_container} onPress={handleClose}>
                     {selectedImage && <Image 
                         style={{height: 'auto', width: '100%', aspectRatio: selectedImage.ar}}
-                        // style={{width: 10}}
                         source={selectedImage.image}
                     />} 
                 </TouchableOpacity>
-                
             </Modal>
         </SafeAreaView>
     );
-
-}
+};
 
 export default QuizResultsScreen;
 
@@ -266,7 +257,6 @@ const styles = StyleSheet.create({
     play_button: {
         backgroundColor: colors.darkPurple,
         padding: 10,
-        // width: '50%',
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 5
@@ -290,5 +280,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-
 });
+

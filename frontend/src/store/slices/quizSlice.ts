@@ -85,7 +85,7 @@ const quizSlice = createSlice({
             state.totalQuestions = totalQuestions;
 
             state.selectedItems = getSelectedItems(filteredItems, totalQuestions);
-            state.results = resetResults(state.selectedItems, state.question, state.answer);
+            state.results = resetResults(state.selectedItems, question, answer);
             state.points = 0;
             state.correctAnswers = 0;
         },
@@ -135,8 +135,10 @@ const quizSlice = createSlice({
             state.error = null;
             state.images = null;
 
-            state.selectedItems = getSelectedItems(state.filteredItems, state.totalQuestions);
-            state.results = resetResults(state.selectedItems, state.question, state.answer);
+            if (state.question && state.answer) {
+                state.selectedItems = getSelectedItems(state.filteredItems, state.totalQuestions);
+                state.results = resetResults(state.selectedItems, state.question, state.answer);
+            }
         },
     },
 });

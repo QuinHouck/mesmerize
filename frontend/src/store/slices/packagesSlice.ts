@@ -57,8 +57,8 @@ export const downloadPackage = createAsyncThunk<
                 _id: packageInfo._id,
                 title: packageInfo.title,
                 name: packageInfo.name,
-                attributes: packageInfo.attributes,
-                divisions: packageInfo.divisions,
+                attributes: packageInfo.attributes || [],
+                divisions: packageInfo.divisions || [],
                 test_division: packageInfo.test_division,
                 has_maps: packageInfo.has_maps,
                 test_time: packageInfo.test_time,
@@ -115,7 +115,12 @@ export const loadDownloadedPackages = createAsyncThunk<
             for (const pack of packs) {
                 const packageData = await AsyncStorage.getItem(pack.name);
                 if (packageData) {
-                    downloadedPackages.push(JSON.parse(packageData));
+                    const parsedPackage: PackageInfo = JSON.parse(packageData);
+                    // Ensure required fields are arrays even if undefined in storage
+                    parsedPackage.attributes = parsedPackage.attributes || [];
+                    parsedPackage.divisions = parsedPackage.divisions || [];
+                    parsedPackage.items = parsedPackage.items || [];
+                    downloadedPackages.push(parsedPackage);
                 }
             }
 

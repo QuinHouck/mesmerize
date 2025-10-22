@@ -12,29 +12,33 @@ import colors from '../util/colors';
 
 import DropDown from '../icons/DropDown.svg';
 
-const QuizOptionScreen = () => {
+import type { QuizOptionScreenNavigationProp } from '../types/navigation';
+import type { PackageAttribute, PackageDivision, PackageDivisionOption, PackageInfo, PackageItem } from '../types/package';
+import type { QuizRange } from '../types/quiz';
+
+const QuizOptionScreen: React.FC = () => {
     // Redux hooks
     const packages = usePackages();
     const user = useUser();
     const game = useQuiz();
-    const navigation = useNavigation();
+    const navigation = useNavigation<QuizOptionScreenNavigationProp>();
 
     // Local state for UI
-    const [selectedQuestion, setQuestion] = useState(null);
-    const [questionType, setQuestionType] = useState(null);
-    const [selectedAnswer, setAnswer] = useState(null);
-    const [answerType, setAnswerType] = useState(null);
+    const [selectedQuestion, setQuestion] = useState<string | null>(null);
+    const [questionType, setQuestionType] = useState<string | null>(null);
+    const [selectedAnswer, setAnswer] = useState<string | null>(null);
+    const [answerType, setAnswerType] = useState<string | null>(null);
 
-    const [selectedDiv, setSelectedDiv] = useState(null);
-    const [selectedDivOption, setDivOption] = useState(null);
+    const [selectedDiv, setSelectedDiv] = useState<PackageDivision | null>(null);
+    const [selectedDivOption, setDivOption] = useState<PackageDivisionOption | null>(null);
 
-    const [showRangeModal, setRangeModal] = useState(false);
-    const [ranged, setRanged] = useState(false);
-    const [start, setStart] = useState(1);
-    const [end, setEnd] = useState(1);
+    const [showRangeModal, setRangeModal] = useState<boolean>(false);
+    const [ranged, setRanged] = useState<boolean>(false);
+    const [start, setStart] = useState<number>(1);
+    const [end, setEnd] = useState<number>(1);
 
-    const [showDivModal, setDivModal] = useState(false);
-    const [showPackModal, setPackModal] = useState(false);
+    const [showDivModal, setDivModal] = useState<boolean>(false);
+    const [showPackModal, setPackModal] = useState<boolean>(false);
 
     // Derived state from Redux
     const downloaded = packages.downloaded;
@@ -47,134 +51,146 @@ const QuizOptionScreen = () => {
     useEffect(() => {
         // Load downloaded packages from Redux
         packages.dispatch(loadDownloadedPackages());
-    }, []);
+    }, [packages.dispatch]);
 
     useEffect(() => {
         // Load last quiz settings from user state
         if (user.lastQuizSettings && downloaded.length > 0) {
             const lastSettings = user.lastQuizSettings;
-            const availablePackages = downloaded.map(p => p.name);
+            const availablePackages = downloaded.map((p: PackageInfo) => p.name);
 
             if (availablePackages.includes(lastSettings.pack)) {
                 // Find and set the package
-                const packageData = downloaded.find(p => p.name === lastSettings.pack);
+                const packageData = downloaded.find((p: PackageInfo) => p.name === lastSettings.pack);
                 if (packageData) {
                     packages.dispatch(setCurrentPackage(packageData));
-                    setSelectedDiv(lastSettings.div);
-                    setDivOption(lastSettings.divOptionName);
+                    
+                    // Find the actual division object from the division name
+                    if (lastSettings.div && packageData.divisions) {
+                        const divisionObj = packageData.divisions.find((d: PackageDivision) => d.name === lastSettings.div);
+                        if (divisionObj) {
+                            setSelectedDiv(divisionObj);
+                            
+                            // Find the actual division option object from the option name
+                            if (lastSettings.divOptionName) {
+                                const divOptionObj = divisionObj.options.find((o: PackageDivisionOption) => o.name === lastSettings.divOptionName);
+                                if (divOptionObj) {
+                                    setDivOption(divOptionObj);
+                                }
+                            }
+                        }
+                    }
+                    
                     setQuestion(lastSettings.question);
                     setQuestionType(lastSettings.questionType);
                     setAnswer(lastSettings.answer);
                     setAnswerType(lastSettings.answerType);
                 }
             }
-        } else if (downloaded.length > 0 && !selectedPackage) {
+        } else if (downloaded.length > 0) {
             // Set first package as default if none selected
             packages.dispatch(setCurrentPackage(downloaded[0]));
         }
-    }, [downloaded, user.lastQuizSettings]);
+    }, [downloaded, user.lastQuizSettings, packages.dispatch]);
 
     useEffect(() => {
         // Set range end when package changes
-        if (packageInfo) {
+        if (packageInfo && packageInfo.items) {
             setRanged(false);
-            setEnd(packageInfo.num);
+            setEnd(packageInfo.items.length);
         }
     }, [packageInfo]);
 
-    async function handleStart() {
-        if (!selectedQuestion || !selectedAnswer || (selectedAnswer === selectedQuestion)) {
+    const handleStart = (): void => {
+        if (!selectedQuestion || !selectedAnswer || (selectedAnswer === selectedQuestion) || !packageInfo) {
             return;
         }
 
-        let divName = null;
+        let divName: string | null = null;
         if (selectedDiv) divName = selectedDiv.name;
 
-        let divOptionName = null;
+        let divOptionName: string | null = null;
         if (selectedDivOption) divOptionName = selectedDivOption.name;
 
         const gameData = {
-            pack: selectedPackage.name,
-            div: selectedDiv,
-            divOptionName: selectedDivOption,
+            pack: selectedPackage!.name,
+            div: divName || '',
+            divOptionName: divOptionName || '',
             question: selectedQuestion,
-            questionType: questionType,
+            questionType: questionType || '',
             answer: selectedAnswer,
-            answerType: answerType
-        }
+            answerType: answerType || ''
+        };
 
         // Save to Redux user state instead of AsyncStorage
         user.dispatch(setLastQuizSettings(gameData));
 
-        let newItems = packageInfo.items.map(item => ({
+        let newItems = packageInfo.items.map((item: any) => ({
             ...item,
             weight: 1
         }));
 
-        let range = {
-            ranged: ranged,
+        const range: QuizRange = {
             start: start,
             end: end,
             attr: packageInfo.ranged
-        }
+        };
 
         // Filter items based on game settings
         let filtered = newItems;
 
         if (divName && divOptionName) {
-            filtered = newItems.filter((item) => {
+            filtered = newItems.filter((item: PackageItem) => {
                 return item[divName] === divOptionName;
-            })
+            });
         }
 
         if (questionType === "map") {
-            filtered = filtered.filter((item) => {
+            filtered = filtered.filter((item: PackageItem) => {
                 return item.mappable === true;
-            })
+            });
         }
 
-        if (range.ranged) {
-            filtered = filtered.filter((item) => {
-                let num = item[range["attr"]];
+        if (ranged && range.attr) {
+            filtered = filtered.filter((item: PackageItem) => {
+                const num = item[range.attr!];
                 return (num <= range.end && num >= range.start);
-            })
+            });
         }
 
         const num = Math.min(maxQuestions, filtered.length);
 
         // Initialize game state in Redux before navigation
         game.dispatch(initializeGame({
-            gameType: 'quiz',
             packageName: packageInfo.name,
-            packageData: packageInfo,
             question: selectedQuestion,
-            questionType: questionType,
+            questionType: questionType!,
             answer: selectedAnswer,
-            answerType: answerType,
+            answerType: answerType!,
             division: divName,
             divisionOption: divOptionName,
             range: range,
             filteredItems: filtered,
-            images: null, // Will be loaded in QuizGameScreen if needed
+            images: null,
             imageHeight: '50%',
             timeLimit: 45,
             totalQuestions: num,
         }));
 
         navigation.navigate("QuizGame");
-    }
+    };
 
-    async function handleAnswer(att) {
+    const handleAnswer = (att: PackageAttribute): void => {
         setAnswer(att.name);
         setAnswerType(att.type);
-    }
+    };
 
-    async function handleQuestion(att) {
+    const handleQuestion = (att: PackageAttribute): void => {
         setQuestion(att.name);
         setQuestionType(att.type);
-    }
+    };
 
-    async function handleDiv(division) {
+    const handleDiv = (division: PackageDivision | null): void => {
         if (!division) {
             setSelectedDiv(null);
             setDivOption(null);
@@ -183,28 +199,27 @@ const QuizOptionScreen = () => {
             setDivModal(true);
         }
         setRanged(false);
-    }
+    };
 
-    async function handleDivCancel() {
+    const handleDivCancel = (): void => {
         if (!selectedDivOption) {
             setSelectedDiv(null);
         }
-
         setDivModal(false);
-    }
+    };
 
-    async function handleDivOption(option) {
+    const handleDivOption = (option: PackageDivisionOption): void => {
         setDivOption(option);
         setRanged(false);
         setDivModal(false);
-    }
+    };
 
-    async function handlePackCancel() {
+    const handlePackCancel = (): void => {
         setPackModal(false);
-    }
+    };
 
-    async function handlePackOption(option) {
-        if (selectedPackage.name !== option.name) {
+    const handlePackOption = (option: PackageInfo): void => {
+        if (selectedPackage && selectedPackage.name !== option.name) {
             packages.dispatch(setCurrentPackage(option));
             setQuestion(null);
             setAnswer(null);
@@ -212,24 +227,24 @@ const QuizOptionScreen = () => {
             setSelectedDiv(null);
         }
         setPackModal(false);
-    }
+    };
 
-    async function handleRange() {
+    const handleRange = (): void => {
         setRangeModal(true);
-    }
+    };
 
-    async function handleCloseRange(submitted) {
+    const handleCloseRange = (submitted: boolean): void => {
         if (submitted) {
             setRanged(true);
             setSelectedDiv(null);
         }
         setRangeModal(false);
-    }
+    };
 
-    function handleSlider(values) {
+    const handleSlider = (values: number[]): void => {
         setStart(values[0]);
         setEnd(values[1]);
-    }
+    };
 
     if (isLoading || !packageInfo) {
         return (
@@ -239,7 +254,7 @@ const QuizOptionScreen = () => {
                 </View>
             </SafeAreaView>
         );
-    };
+    }
 
     if (downloaded.length === 0) {
         return (
@@ -277,12 +292,12 @@ const QuizOptionScreen = () => {
                 <TouchableOpacity style={(!selectedDiv && !ranged) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
                     <Text style={(selectedDiv === null && !ranged) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
                 </TouchableOpacity>
-                {packageInfo?.divisions && packageInfo?.divisions.map((division) => {
+                {packageInfo?.divisions && Array.isArray(packageInfo.divisions) && packageInfo.divisions.map((division: PackageDivision) => {
                     return (
-                        <TouchableOpacity key={division.title} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
+                        <TouchableOpacity key={division.name} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
                             <Text style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_title_selected : styles.division_button_title}>{(selectedDivOption) ? selectedDivOption.title : division.title}</Text>
                         </TouchableOpacity>
-                    )
+                    );
                 })}
                 {packageInfo?.ranged &&
                     <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
@@ -291,7 +306,6 @@ const QuizOptionScreen = () => {
                             :
                             <Text style={styles.division_button_title}>Range</Text>
                         }
-                        {/* <Text style={(selectedDiv === null && ranged) ? styles.division_button_title_selected : styles.division_button_title}>Range</Text> */}
                     </TouchableOpacity>}
             </View>
             <View style={styles.qa_container}>
@@ -300,14 +314,15 @@ const QuizOptionScreen = () => {
                         <Text style={styles.section_text}>Question:</Text>
                     </View>
                     <View style={styles.qa_half_option_container}>
-                        {packageInfo && packageInfo.attributes.map((att) => {
+                        {packageInfo && packageInfo.attributes && packageInfo.attributes.map((att: PackageAttribute) => {
                             if (att.question) {
                                 return (
                                     <TouchableOpacity key={att.name} style={(att.name === selectedQuestion) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleQuestion(att)}>
                                         <Text style={(att.name === selectedQuestion) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
                                     </TouchableOpacity>
-                                )
+                                );
                             }
+                            return null;
                         })}
                     </View>
                 </View>
@@ -316,14 +331,15 @@ const QuizOptionScreen = () => {
                         <Text style={styles.section_text}>Answer:</Text>
                     </View>
                     <View style={styles.qa_half_option_container}>
-                        {packageInfo && packageInfo.attributes.map((att) => {
+                        {packageInfo && packageInfo.attributes && packageInfo.attributes.map((att: PackageAttribute) => {
                             if (att.answer) {
                                 return (
                                     <TouchableOpacity key={att.name} style={(att.name === selectedAnswer) ? styles.qa_half_option_selected : styles.qa_half_option} onPress={() => handleAnswer(att)}>
                                         <Text style={(att.name === selectedAnswer) ? styles.option_text_selected : styles.option_text}>{att.title}</Text>
                                     </TouchableOpacity>
-                                )
+                                );
                             }
+                            return null;
                         })}
                     </View>
                 </View>
@@ -340,12 +356,12 @@ const QuizOptionScreen = () => {
                 style={styles.modal_container}
             >
                 <View style={styles.modal_options_container}>
-                    {selectedDiv && selectedDiv.options.map((option) => {
+                    {selectedDiv && selectedDiv.options && selectedDiv.options.map((option: PackageDivisionOption) => {
                         return (
                             <TouchableOpacity key={option.title} style={styles.modal_options_button} onPress={() => handleDivOption(option)}>
                                 <Text style={styles.modal_options_text}>{option.title}</Text>
                             </TouchableOpacity>
-                        )
+                        );
                     })}
                 </View>
             </Modal>
@@ -356,12 +372,12 @@ const QuizOptionScreen = () => {
                 style={styles.modal_container}
             >
                 <View style={styles.modal_options_container}>
-                    {downloaded && downloaded.map((option) => {
+                    {downloaded && Array.isArray(downloaded) && downloaded.map((option: PackageInfo) => {
                         return (
                             <TouchableOpacity key={option.name} style={styles.modal_options_button} onPress={() => handlePackOption(option)}>
                                 <Text style={styles.modal_options_text}>{option.title}</Text>
                             </TouchableOpacity>
-                        )
+                        );
                     })}
                 </View>
             </Modal>
@@ -378,11 +394,11 @@ const QuizOptionScreen = () => {
                         isMarkersSeparated={true}
                         onValuesChange={handleSlider}
                         min={1}
-                        max={packageInfo.num}
+                        max={packageInfo.items.length}
                         step={1}
                         snapped
                         sliderLength={200}
-                        style={styles.slider}
+                        containerStyle={styles.slider}
                         unselectedStyle={{
                             backgroundColor: 'white',
                             height: 5,
@@ -399,8 +415,7 @@ const QuizOptionScreen = () => {
             </Modal>
         </SafeAreaView>
     );
-
-}
+};
 
 export default QuizOptionScreen;
 
@@ -670,6 +685,5 @@ const styles = StyleSheet.create({
         fontSize: 50,
         fontWeight: '700'
     }
-
-
 });
+
