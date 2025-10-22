@@ -38,8 +38,8 @@
   },
   "include": [
     "src/**/*",
-    "App.js",
-    "app.config.js"
+    "App.tsx",
+    "app.config.ts"
   ],
   "exclude": [
     "node_modules",

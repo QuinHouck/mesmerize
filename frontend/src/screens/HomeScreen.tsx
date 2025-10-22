@@ -1,6 +1,6 @@
-import { useNavigation, useIsFocused } from '@react-navigation/core';
+import { useIsFocused, useNavigation } from '@react-navigation/core';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import LottieView from 'lottie-react-native';
@@ -11,17 +11,26 @@ import DotsIcon from '../icons/Dots.svg';
 import StoreIcon from '../icons/Store.svg';
 
 import env from '../config/env';
+import type { HomeScreenNavigationProp, RootStackParamList } from '../types/navigation';
 
-const HomeScreen = () => {
+interface GameOption {
+    text: string;
+    nav: keyof RootStackParamList | "";
+}
 
-    const navigation = useNavigation();
+const HomeScreen: React.FC = () => {
+    const navigation = useNavigation<HomeScreenNavigationProp>();
     const isFocused = useIsFocused();
-    const isInitialMount = useRef(true);
+    const isInitialMount = useRef<boolean>(true);
 
     // Game options
-    const options = [{ text: "Multiple Choice", nav: "" }, { text: "Write Quiz", nav: "QuizOption" }, { text: "Write Test", nav: "TestOption" }]
+    const options: GameOption[] = [
+        { text: "Multiple Choice", nav: "" },
+        { text: "Write Quiz", nav: "QuizOption" },
+        { text: "Write Test", nav: "TestOption" }
+    ];
 
-    const [isLoading, setLoading] = useState(true);
+    const [isLoading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         // Reset navigation stack when returning to Home (but not on initial mount)
@@ -31,17 +40,17 @@ const HomeScreen = () => {
                 routes: [{ name: "Home" }],
             });
         }
-        
+
         // After first render, mark as not initial mount
         if (isInitialMount.current) {
             isInitialMount.current = false;
         }
-    }, [isFocused]);
+    }, [isFocused, navigation]);
 
-    //Called when Tinyshark logo stops animating
-    function animationDone() {
+    // Called when Tinyshark logo stops animating
+    const animationDone = (): void => {
         setLoading(false);
-    }
+    };
 
     if (isLoading && env.environment === 'production') {
         return (
@@ -53,11 +62,10 @@ const HomeScreen = () => {
                         source={require('./TinySharkLogoAnimated.json')}
                         loop={false}
                         onAnimationFinish={animationDone}
-                    >
-                    </LottieView>
+                    />
                 </View>
             </SafeAreaView>
-        )
+        );
     }
 
     return (
@@ -68,9 +76,13 @@ const HomeScreen = () => {
             </View>
             <View style={styles.options_container}>
                 {options.map((option) => {
-                    if (option.nav === "") return;
+                    if (option.nav === "") return null;
                     return (
-                        <TouchableOpacity key={option.nav} style={styles.option} onPress={() => navigation.navigate(option.nav)}>
+                        <TouchableOpacity
+                            key={option.nav}
+                            style={styles.option}
+                            onPress={() => navigation.navigate(option.nav as keyof RootStackParamList)}
+                        >
                             <LinearGradient
                                 colors={[colors.lightPurple, colors.lightPurpleShadow]}
                                 style={styles.option_inside}
@@ -81,7 +93,7 @@ const HomeScreen = () => {
                                 <Text style={styles.options_text}>{option.text}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
-                    )
+                    );
                 })}
             </View>
             <View style={styles.bottom_container}>
@@ -94,8 +106,7 @@ const HomeScreen = () => {
             </View>
         </SafeAreaView>
     );
-
-}
+};
 
 export default HomeScreen;
 
@@ -148,7 +159,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
-
     },
 
     options_text: {
@@ -189,6 +199,5 @@ const styles = StyleSheet.create({
         width: '100%',
         aspectRatio: 1
     },
-
-
 });
+

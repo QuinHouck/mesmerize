@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
+import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { combineReducers } from '@reduxjs/toolkit';
 
@@ -10,13 +10,6 @@ import quizReducer from './slices/quizSlice';
 import networkReducer from './slices/networkSlice';
 import testReducer from './slices/testSlice';
 
-// Configure persistence
-const persistConfig = {
-  key: 'root',
-  storage: AsyncStorage,
-  whitelist: ['packages', 'user'], // Only persist packages and user data, not game state
-};
-
 // Combine reducers
 const rootReducer = combineReducers({
   packages: packagesReducer,
@@ -25,6 +18,13 @@ const rootReducer = combineReducers({
   network: networkReducer,
   test: testReducer,
 });
+
+// Configure persistence
+const persistConfig: PersistConfig<ReturnType<typeof rootReducer>> = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['packages', 'user'], // Only persist packages and user data, not game state
+};
 
 // Create persisted reducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -43,6 +43,7 @@ export const store = configureStore({
 // Create persistor
 export const persistor = persistStore(store);
 
-// Export types for TypeScript (if you decide to migrate later)
-// export type RootState = ReturnType<typeof store.getState>;
-// export type AppDispatch = typeof store.dispatch;
+// Export types for TypeScript
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+

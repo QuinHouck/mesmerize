@@ -37,22 +37,6 @@ const QuizResultsScreen = () => {
     const points = game.points;
     const totalQuestions = game.totalQuestions;
 
-    // useEffect(() => {
-    //     saveStatistics();
-    // }, []);
-
-
-    function saveStatistics(){
-        if (points !== undefined && totalQuestions !== undefined && totalQuestions > 0) {
-            const score = (points / totalQuestions) * 100;
-            
-            user.dispatch(updateStatistics({
-                gameType: 'quiz',
-                score,
-                timeSpent
-            }));
-        }
-    }
 
     async function handlePlay(){
         // Reset game state for a new game

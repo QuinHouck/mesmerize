@@ -1,23 +1,31 @@
+import type { PackageItem } from '../../types/package';
+import type { QuizResult } from '../../types/quiz';
 
-
-export const resetResults = (items, question, answer) => {
+export const resetResults = (
+    items: PackageItem[],
+    question: string,
+    answer: string
+): QuizResult[] => {
     return items.map((item) => ({
+        itemName: item.name,
         question: item[question],
         answer: item[answer],
-        input: '',
-        name: item.name,
+        input: null,
         correct: false,
     }));
-}
+};
 
-export const getSelectedItems = (filtered, num) => {
+export const getSelectedItems = (
+    filtered: PackageItem[],
+    num: number
+): PackageItem[] => {
     // Create a working copy so we don't mutate the original
     let available = [...filtered];
-    let chosen = [];
+    let chosen: PackageItem[] = [];
 
     while (chosen.length < num && available.length > 0) {
         // Calculate cumulative weights for remaining items
-        let weights = [];
+        let weights: number[] = [];
         let total = 0;
         for (const item of available) {
             const weight = item.weight ?? 1;
@@ -45,18 +53,22 @@ export const getSelectedItems = (filtered, num) => {
     return chosen;
 };
 
-export const updateWeights = (items, results) => {
-
+export const updateWeights = (
+    items: PackageItem[],
+    results: QuizResult[]
+): PackageItem[] => {
     for (const result of results) {
-        const item = items.find(i => i.name === result.name);
+        const item = items.find(i => i.name === result.itemName);
         if (!item) continue; // no match found, skip
 
         if (result.correct) {
             item.weight = Math.max((item.weight ?? 1) - 20, 1); // Subtract 20 from the weight or back to 1
-        } else if (result.input !== "") { // Set the weight back to 60 if incorrect and no answer
+        } else if (result.input !== null && result.input !== "") {
+            // Set the weight back to 60 if incorrect and answered
             item.weight = 60;
         }
     }
 
     return items;
-}
+};
+

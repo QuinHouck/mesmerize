@@ -2,20 +2,19 @@ import 'react-native-gesture-handler';  // Ensure this is at the top of the file
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Redux store
 import { store, persistor } from './src/store';
 import { setOnlineStatus } from './src/store/slices/networkSlice';
 
+// Screens
 import HomeScreen from './src/screens/HomeScreen';
 import QuizOptionScreen from './src/screens/QuizOptionScreen';
 import QuizGameScreen from './src/screens/QuizGameScreen';
@@ -23,12 +22,18 @@ import StoreScreen from './src/screens/StoreScreen';
 import QuizResultsScreen from './src/screens/QuizResultsScreen';
 import TestOptionScreen from './src/screens/TestOptionScreen';
 import TestGameScreen from './src/screens/TestGameScreen';
+import TestResultsScreen from './src/screens/TestResultsScreen';
 import Acknowledgements from './src/screens/Acknowledgements';
+
+// Hooks
 import { useNetwork } from './src/hooks/useRedux';
 
-const Stack = createStackNavigator();
+// Types
+import type { RootStackParamList } from './src/types/navigation';
 
-export default function App() {
+const Stack = createStackNavigator<RootStackParamList>();
+
+export default function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -38,15 +43,15 @@ export default function App() {
   );
 }
 
-function AppContent() {
+function AppContent(): React.JSX.Element {
   const { dispatch } = useNetwork();
 
   useEffect(() => {
     // Set initial network state
     NetInfo.fetch().then(state => {
       dispatch(setOnlineStatus({
-        isConnected: state.isConnected,
-        isInternetReachable: state.isInternetReachable,
+        isConnected: state?.isConnected ?? false,
+        isInternetReachable: state?.isInternetReachable ?? false,
         type: state.type,
       }));
     });
@@ -54,8 +59,8 @@ function AppContent() {
     // Subscribe to network state changes
     const unsubscribe = NetInfo.addEventListener(state => {
       dispatch(setOnlineStatus({
-        isConnected: state.isConnected,
-        isInternetReachable: state.isInternetReachable,
+        isConnected: state?.isConnected ?? false,
+        isInternetReachable: state?.isInternetReachable ?? false,
         type: state.type,
       }));
     });
@@ -66,7 +71,7 @@ function AppContent() {
   }, [dispatch]);
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
         <Stack.Navigator 
           screenOptions={{
@@ -82,6 +87,7 @@ function AppContent() {
           <Stack.Screen options={{ headerShown: false }} name="QuizResults" component={QuizResultsScreen} />
           <Stack.Screen options={{ headerShown: false }} name="TestOption" component={TestOptionScreen} />
           <Stack.Screen options={{ headerShown: false }} name="TestGame" component={TestGameScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="TestResults" component={TestResultsScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Acknowledgements" component={Acknowledgements} />
         </Stack.Navigator>
         <StatusBar style="light" />
@@ -90,24 +96,3 @@ function AppContent() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  iconContainer: {
-    height: '100%',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 10,
-  },
-
-  icon: {
-    height: '80%',
-    aspectRatio: 1,
-  },
-});
