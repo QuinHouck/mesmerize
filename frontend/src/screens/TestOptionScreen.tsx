@@ -9,14 +9,18 @@ import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes } fr
 import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
 import { setLastTestSettings } from '../store/slices/userSlice';
 
+import type { PackageInfo, PackageAttribute, PackageItem, PackageDivision, PackageDivisionOption } from '../types/package';
+import type { InitializeTestPayload } from '../types/test';
+
 import DropDown from '../icons/DropDown.svg';
 import Check from '../icons/Check.svg';
+import { TestOptionScreenNavigationProp } from 'types/navigation';
 
 const TestOptionScreen = () => {
     const packages = usePackages();
     const user = useUser();
     const test = useTest();
-    const navigation = useNavigation();
+    const navigation = useNavigation<TestOptionScreenNavigationProp>();
 
     // Redux state
     const downloadedPackages = packages.downloaded;
@@ -26,8 +30,8 @@ const TestOptionScreen = () => {
 
     const selectedAttributes = test.selectedAttributes;
 
-    const [selectedDiv, setSelectedDiv] = useState(null);
-    const [selectedDivOption, setDivOption] = useState(null);
+    const [selectedDiv, setSelectedDiv] = useState<PackageDivision | null>(null);
+    const [selectedDivOption, setDivOption] = useState<PackageDivisionOption | null>(null);
 
     const [showDivModal, setDivModal] = useState(false);
     const [showPackModal, setPackModal] = useState(false);
@@ -42,91 +46,100 @@ const TestOptionScreen = () => {
 
     // Initialize selections when packages are loaded
     useEffect(() => {
-        // Load last test settings from user state
-        if (user.lastTestSettings && downloadedPackages.length > 0) {
-            const lastSettings = user.lastTestSettings;
-            const availablePackages = downloadedPackages.map(p => p.name);
 
-            if (availablePackages.includes(lastSettings.pack)) {
-                // Find and set the package
-                const packageData = downloadedPackages.find(p => p.name === lastSettings.pack);
-                if (packageData) {
-                    packages.dispatch(setCurrentPackage(packageData));
-                    if (lastSettings.div) {
-                        setSelectedDiv(lastSettings.div);
-                    }
-                    if (lastSettings.divOptionName) {
-                        setDivOption(lastSettings.divOptionName);
-                    }
-                    if (lastSettings.attributes) {
-                        test.dispatch(setTestAttributes(lastSettings.attributes));
-                    }
+        if (downloadedPackages.length === 0) return;
+
+        const setDefaultPackage = () => {
+            const defaultPkg = downloadedPackages[0];
+            packages.dispatch(setCurrentPackage(defaultPkg));
+            test.dispatch(setTestPackage({ packageName: defaultPkg.name, packageInfo: defaultPkg }));
+        };
+
+        const restoreLastSettings = () => {
+            const { pack, attributes, div, divOptionName } = user.lastTestSettings;
+            const packageData = downloadedPackages.find((p: PackageInfo) => p.name === pack);
+
+            if (!packageData) {
+                setDefaultPackage();
+                return;
+            }
+
+            // Set package
+            packages.dispatch(setCurrentPackage(packageData));
+            test.dispatch(setTestPackage({ packageName: packageData.name, packageInfo: packageData }));
+
+            // Set attributes if available
+            if (attributes) {
+                test.dispatch(setTestAttributes({ attributeNames: attributes }));
+            }
+
+            // Set division and option if available
+            if (div && divOptionName && packageData.divisions) {
+                const divisionObj = packageData.divisions.find((d: PackageDivision) => d.name === div);
+                const divOptionObj = divisionObj?.options?.find((o: PackageDivisionOption) => o.name === divOptionName);
+
+                if (divisionObj && divOptionObj) {
+                    setSelectedDiv(divisionObj);
+                    setDivOption(divOptionObj);
                 }
             }
-        } else if (downloadedPackages.length > 0 && !selectedPackage) {
-            // Set first package as default if none selected
-            packages.dispatch(setCurrentPackage(downloadedPackages[0]));
-        }
+        };
+
+        user.lastTestSettings ? restoreLastSettings() : setDefaultPackage();
         setLoading(false);
-    }, [downloadedPackages, user.lastTestSettings]);
+    }, [downloadedPackages]);
 
 
-    function handleStart() {
+    function handleStart(): void {
         // Validate attribute selection
         if (selectedAttributes.length === 0) {
             alert('Please select at least one attribute to test');
             return;
         }
 
-        let divName = null;
-        if (selectedDiv) divName = selectedDiv.name;
-
-        let divOptionName = null;
-        if (selectedDivOption) divOptionName = selectedDivOption.name;
-
         //TODO: Implement
-        let listDiv = null;
-        let listDivName = null;
+        // let listDiv: any = null;
+        // let listDivName: string | null = null;
         if (packageInfo.divisions && packageInfo.test_division) {
-            let found = packageInfo.divisions.find((e) => e.name === packageInfo.test_division);
+            let found = packageInfo.divisions.find((e: PackageDivision) => e.name === packageInfo.test_division);
             if (found && found.options) {
-                listDivName = packageInfo.test_division;
-                listDiv = found.options;
+                // listDivName = packageInfo.test_division;
+                // listDiv = found.options;
             }
         }
 
         const testData = {
             pack: selectedPackage.name,
-            div: selectedDiv,
-            divOptionName: selectedDivOption,
-            attributes: selectedAttributes
+            div: selectedDiv ? selectedDiv.name : null,
+            divOptionName: selectedDivOption ? selectedDivOption.name : null,
+            attributes: selectedAttributes.map((attr: PackageAttribute) => attr.name)
         }
 
         // Save last test settings to Redux (persisted automatically)
         user.dispatch(setLastTestSettings(testData));
 
         // Filter items based on division selection
-        let filteredItems = packageInfo.items;
-        if (divName && divOptionName) {
-            filteredItems = packageInfo.items.filter((item) => {
-                return item[divName] === divOptionName;
+        let filteredItems: PackageItem[] = packageInfo.items;
+        if (selectedDiv && selectedDivOption) {
+            filteredItems = packageInfo.items.filter((item: PackageItem) => {
+                return item[selectedDiv.name] === selectedDivOption.name;
             });
         }
 
         // Initialize test in Redux
-        test.dispatch(initializeTest({
-            div: selectedDiv,
-            divOptionName: selectedDivOption,
+        const initializePayload: InitializeTestPayload = {
+            division: selectedDiv ? selectedDiv.name : null,
+            divisionOption: selectedDivOption ? selectedDivOption.name : null,
             filteredItems: filteredItems,
             timeLimit: packageInfo.test_time || 300,
             selectedAttributes: selectedAttributes,
-        }));
-
+        };
+        test.dispatch(initializeTest(initializePayload));
 
         navigation.navigate("TestGame");
     }
 
-    function handleAttributeToggle(attribute) {
+    function handleAttributeToggle(attribute: PackageAttribute): void {
         // Prevent toggling the 'name' attribute
         if (attribute.name === 'name') {
             return;
@@ -134,37 +147,32 @@ const TestOptionScreen = () => {
         test.dispatch(toggleAttribute(attribute));
     }
 
-    function isAttributeSelected(attribute) {
-        return selectedAttributes.some(attr => attr.name === attribute.name);
+    function isAttributeSelected(attribute: PackageAttribute): boolean {
+        return selectedAttributes.some((attr: PackageAttribute) => attr.name === attribute.name);
     }
 
-    function handleDiv(division) {
-        if (!division) {
-            setSelectedDiv(null);
-            setDivOption(null);
-        } else {
-            setSelectedDiv(division);
-            setDivModal(true);
-        }
+    function handleDiv(division: PackageDivision | null): void {
+        setSelectedDiv(division);
+        setDivModal(division ? true : false);
     }
 
-    function handleDivCancel() {
+    function handleDivCancel(): void {
         if (!selectedDivOption) {
             setSelectedDiv(null);
         }
         setDivModal(false);
     }
 
-    function handleDivOption(option) {
+    function handleDivOption(option: PackageDivisionOption): void {
         setDivOption(option);
         setDivModal(false);
     }
 
-    function handlePackCancel() {
+    function handlePackCancel(): void {
         setPackModal(false);
     }
 
-    function handlePackOption(option) {
+    function handlePackOption(option: PackageInfo): void {
         if (selectedPackage !== option.name) {
             packages.dispatch(setCurrentPackage(option));
             setDivOption(null);
@@ -226,7 +234,7 @@ const TestOptionScreen = () => {
                         <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
                             <Text style={(selectedDiv === null) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
                         </TouchableOpacity>
-                        {packageInfo.divisions && packageInfo.divisions.map((division) => {
+                        {packageInfo.divisions && packageInfo.divisions.map((division: PackageDivision) => {
                             return (
                                 <TouchableOpacity key={division.title} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
                                     <Text style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_title_selected : styles.division_button_title}>{(selectedDivOption) ? selectedDivOption.title : division.title}</Text>
@@ -245,7 +253,7 @@ const TestOptionScreen = () => {
                             : 'No attributes selected'}
                     </Text>
                     <View style={styles.attributes_container}>
-                        {packageInfo.attributes && packageInfo.attributes.filter(attribute => attribute.type === "string" || attribute.type === "number").map((attribute) => {
+                        {packageInfo.attributes && packageInfo.attributes.filter((attribute: PackageAttribute) => attribute.type === "string" || attribute.type === "number").map((attribute: PackageAttribute) => {
                             const isSelected = isAttributeSelected(attribute);
                             const isRequired = attribute.name === 'name';
                             return (
@@ -286,7 +294,7 @@ const TestOptionScreen = () => {
                 style={styles.modal_container}
             >
                 <View style={styles.modal_options_container}>
-                    {selectedDiv && selectedDiv.options.map((option) => {
+                    {selectedDiv && selectedDiv.options.map((option: PackageDivisionOption) => {
                         return (
                             <TouchableOpacity key={option.title} style={styles.modal_options_button} onPress={() => handleDivOption(option)}>
                                 <Text style={styles.modal_options_text}>{option.title}</Text>
@@ -302,7 +310,7 @@ const TestOptionScreen = () => {
                 style={styles.modal_container}
             >
                 <View style={styles.modal_options_container}>
-                    {downloadedPackages && downloadedPackages.map((option) => {
+                    {downloadedPackages && downloadedPackages.map((option: PackageInfo) => {
                         return (
                             <TouchableOpacity key={option.name} style={styles.modal_options_button} onPress={() => handlePackOption(option)}>
                                 <Text style={styles.modal_options_text}>{option.title}</Text>

@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { resetResults } from "../helpers/testHelper";
 import type { PackageInfo, PackageAttribute, PackageItem } from '../../types/package';
-import type { TestView, SetTestPackagePayload, InitializeTestPayload, TestResult, SubmitAttributeAnswerPayload } from '../../types/test';
+import type { TestView, SetTestPackagePayload, InitializeTestPayload, TestResult, SubmitAttributeAnswerPayload, SetTestAttributesPayload } from '../../types/test';
 
 // State interface
 interface TestState {
@@ -88,18 +88,36 @@ const testSlice = createSlice({
         },
 
         // Set multiple attributes at once
-        setTestAttributes: (state, action: PayloadAction<PackageAttribute[]>) => {
-            const attributes = action.payload;
-
-            // Ensure 'name' attribute is always included if it exists in packageInfo
-            const nameAttribute = state.packageInfo?.attributes?.find(attr => attr.name === 'name');
-            const hasNameAttribute = attributes.some(attr => attr.name === 'name');
-
-            if (nameAttribute && !hasNameAttribute) {
-                state.selectedAttributes = [nameAttribute, ...attributes];
-            } else {
-                state.selectedAttributes = attributes;
+        setTestAttributes: (state, action: PayloadAction<SetTestAttributesPayload>) => {
+            const { attributeNames } = action.payload;
+            
+            if (!state.packageInfo?.attributes) {
+                return;
             }
+
+            // Find the full PackageAttribute objects based on the names
+            const selectedAttributes: PackageAttribute[] = [];
+            
+            // Always include the 'name' attribute if it exists
+            const nameAttribute = state.packageInfo.attributes.find(attr => attr.name === 'name');
+            if (nameAttribute) {
+                selectedAttributes.push(nameAttribute);
+            }
+            
+            // Add other attributes based on the provided names
+            for (const attributeName of attributeNames) {
+                // Skip 'name' since it's already added above
+                if (attributeName === 'name') {
+                    continue;
+                }
+                
+                const attribute = state.packageInfo.attributes.find(attr => attr.name === attributeName);
+                if (attribute) {
+                    selectedAttributes.push(attribute);
+                }
+            }
+            
+            state.selectedAttributes = selectedAttributes;
         },
 
         // Initialize test with filtered items
@@ -138,6 +156,7 @@ const testSlice = createSlice({
             );
             if (!isAlreadyDiscovered) {
                 state.discoveredItems.push(item);
+                state.pointsEarned += 1;
             }
         },
 
@@ -156,6 +175,7 @@ const testSlice = createSlice({
                 result.answered = true;
                 if (isCorrect) {
                     result.answer = correctAnswer;
+                    state.pointsEarned += 1;
                 }
             }
         },

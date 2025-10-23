@@ -20,26 +20,31 @@ import { getDistance } from '../util/extraFuncs';
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
+import type { TestView } from '../types/test';
+import type { PackageItem } from '../types/package';
+
+type FeedbackType = 'correct' | 'already' | 'wrong' | null;
+
 /**
  * TestNamePanel - Component for guessing item names in test mode
  * Users enter guesses and items are discovered if they match within distance threshold
  */
-const TestNamePanel = React.memo(() => {
-    const [input, setInput] = useState("");
-    const [lastInput, setLastInput] = useState("");
-    const [feedback, setFeedback] = useState(null); // null, 'correct', 'already', 'wrong'
+const TestNamePanel = React.memo((): React.JSX.Element => {
+    const [input, setInput] = useState<string>("");
+    const [lastInput, setLastInput] = useState<string>("");
+    const [feedback, setFeedback] = useState<FeedbackType>(null);
 
     const test = useTest();
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<TextInput>(null);
 
-    const items = test.filteredItems;
-    const discoveredItems = test.discoveredItems;
+    const items: PackageItem[] = test.filteredItems;
+    const discoveredItems: PackageItem[] = test.discoveredItems;
 
     /**
      * Gets the appropriate keyboard type for the platform
      */
-    function getKeyboard() {
+    function getKeyboard(): 'ascii-capable' | 'visible-password' {
         if (Platform.OS === 'ios') return 'ascii-capable';
         return 'visible-password';
     }
@@ -47,14 +52,14 @@ const TestNamePanel = React.memo(() => {
     /**
      * Handles view changes
      */
-    function handleViewChange(newView) {
+    function handleViewChange(newView: TestView): void {
         test.dispatch(setCurrentView(newView));
     }
 
     /**
      * Checks if input matches a word within acceptable distance threshold
      */
-    const isMatch = (input, word) => {
+    const isMatch = (input: string, word: string): boolean => {
         const distance = getDistance(input, word);
         return distance / word.length < 0.1;
     };
@@ -63,10 +68,10 @@ const TestNamePanel = React.memo(() => {
      * Handles user submission of a name guess
      * Checks if the input matches any item name or accepted alternative
      */
-    async function handleSubmit() {
+    async function handleSubmit(): Promise<void> {
         if (!input.trim()) return;
 
-        let matchedItem = null;
+        let matchedItem: PackageItem | null = null;
 
         // Search through all items for a match
         for (const item of items) {
@@ -76,7 +81,7 @@ const TestNamePanel = React.memo(() => {
                 break;
             }
             // Check accepted alternatives
-            if (item.accepted?.some((alt) => isMatch(input, alt))) {
+            if (item.accepted?.some((alt: string) => isMatch(input, alt))) {
                 matchedItem = item;
                 break;
             }
@@ -84,7 +89,7 @@ const TestNamePanel = React.memo(() => {
 
         // Determine feedback based on match result
         if (matchedItem) {
-            if (discoveredItems.some(discovered => discovered._id === matchedItem._id)) {
+            if (discoveredItems.some(discovered => discovered._id === matchedItem!._id)) {
                 // Already discovered
                 setFeedback('already');
                 setLastInput(matchedItem.name);
@@ -107,14 +112,14 @@ const TestNamePanel = React.memo(() => {
     /**
      * Renders the feedback symbol (checkmark or X) based on last guess
      */
-    function getFeedbackSymbol() {
+    function getFeedbackSymbol(): React.JSX.Element | null {
         switch (feedback) {
             case 'correct':
-                return <Check style={[styles.symbol, { color: "green" }]} />;
+                return <Check style={styles.symbol} fill="green" />;
             case 'already':
-                return <Check style={[styles.symbol, { color: "orange" }]} />;
+                return <Check style={styles.symbol} fill="orange" />;
             case 'wrong':
-                return <X style={[styles.symbol, { color: "red" }]} />;
+                return <X style={styles.symbol} fill="red" />;
             default:
                 return null;
         }
@@ -257,4 +262,3 @@ const styles = StyleSheet.create({
 });
 
 TestNamePanel.displayName = 'TestNamePanel';
-

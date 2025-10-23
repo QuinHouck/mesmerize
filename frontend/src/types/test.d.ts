@@ -35,3 +35,7 @@ export interface SubmitAttributeAnswerPayload {
     correctAnswer: string | number;
 }
 
+export interface SetTestAttributesPayload {
+    attributeNames: string[];
+}
+

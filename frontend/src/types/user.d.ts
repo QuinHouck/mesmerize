@@ -33,8 +33,7 @@ export type QuizSettings = {
 
 export type TestSettings = {
     pack: string,
-    div: string,
-    divOptionName: string,
+    div: string | null,
+    divOptionName: string | null,
     attributes: string[]
 };
-

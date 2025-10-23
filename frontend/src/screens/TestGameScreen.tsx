@@ -13,8 +13,10 @@ import colors from '../util/colors';
 import {
     setCurrentView,
     endTest,
-    quickRestartTest,
 } from '../store/slices/testSlice';
+
+import type { TestView } from '../types/test';
+import { TestGameScreenNavigationProp } from 'types/navigation';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -23,7 +25,7 @@ const screenWidth = Dimensions.get('window').width;
  * Manages timer, pause/end controls, and renders appropriate view panel
  */
 const TestGameScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<TestGameScreenNavigationProp>();
     const isFocused = useIsFocused();
     const test = useTest();
     // Redux state
@@ -36,11 +38,11 @@ const TestGameScreen = () => {
     const totalDiscovered = test.discoveredItems.length;
 
     const currentView = test.currentView;
-    const gameEnded = test.gameEnded;
+    const testEnded = test.testEnded;
     const testStarted = test.testStarted;
 
     const [time, setTime] = useState(test_time);
-    const [tid, setTid] = useState(null);
+    const [tid, setTid] = useState<NodeJS.Timeout | null>(null);
     const timerRef = useRef(time);
 
     /**
@@ -57,7 +59,7 @@ const TestGameScreen = () => {
         if (!testStarted) return;
         timerRef.current = test_time;
         const timerId = setInterval(() => {
-            if (gameEnded) return;
+            if (testEnded) return;
             timerRef.current -= 1;
             if (timerRef.current < 0) {
                 clearInterval(timerId);
@@ -73,39 +75,40 @@ const TestGameScreen = () => {
         };
     }, [testStarted]);
 
-
     /**
      * Formats numbers with leading zeros for timer display
      */
-    function addZeros(num) {
+    function addZeros(num: number): string {
         return num.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
     }
 
     /**
      * Ends the test game
      */
-    function endGame() {
+    function endGame(): void {
         if (tid) {
             clearInterval(tid);
         }
         test.dispatch(endTest());
-        navigation.navigate("TestOption");
-        // navigation.navigate("TestResults");
+        navigation.navigate("TestResults");
     }
 
 
     /**
-     * Handles view changes
+     * Renders the map view
      */
-    function handleViewChange(newView) {
-        test.dispatch(setCurrentView(newView));
+    function renderMapView(): React.JSX.Element {
+        return (
+            <ScrollView style={styles.scroll_map_container}>
+                {/* <Map /> */}
+            </ScrollView>
+        );
     }
 
     /**
      * Renders the appropriate panel based on current view
      */
-    function renderCurrentView() {
-
+    function renderCurrentView(): React.JSX.Element {
         switch (currentView) {
             case 'cards':
                 return (
@@ -129,18 +132,25 @@ const TestGameScreen = () => {
         <SafeAreaView style={styles.main_container}>
             {/* Top Bar with Timer and Controls */}
             <View style={styles.top_container}>
-                <View style={[styles.top_left_container, currentView === 'map' ? { justifyContent: 'space-between' } : { justifyContent: 'flex-end' }]}>
-
+                <View style={styles.top_corner_container}>
+                    <View style={styles.total_container}>
+                        <Text style={styles.totals_text}>Discovered</Text>
+                        <Text style={styles.totals_text}>{`${totalDiscovered} / ${totalItems}`}</Text>
+                    </View>
                 </View>
                 <View style={styles.top_mid_container}>
                     <View style={styles.timer_circle}>
                         <Text style={styles.timer_text}>{`${addZeros(Math.floor(time / 60))}:${addZeros(time % 60)}`}</Text>
                     </View>
                 </View>
-                <View style={[styles.top_right_container, gameEnded ? { justifyContent: 'flex-end' } : {}]}>
+                <View style={[styles.top_corner_container, testEnded ? { justifyContent: 'flex-end' } : {}]}>
                     <TouchableOpacity style={[styles.title_button, { alignSelf: 'flex-end' }]} onPress={endGame}>
                         <Text style={styles.title_button_text}>End</Text>
                     </TouchableOpacity>
+                    <View style={[styles.total_container, { alignItems: 'flex-end' }]}>
+                        <Text style={styles.totals_text}>Points</Text>
+                        <Text style={styles.totals_text}>{`${pointsEarned} / ${totalPoints}`}</Text>
+                    </View>
                 </View>
             </View>
 
@@ -177,21 +187,11 @@ const styles = StyleSheet.create({
         width: '100%',
         justifyContent: 'space-between',
         paddingVertical: 10,
-        zIndex: 10,
-    },
-
-    top_left_container: {
-        height: '100%',
-        width: '25%',
-        borderColor: 'white',
-        borderBottomWidth: 2,
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
     },
 
     top_mid_container: {
         height: '100%',
-        width: '50%',
+        width: '30%',
         alignItems: 'center',
     },
 
@@ -211,19 +211,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    top_right_container: {
-        height: '100%',
-        width: '25%',
-        borderColor: 'white',
-        borderBottomWidth: 2,
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-    },
-
-    top_text: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: '600',
+    top_corner_container: {
+        height: "100%",
+        width: "35%",
+        justifyContent: 'flex-end',
     },
 
     title_button: {
@@ -243,65 +234,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
     },
 
-    // Results Screen
-    results_container: {
+    total_container: {
+        flexDirection: 'column',
         flex: 1,
-        gap: 5,
-    },
-
-    missed_title_container: {
-        height: '5%',
-        paddingHorizontal: 20,
+        width: '100%',
+        padding: 10,
         justifyContent: 'flex-end',
-        borderBottomWidth: 2,
-        borderBottomColor: 'rgba(255,255,255,1)',
-        paddingBottom: 5,
     },
 
-    perfect_container: {
-        height: '30%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    perfect_text: {
+    totals_text: {
         color: 'white',
-        fontSize: 25,
-        fontWeight: '700'
-    },
-
-    missed_container: {
-        height: '30%',
-        paddingHorizontal: 30,
-    },
-
-    missed_item: {
-        color: 'white',
-        paddingVertical: 2
-    },
-
-    end_button_container: {
-        height: '20%',
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-        borderTopWidth: 2,
-        borderTopColor: 'rgba(255,255,255,1)',
-    },
-
-    end_button: {
-        minWidth: '40%',
-        paddingVertical: 20,
-        backgroundColor: colors.lightPurple,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 5
-    },
-
-    end_button_text: {
-        color: 'white',
-        fontSize: 15,
-        fontWeight: '600'
+        fontSize: 16,
+        fontWeight: '600',
     },
 
     // Map View
