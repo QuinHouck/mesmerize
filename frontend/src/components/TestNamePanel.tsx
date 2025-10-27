@@ -11,7 +11,8 @@ import {
 import { useTest } from '../hooks/useRedux';
 import {
     discoverItem,
-    setCurrentView
+    setCurrentView,
+    submitAttributeAnswer
 } from '../store/slices/testSlice';
 
 import colors from '../util/colors';
@@ -20,8 +21,8 @@ import { getDistance } from '../util/extraFuncs';
 import Check from '../icons/Check.svg';
 import X from '../icons/X.svg';
 
-import type { TestView } from '../types/test';
 import type { PackageItem } from '../types/package';
+import type { TestView } from '../types/test';
 
 type FeedbackType = 'correct' | 'already' | 'wrong' | null;
 
@@ -98,6 +99,14 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
                 setFeedback('correct');
                 setLastInput(matchedItem.name);
                 test.dispatch(discoverItem(matchedItem));
+
+                test.dispatch(submitAttributeAnswer({
+                    itemName: matchedItem.name,
+                    attributeName: "name",
+                    input,
+                    isCorrect: true,
+                    correctAnswer: matchedItem.name
+                }));
             }
         } else {
             // No match

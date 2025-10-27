@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { PackageAttribute, PackageInfo, PackageItem } from '../../types/package';
+import type { InitializeTestPayload, SetTestAttributesPayload, SetTestPackagePayload, SubmitAttributeAnswerPayload, TestItemResult, TestView } from '../../types/test';
 import { resetResults } from "../helpers/testHelper";
-import type { PackageInfo, PackageAttribute, PackageItem } from '../../types/package';
-import type { TestView, SetTestPackagePayload, InitializeTestPayload, TestResult, SubmitAttributeAnswerPayload, SetTestAttributesPayload } from '../../types/test';
 
 // State interface
 interface TestState {
@@ -13,7 +13,7 @@ interface TestState {
     selectedAttributes: PackageAttribute[];
     filteredItems: PackageItem[];
     discoveredItems: PackageItem[];
-    results: TestResult[];
+    results: TestItemResult[];
     currentItemIndex: number;
     timeLimit: number;
     testStarted: boolean;
@@ -90,33 +90,33 @@ const testSlice = createSlice({
         // Set multiple attributes at once
         setTestAttributes: (state, action: PayloadAction<SetTestAttributesPayload>) => {
             const { attributeNames } = action.payload;
-            
+
             if (!state.packageInfo?.attributes) {
                 return;
             }
 
             // Find the full PackageAttribute objects based on the names
             const selectedAttributes: PackageAttribute[] = [];
-            
+
             // Always include the 'name' attribute if it exists
             const nameAttribute = state.packageInfo.attributes.find(attr => attr.name === 'name');
             if (nameAttribute) {
                 selectedAttributes.push(nameAttribute);
             }
-            
+
             // Add other attributes based on the provided names
             for (const attributeName of attributeNames) {
                 // Skip 'name' since it's already added above
                 if (attributeName === 'name') {
                     continue;
                 }
-                
+
                 const attribute = state.packageInfo.attributes.find(attr => attr.name === attributeName);
                 if (attribute) {
                     selectedAttributes.push(attribute);
                 }
             }
-            
+
             state.selectedAttributes = selectedAttributes;
         },
 
@@ -143,6 +143,10 @@ const testSlice = createSlice({
             state.results = resetResults(filteredItems, state.selectedAttributes);
         },
 
+        setCurrentItemIndex: (state, action: PayloadAction<number>) => {
+            state.currentItemIndex = action.payload;
+        },
+
         // Set current view (name, cards, list, map)
         setCurrentView: (state, action: PayloadAction<TestView>) => {
             state.currentView = action.payload;
@@ -164,18 +168,23 @@ const testSlice = createSlice({
         submitAttributeAnswer: (state, action: PayloadAction<SubmitAttributeAnswerPayload>) => {
             const { itemName, attributeName, input, isCorrect, correctAnswer } = action.payload;
 
-            // Find the result for this item and attribute
-            const result = state.results.find(
-                r => r.itemName === itemName && r.attributeName === attributeName
-            );
+            // Find the result for this item
+            const itemResult = state.results.find(r => r.itemName === itemName);
 
-            if (result) {
-                result.input = input;
-                result.correct = isCorrect;
-                result.answered = true;
-                if (isCorrect) {
-                    result.answer = correctAnswer;
-                    state.pointsEarned += 1;
+            if (itemResult) {
+                // Find the specific attribute result within the item
+                const attributeResult = itemResult.attributeResults.find(
+                    attr => attr.attributeName === attributeName
+                );
+
+                if (attributeResult) {
+                    attributeResult.input = input;
+                    attributeResult.correct = isCorrect;
+                    attributeResult.answered = true;
+                    if (isCorrect) {
+                        attributeResult.answer = correctAnswer;
+                        state.pointsEarned += 1;
+                    }
                 }
             }
         },
@@ -219,6 +228,7 @@ export const {
     toggleAttribute,
     setTestAttributes,
     initializeTest,
+    setCurrentItemIndex,
     setCurrentView,
     discoverItem,
     submitAttributeAnswer,

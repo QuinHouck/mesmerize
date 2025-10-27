@@ -4,13 +4,17 @@ import type { PackageInfo, PackageAttribute, PackageItem } from './package';
 
 export type TestView = 'name' | 'cards' | 'list' | 'map';
 
-export interface TestResult {
-    itemName: string;
+export interface TestAttributeResult {
     attributeName: string;
     answer: string | number;
     input: string | number;
     correct: boolean;
     answered: boolean;
+}
+
+export interface TestItemResult {
+    itemName: string;
+    attributeResults: TestAttributeResult[];
 }
 
 export interface SetTestPackagePayload {
