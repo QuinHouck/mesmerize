@@ -104,10 +104,17 @@ const TestResultsScreen = () => {
     }
 
     /**
+     * Checks if we should group by test_division
+     */
+    function shouldGroupByDivision(): boolean {
+        return !!(packageInfo?.test_division && !test.division);
+    }
+
+    /**
      * Sort results by sort_attr if specified in packageInfo
      */
-    function getSortedResults(): TestItemResult[] {
-        const sortedResults = [...results];
+    function sortResults(resultsToSort: TestItemResult[]): TestItemResult[] {
+        const sortedResults = [...resultsToSort];
         
         if (packageInfo?.sort_attr) {
             sortedResults.sort((a, b) => {
@@ -131,7 +138,92 @@ const TestResultsScreen = () => {
         return sortedResults;
     }
 
-    const sortedResults = getSortedResults();
+    /**
+     * Get the division value for an item by its name
+     */
+    function getItemDivisionValue(itemName: string): string {
+        if (!packageInfo?.test_division || !packageInfo?.items) return '';
+        
+        const item = packageInfo.items.find((i: PackageItem) => i.name === itemName);
+        return item?.[packageInfo.test_division] || '';
+    }
+
+    /**
+     * Get the title for a division value
+     */
+    function getDivisionTitle(divisionValue: string): string {
+        if (!packageInfo?.test_division || !packageInfo?.divisions) return divisionValue;
+        
+        const division = packageInfo.divisions.find((d: any) => d.name === packageInfo.test_division);
+        if (!division) return divisionValue;
+        
+        const option = division.options?.find((opt: any) => opt.name === divisionValue);
+        return option?.title || divisionValue;
+    }
+
+    /**
+     * Get statistics for a group of results
+     */
+    function getGroupStats(resultsGroup: TestItemResult[]): { discovered: number; points: number } {
+        const discovered = resultsGroup.length;
+        let points = 0;
+        
+        resultsGroup.forEach(result => {
+            result.attributeResults.forEach(answer => {
+                if (answer.correct && answer.answered) {
+                    points++;
+                }
+            });
+        });
+        
+        return { discovered, points };
+    }
+
+    /**
+     * Groups results by their test_division value
+     */
+    function getGroupedResults(): Array<{ divisionValue: string; divisionTitle: string; results: TestItemResult[] }> {
+        if (!shouldGroupByDivision() || !packageInfo?.test_division) {
+            return [{ divisionValue: '', divisionTitle: '', results: sortResults(results) }];
+        }
+
+        // Group results by division value
+        const grouped = new Map<string, TestItemResult[]>();
+        
+        results.forEach(result => {
+            const divisionValue = getItemDivisionValue(result.itemName);
+            if (!grouped.has(divisionValue)) {
+                grouped.set(divisionValue, []);
+            }
+            grouped.get(divisionValue)!.push(result);
+        });
+
+        // Sort results within each group
+        const result: Array<{ divisionValue: string; divisionTitle: string; results: TestItemResult[] }> = [];
+        grouped.forEach((resultsGroup, divisionValue) => {
+            const divisionTitle = getDivisionTitle(divisionValue);
+            result.push({ divisionValue, divisionTitle, results: sortResults(resultsGroup) });
+        });
+
+        // Sort groups by division value
+        result.sort((a, b) => {
+            const valueA = a.divisionValue;
+            const valueB = b.divisionValue;
+            
+            // Handle numeric sorting
+            if (!isNaN(Number(valueA)) && !isNaN(Number(valueB))) {
+                return Number(valueA) - Number(valueB);
+            }
+            
+            // Handle string sorting
+            return String(valueA).localeCompare(String(valueB));
+        });
+
+        return result;
+    }
+
+    const groupedResults = getGroupedResults();
+    const showGrouping = shouldGroupByDivision();
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -168,76 +260,166 @@ const TestResultsScreen = () => {
                 {/* Item Results List */}
                 <ScrollView style={styles.detailed_results}>
                     <Text style={styles.results_title}>Test Results</Text>
-                    {sortedResults.length === 0 ? (
+                    {groupedResults.length === 0 || (groupedResults[0]?.results.length === 0) ? (
                         <View style={styles.empty_container}>
                             <Text style={styles.empty_text}>
                                 No results available.
                             </Text>
                         </View>
                     ) : (
-                        sortedResults.map((itemResult, index) => {
-                            const itemName = itemResult.itemName;
-                            const isExpanded = expandedItems.has(itemName);
-                            const { correct, total } = getItemScore(itemName);
-
-                            return (
-                                <View key={itemName || index} style={styles.item_result}>
-                                    <TouchableOpacity
-                                        style={styles.item_header_touchable}
-                                        onPress={() => toggleItem(itemName)}
-                                    >
-                                        <View style={styles.item_header}>
-                                            <Text style={styles.item_name}>{itemName}</Text>
-                                            <View style={styles.item_header_right}>
-                                                <Text style={styles.item_score}>
-                                                    {correct}/{total}
-                                                </Text>
-                                                <Text style={styles.expand_indicator}>
-                                                    {isExpanded ? '▼' : '▶'}
-                                                </Text>
+                        <>
+                            {showGrouping ? (
+                                // Render with section headers
+                                groupedResults.map((group, groupIndex) => {
+                                    const { discovered, points } = getGroupStats(group.results);
+                                    return (
+                                        <View key={groupIndex}>
+                                            {/* Section Header */}
+                                            <View style={styles.section_header}>
+                                                <View style={styles.section_header_content}>
+                                                    <Text style={styles.section_title}>
+                                                        {group.divisionTitle || 'Uncategorized'}
+                                                    </Text>
+                                                    <Text style={styles.section_stats}>
+                                                        {discovered} items • {points} pts
+                                                    </Text>
+                                                </View>
                                             </View>
-                                        </View>
-                                    </TouchableOpacity>
 
-                                    {/* Expanded attributes view */}
-                                    {isExpanded && (
-                                        <View style={styles.attributes_container}>
-                                            {itemResult.attributeResults.map((attr, attrIndex) => {
-                                                if (attr.attributeName === 'name') {
-                                                    return null;
-                                                }
+                                            {/* Section Results */}
+                                            {group.results.map((itemResult, index) => {
+                                                const itemName = itemResult.itemName;
+                                                const isExpanded = expandedItems.has(itemName);
+                                                const { correct, total } = getItemScore(itemName);
+
                                                 return (
-                                                    <View key={attrIndex} style={styles.attribute_row}>
-                                                        <Text style={styles.attribute_name}>
-                                                            {getAttributeTitle(attr.attributeName)}:
-                                                        </Text>
-                                                        <View style={styles.attribute_answer_container}>
-                                                            <>
-                                                                <Text
-                                                                    style={[
-                                                                        styles.attribute_answer,
-                                                                        attr.correct
-                                                                            ? styles.correct_answer
-                                                                            : styles.incorrect_answer,
-                                                                    ]}
-                                                                >
-                                                                    {attr.input}
-                                                                </Text>
-                                                                {!attr.correct && (
-                                                                    <Text style={styles.correct_answer}>
-                                                                        {' → '}{attr.answer}
+                                                    <View key={itemName || index} style={styles.item_result}>
+                                                        <TouchableOpacity
+                                                            style={styles.item_header_touchable}
+                                                            onPress={() => toggleItem(itemName)}
+                                                        >
+                                                            <View style={styles.item_header}>
+                                                                <Text style={styles.item_name}>{itemName}</Text>
+                                                                <View style={styles.item_header_right}>
+                                                                    <Text style={styles.item_score}>
+                                                                        {correct}/{total}
                                                                     </Text>
-                                                                )}
-                                                            </>
-                                                        </View>
+                                                                    <Text style={styles.expand_indicator}>
+                                                                        {isExpanded ? '▼' : '▶'}
+                                                                    </Text>
+                                                                </View>
+                                                            </View>
+                                                        </TouchableOpacity>
+
+                                                        {/* Expanded attributes view */}
+                                                        {isExpanded && (
+                                                            <View style={styles.attributes_container}>
+                                                                {itemResult.attributeResults.map((attr, attrIndex) => {
+                                                                    if (attr.attributeName === 'name') {
+                                                                        return null;
+                                                                    }
+                                                                    return (
+                                                                        <View key={attrIndex} style={styles.attribute_row}>
+                                                                            <Text style={styles.attribute_name}>
+                                                                                {getAttributeTitle(attr.attributeName)}:
+                                                                            </Text>
+                                                                            <View style={styles.attribute_answer_container}>
+                                                                                <>
+                                                                                    <Text
+                                                                                        style={[
+                                                                                            styles.attribute_answer,
+                                                                                            attr.correct
+                                                                                                ? styles.correct_answer
+                                                                                                : styles.incorrect_answer,
+                                                                                        ]}
+                                                                                    >
+                                                                                        {attr.input}
+                                                                                    </Text>
+                                                                                    {!attr.correct && (
+                                                                                        <Text style={styles.correct_answer}>
+                                                                                            {' → '}{attr.answer}
+                                                                                        </Text>
+                                                                                    )}
+                                                                                </>
+                                                                            </View>
+                                                                        </View>
+                                                                    )
+                                                                })}
+                                                            </View>
+                                                        )}
                                                     </View>
-                                                )
+                                                );
                                             })}
                                         </View>
-                                    )}
-                                </View>
-                            );
-                        })
+                                    );
+                                })
+                            ) : (
+                                // Render without section headers
+                                groupedResults[0]?.results.map((itemResult, index) => {
+                                    const itemName = itemResult.itemName;
+                                    const isExpanded = expandedItems.has(itemName);
+                                    const { correct, total } = getItemScore(itemName);
+
+                                    return (
+                                        <View key={itemName || index} style={styles.item_result}>
+                                            <TouchableOpacity
+                                                style={styles.item_header_touchable}
+                                                onPress={() => toggleItem(itemName)}
+                                            >
+                                                <View style={styles.item_header}>
+                                                    <Text style={styles.item_name}>{itemName}</Text>
+                                                    <View style={styles.item_header_right}>
+                                                        <Text style={styles.item_score}>
+                                                            {correct}/{total}
+                                                        </Text>
+                                                        <Text style={styles.expand_indicator}>
+                                                            {isExpanded ? '▼' : '▶'}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+
+                                            {/* Expanded attributes view */}
+                                            {isExpanded && (
+                                                <View style={styles.attributes_container}>
+                                                    {itemResult.attributeResults.map((attr, attrIndex) => {
+                                                        if (attr.attributeName === 'name') {
+                                                            return null;
+                                                        }
+                                                        return (
+                                                            <View key={attrIndex} style={styles.attribute_row}>
+                                                                <Text style={styles.attribute_name}>
+                                                                    {getAttributeTitle(attr.attributeName)}:
+                                                                </Text>
+                                                                <View style={styles.attribute_answer_container}>
+                                                                    <>
+                                                                        <Text
+                                                                            style={[
+                                                                                styles.attribute_answer,
+                                                                                attr.correct
+                                                                                    ? styles.correct_answer
+                                                                                    : styles.incorrect_answer,
+                                                                            ]}
+                                                                        >
+                                                                            {attr.input}
+                                                                        </Text>
+                                                                        {!attr.correct && (
+                                                                            <Text style={styles.correct_answer}>
+                                                                                {' → '}{attr.answer}
+                                                                            </Text>
+                                                                        )}
+                                                                    </>
+                                                                </View>
+                                                            </View>
+                                                        )
+                                                    })}
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                })
+                            )}
+                        </>
                     )}
                 </ScrollView>
             </View>
@@ -450,6 +632,34 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#666',
         textAlign: 'center',
+    },
+
+    section_header: {
+        backgroundColor: colors.darkPurple,
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        marginVertical: 10,
+        borderRadius: 8,
+    },
+
+    section_header_content: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    section_title: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: 'white',
+        flex: 1,
+    },
+
+    section_stats: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: 'white',
+        marginLeft: 10,
     },
 
     bottom_container: {
