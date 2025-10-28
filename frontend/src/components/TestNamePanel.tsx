@@ -31,11 +31,13 @@ type FeedbackType = 'correct' | 'already' | 'wrong' | null;
  * Users enter guesses and items are discovered if they match within distance threshold
  */
 const TestNamePanel = React.memo((): React.JSX.Element => {
-    const [input, setInput] = useState<string>("");
-    const [lastInput, setLastInput] = useState<string>("");
-    const [feedback, setFeedback] = useState<FeedbackType>(null);
-
     const test = useTest();
+
+    const lastDiscoveredItem = test.lastDiscoveredItem;
+
+    const [input, setInput] = useState<string>("");
+    const [lastInput, setLastInput] = useState<string>(lastDiscoveredItem?.name || "");
+    const [feedback, setFeedback] = useState<FeedbackType>(null);
 
     const inputRef = useRef<TextInput>(null);
 

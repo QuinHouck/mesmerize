@@ -1,43 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigation, useIsFocused } from '@react-navigation/core';
-import { Keyboard, Platform, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, TextInput, KeyboardAvoidingView, ScrollView } from 'react-native';
-import Modal from "react-native-modal";
+import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/core';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 
 import colors from '../util/colors';
-import { useTest, useUser } from '../hooks/useRedux';
-import { resetTest, quickRestartTest } from '../store/slices/testSlice';
+import { useTest } from '../hooks/useRedux';
+import { resetTest, initializeTest } from '../store/slices/testSlice';
 
-import type { TestResult } from '../types/test';
-import type { PackageInfo, PackageItem } from '../types/package';
+import type { PackageAttribute, PackageItem } from '../types/package';
+import type { TestItemResult } from '../types/test';
 import { TestResultsScreenNavigationProp } from 'types/navigation';
 
 const TestResultsScreen = () => {
     // Redux hooks
     const test = useTest();
-    const user = useUser();
     const navigation = useNavigation<TestResultsScreenNavigationProp>();
 
     // Redux state
-    const results: TestResult[] = test.results;
-    const packageInfo: PackageInfo | null = test.packageInfo;
+    const results: TestItemResult[] = test.results;
     const totalPoints: number = test.totalPoints;
     const pointsEarned: number = test.pointsEarned;
-    const totalItems: number = test.totalItems;
     const discoveredItems: PackageItem[] = test.discoveredItems;
+    const timeElapsed: number = test.timeElapsed;
+    const packageInfo = test.packageInfo;
 
-    // Local state
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [showModal, setShowModal] = useState<boolean>(false);
+    // Local state for expanded items
+    const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
     // Calculate statistics
-    const correctAnswers = results.filter(result => result.correct).length;
-    const totalAnswers = results.filter(result => result.answered).length;
-    const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
     const score = totalPoints > 0 ? Math.round((pointsEarned / totalPoints) * 100) : 0;
 
     async function handlePlay(): Promise<void> {
-        // Reset game state for a new game
-        test.dispatch(quickRestartTest());
+        // Get the current test settings
+        const division = test.division;
+        const divisionOption = test.divisionOption;
+        const filteredItems = test.filteredItems;
+        const timeLimit = test.timeLimit;
+        const selectedAttributes = test.selectedAttributes;
+
+        // Reinitialize the test with the same settings
+        test.dispatch(initializeTest({
+            division: division,
+            divisionOption: divisionOption,
+            filteredItems: filteredItems,
+            timeLimit: timeLimit,
+            selectedAttributes: selectedAttributes,
+        }));
+
         navigation.navigate("TestGame");
     }
 
@@ -52,24 +60,78 @@ const TestResultsScreen = () => {
         });
     }
 
-    async function handleImage(image: string): Promise<void> {
-        setSelectedImage(image);
-        setShowModal(true);
-    }
-
-    async function handleClose(): Promise<void> {
-        setSelectedImage(null);
-        setShowModal(false);
-    }
-
-    // Group results by item for display
-    const resultsByItem = results.reduce((acc: Record<string, TestResult[]>, result) => {
-        if (!acc[result.itemName]) {
-            acc[result.itemName] = [];
+    /**
+     * Toggle expanded state for an item
+     */
+    function toggleItem(itemName: string): void {
+        const newExpanded = new Set(expandedItems);
+        if (newExpanded.has(itemName)) {
+            newExpanded.delete(itemName);
+        } else {
+            newExpanded.add(itemName);
         }
-        acc[result.itemName].push(result);
-        return acc;
-    }, {});
+        setExpandedItems(newExpanded);
+    }
+
+    /**
+     * Format time in mm:ss format
+     */
+    function formatTime(seconds: number): string {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    /**
+     * Get item score (correct/total)
+     */
+    function getItemScore(itemName: string): { correct: number; total: number } {
+        const result = results.find(r => r.itemName === itemName);
+        if (!result) return { correct: 0, total: 0 };
+
+        const correctCount = result.attributeResults.filter(a => a.correct).length;
+        const totalCount = result.attributeResults.filter(a => a.answered).length;
+
+        return { correct: correctCount, total: totalCount };
+    }
+
+    /**
+     * Get attribute title from packageInfo
+     */
+    function getAttributeTitle(attributeName: string): string {
+        const attr = packageInfo?.attributes?.find((a: PackageAttribute) => a.name === attributeName);
+        return attr?.title || attributeName;
+    }
+
+    /**
+     * Sort results by sort_attr if specified in packageInfo
+     */
+    function getSortedResults(): TestItemResult[] {
+        const sortedResults = [...results];
+        
+        if (packageInfo?.sort_attr) {
+            sortedResults.sort((a, b) => {
+                // Get the attribute result for the sort attribute
+                const attrA = a.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
+                const attrB = b.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
+                
+                const valueA = attrA?.answer || '';
+                const valueB = attrB?.answer || '';
+                
+                // Handle numeric sorting
+                if (typeof valueA === 'number' && typeof valueB === 'number') {
+                    return valueA - valueB;
+                }
+                
+                // Handle string sorting
+                return String(valueA).localeCompare(String(valueB));
+            });
+        }
+        
+        return sortedResults;
+    }
+
+    const sortedResults = getSortedResults();
 
     return (
         <SafeAreaView style={styles.main_container}>
@@ -86,12 +148,12 @@ const TestResultsScreen = () => {
                     <Text style={styles.score_title}>Test Complete!</Text>
                     <View style={styles.score_stats}>
                         <View style={styles.stat_item}>
-                            <Text style={styles.stat_value}>{score}%</Text>
-                            <Text style={styles.stat_label}>Score</Text>
+                            <Text style={styles.stat_value}>{formatTime(timeElapsed)}</Text>
+                            <Text style={styles.stat_label}>Time</Text>
                         </View>
                         <View style={styles.stat_item}>
-                            <Text style={styles.stat_value}>{accuracy}%</Text>
-                            <Text style={styles.stat_label}>Accuracy</Text>
+                            <Text style={styles.stat_value}>{score}%</Text>
+                            <Text style={styles.stat_label}>Score</Text>
                         </View>
                         <View style={styles.stat_item}>
                             <Text style={styles.stat_value}>{discoveredItems.length}</Text>
@@ -103,39 +165,80 @@ const TestResultsScreen = () => {
                     </Text>
                 </View>
 
-                {/* Detailed Results */}
+                {/* Item Results List */}
                 <ScrollView style={styles.detailed_results}>
-                    <Text style={styles.results_title}>Detailed Results</Text>
-                    {Object.entries(resultsByItem).map(([itemName, itemResults]) => {
-                        const itemCorrect = itemResults.filter(r => r.correct).length;
-                        const itemTotal = itemResults.filter(r => r.answered).length;
-                        const itemAccuracy = itemTotal > 0 ? Math.round((itemCorrect / itemTotal) * 100) : 0;
+                    <Text style={styles.results_title}>Test Results</Text>
+                    {sortedResults.length === 0 ? (
+                        <View style={styles.empty_container}>
+                            <Text style={styles.empty_text}>
+                                No results available.
+                            </Text>
+                        </View>
+                    ) : (
+                        sortedResults.map((itemResult, index) => {
+                            const itemName = itemResult.itemName;
+                            const isExpanded = expandedItems.has(itemName);
+                            const { correct, total } = getItemScore(itemName);
 
-                        return (
-                            <View key={itemName} style={styles.item_result}>
-                                <View style={styles.item_header}>
-                                    <Text style={styles.item_name}>{itemName}</Text>
-                                    <Text style={styles.item_score}>{itemAccuracy}%</Text>
+                            return (
+                                <View key={itemName || index} style={styles.item_result}>
+                                    <TouchableOpacity
+                                        style={styles.item_header_touchable}
+                                        onPress={() => toggleItem(itemName)}
+                                    >
+                                        <View style={styles.item_header}>
+                                            <Text style={styles.item_name}>{itemName}</Text>
+                                            <View style={styles.item_header_right}>
+                                                <Text style={styles.item_score}>
+                                                    {correct}/{total}
+                                                </Text>
+                                                <Text style={styles.expand_indicator}>
+                                                    {isExpanded ? '▼' : '▶'}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+
+                                    {/* Expanded attributes view */}
+                                    {isExpanded && (
+                                        <View style={styles.attributes_container}>
+                                            {itemResult.attributeResults.map((attr, attrIndex) => {
+                                                if (attr.attributeName === 'name') {
+                                                    return null;
+                                                }
+                                                return (
+                                                    <View key={attrIndex} style={styles.attribute_row}>
+                                                        <Text style={styles.attribute_name}>
+                                                            {getAttributeTitle(attr.attributeName)}:
+                                                        </Text>
+                                                        <View style={styles.attribute_answer_container}>
+                                                            <>
+                                                                <Text
+                                                                    style={[
+                                                                        styles.attribute_answer,
+                                                                        attr.correct
+                                                                            ? styles.correct_answer
+                                                                            : styles.incorrect_answer,
+                                                                    ]}
+                                                                >
+                                                                    {attr.input}
+                                                                </Text>
+                                                                {!attr.correct && (
+                                                                    <Text style={styles.correct_answer}>
+                                                                        {' → '}{attr.answer}
+                                                                    </Text>
+                                                                )}
+                                                            </>
+                                                        </View>
+                                                    </View>
+                                                )
+                                            })}
+                                        </View>
+                                    )}
                                 </View>
-                                {itemResults.map((result, index) => (
-                                    <View key={index} style={styles.attribute_result}>
-                                        <Text style={styles.attribute_name}>{result.attributeName}:</Text>
-                                        <Text style={[
-                                            styles.attribute_answer,
-                                            result.correct ? styles.correct_answer : styles.incorrect_answer
-                                        ]}>
-                                            {result.input}
-                                        </Text>
-                                        {!result.correct && (
-                                            <Text style={styles.correct_answer}>
-                                                (Correct: {result.answer})
-                                            </Text>
-                                        )}
-                                    </View>
-                                ))}
-                            </View>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </ScrollView>
             </View>
             <View style={styles.bottom_container}>
@@ -143,31 +246,9 @@ const TestResultsScreen = () => {
                     <Text style={styles.play_text}>Play Again!</Text>
                 </TouchableOpacity>
             </View>
-
-            {/* Image Modal */}
-            <Modal
-                isVisible={showModal}
-                coverScreen={true}
-                onBackdropPress={handleClose}
-                style={styles.modal_container}
-            >
-                <View style={styles.modal_image_container}>
-                    {selectedImage && (
-                        <Image
-                            source={{ uri: selectedImage }}
-                            style={styles.modal_image}
-                            resizeMode="contain"
-                        />
-                    )}
-                    <TouchableOpacity style={styles.close_button} onPress={handleClose}>
-                        <Text style={styles.close_button_text}>Close</Text>
-                    </TouchableOpacity>
-                </View>
-            </Modal>
         </SafeAreaView>
     );
-
-}
+};
 
 export default TestResultsScreen;
 
@@ -272,21 +353,32 @@ const styles = StyleSheet.create({
     item_result: {
         backgroundColor: '#f5f5f5',
         borderRadius: 8,
-        padding: 15,
         marginBottom: 10,
+        overflow: 'hidden',
+    },
+
+    item_header_touchable: {
+        paddingHorizontal: 15,
+        paddingVertical: 12,
     },
 
     item_header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+    },
+
+    item_header_right: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
 
     item_name: {
         fontSize: 18,
         fontWeight: '600',
         color: colors.darkPurple,
+        flex: 1,
     },
 
     item_score: {
@@ -295,24 +387,42 @@ const styles = StyleSheet.create({
         color: colors.lightPurple,
     },
 
-    attribute_result: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 5,
-        flexWrap: 'wrap',
+    expand_indicator: {
+        fontSize: 14,
+        color: colors.darkPurple,
+        fontWeight: '500',
+    },
+
+    attributes_container: {
+        paddingHorizontal: 15,
+        paddingBottom: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        paddingTop: 12,
+        backgroundColor: 'white',
+    },
+
+    attribute_row: {
+        flexDirection: 'column',
+        marginBottom: 10,
     },
 
     attribute_name: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
         color: '#666',
-        marginRight: 8,
+        marginBottom: 4,
+    },
+
+    attribute_answer_container: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
     },
 
     attribute_answer: {
-        fontSize: 14,
-        fontWeight: '400',
-        marginRight: 8,
+        fontSize: 15,
+        fontWeight: '500',
     },
 
     correct_answer: {
@@ -323,43 +433,23 @@ const styles = StyleSheet.create({
         color: '#ed0e0e',
     },
 
-    row_title: {
-        backgroundColor: colors.darkPurple,
-        flexDirection: 'row',
-        paddingHorizontal: 5,
-    },
-
-    row_title_text: {
-        color: 'white',
+    unanswered_text: {
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: '400',
+        color: '#999',
+        fontStyle: 'italic',
     },
 
-    row_item_container: {
-        flexDirection: 'row',
-        paddingHorizontal: 5,
+    empty_container: {
+        paddingVertical: 40,
+        alignItems: 'center',
     },
 
-    row_item: {
-        flex: 1,
-        padding: 5,
-    },
-
-    row_image_container: {
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-
-    correct_icon: {
-        width: "25%",
-        aspectRatio: 1,
-        color: '#2ebf44'
-    },
-
-    wrong_icon: {
-        width: "20%",
-        aspectRatio: 1,
-        color: '#ed0e0e'
+    empty_text: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#666',
+        textAlign: 'center',
     },
 
     bottom_container: {
@@ -374,53 +464,14 @@ const styles = StyleSheet.create({
     play_button: {
         backgroundColor: colors.darkPurple,
         padding: 10,
-        // width: '50%',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 5
+        borderRadius: 5,
     },
 
     play_text: {
         color: 'white',
         fontSize: 30,
-        fontWeight: '700'
+        fontWeight: '700',
     },
-
-    modal_container: {
-        flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-
-    modal_image_container: {
-        width: '90%',
-        height: '80%',
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-
-    modal_image: {
-        width: '100%',
-        height: '80%',
-        borderRadius: 8,
-    },
-
-    close_button: {
-        backgroundColor: colors.lightPurple,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-        marginTop: 15,
-    },
-
-    close_button_text: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-
 });

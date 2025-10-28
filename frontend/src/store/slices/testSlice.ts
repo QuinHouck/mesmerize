@@ -14,8 +14,10 @@ interface TestState {
     filteredItems: PackageItem[];
     discoveredItems: PackageItem[];
     results: TestItemResult[];
+    lastDiscoveredItem: PackageItem | null;
     currentItemIndex: number;
     timeLimit: number;
+    timeElapsed: number;
     testStarted: boolean;
     testEnded: boolean;
     totalItems: number;
@@ -36,8 +38,10 @@ const initialState: TestState = {
     filteredItems: [],
     discoveredItems: [],
     results: [],
+    lastDiscoveredItem: null,
     currentItemIndex: 0,
     timeLimit: 300,
+    timeElapsed: 0,
     testStarted: false,
     testEnded: false,
     totalItems: 0,
@@ -133,12 +137,14 @@ const testSlice = createSlice({
             state.testEnded = false;
             state.currentView = 'name';
             state.discoveredItems = [];
+            state.lastDiscoveredItem = null;
 
             state.selectedAttributes = selectedAttributes;
 
             state.currentItemIndex = 0;
             state.pointsEarned = 0;
             state.totalPoints = state.totalItems * state.selectedAttributes.length;
+            state.timeElapsed = 0;
 
             state.results = resetResults(filteredItems, state.selectedAttributes);
         },
@@ -160,7 +166,7 @@ const testSlice = createSlice({
             );
             if (!isAlreadyDiscovered) {
                 state.discoveredItems.push(item);
-                state.pointsEarned += 1;
+                state.lastDiscoveredItem = item;
             }
         },
 
@@ -190,9 +196,10 @@ const testSlice = createSlice({
         },
 
         // End test early
-        endTest: (state) => {
+        endTest: (state, action: PayloadAction<{ timeElapsed: number }>) => {
             state.testEnded = true;
             state.testStarted = false;
+            state.timeElapsed = action.payload.timeElapsed;
         },
 
         // Reset test state
@@ -207,7 +214,14 @@ const testSlice = createSlice({
             state.testEnded = false;
             state.currentView = 'name';
             state.discoveredItems = [];
-            state.results = [];
+            state.lastDiscoveredItem = null;
+            state.pointsEarned = 0;
+            state.timeElapsed = 0;
+            
+            // Recreate results array with fresh data from filteredItems
+            if (state.filteredItems.length > 0 && state.selectedAttributes.length > 0) {
+                state.results = resetResults(state.filteredItems, state.selectedAttributes);
+            }
         },
 
         // Set error

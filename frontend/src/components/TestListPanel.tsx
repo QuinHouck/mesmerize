@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import { useTest } from '../hooks/useRedux';
 import { setCurrentView } from '../store/slices/testSlice';
+import type { PackageAttribute, PackageItem } from '../types/package';
+import type { TestItemResult, TestView } from '../types/test';
 
 import colors from '../util/colors';
 
@@ -18,21 +20,25 @@ import colors from '../util/colors';
 const TestListPanel = React.memo(() => {
     const test = useTest();
 
-    const discoveredItems = test.discoveredItems;
-    const totalItems = test.totalItems;
-    const results = test.results;
-    const attributes = test.selectedAttributes;
+    const discoveredItems: PackageItem[] = test.discoveredItems;
+    const totalItems: number = test.totalItems;
+    const results: TestItemResult[] = test.results;
+    const attributes: PackageAttribute[] = test.selectedAttributes;
 
-    function onViewChange(view) {
+    const division = test.division;
+    const divisionOption = test.divisionOption;
+
+    function onViewChange(view: TestView): void {
         test.dispatch(setCurrentView(view));
     }
+
     /**
      * Calculates total correct attributes across all discovered items
      */
-    function getTotalCorrectAttributes() {
+    function getTotalCorrectAttributes(): number {
         let correct = 0;
         results?.forEach(result => {
-            result.answers?.forEach(answer => {
+            result.attributeResults?.forEach(answer => {
                 if (answer.correct) correct++;
             });
         });
@@ -42,7 +48,7 @@ const TestListPanel = React.memo(() => {
     /**
      * Calculates total possible attributes for discovered items
      */
-    function getTotalPossibleAttributes() {
+    function getTotalPossibleAttributes(): number {
         // Only count string and number attributes
         const validAttributes = attributes.filter(
             attr => attr.type === 'string' || attr.type === 'number'
@@ -53,22 +59,27 @@ const TestListPanel = React.memo(() => {
     /**
      * Calculates percentage of correct answers
      */
-    function getPercentage() {
+    function getPercentage(): number {
         const total = getTotalPossibleAttributes();
         if (total === 0) return 0;
         const correct = getTotalCorrectAttributes();
         return Math.floor((correct / total) * 100);
     }
 
+    interface ItemScore {
+        correct: number;
+        total: number;
+    }
+
     /**
      * Gets the score for a specific item
      */
-    function getItemScore(itemName) {
+    function getItemScore(itemName: string): ItemScore {
         const result = results?.find(r => r.itemName === itemName);
         if (!result) return { correct: 0, total: 0 };
 
-        const correctCount = result.answers.filter(a => a.correct).length;
-        const totalCount = result.answers.length;
+        const correctCount = result.attributeResults.filter(a => a.correct).length;
+        const totalCount = result.attributeResults.length;
 
         return { correct: correctCount, total: totalCount };
     }
@@ -76,7 +87,7 @@ const TestListPanel = React.memo(() => {
     /**
      * Renders a single item in the list
      */
-    function renderListItem(item, index) {
+    function renderListItem(item: PackageItem, index: number): React.ReactElement {
         const { correct, total } = getItemScore(item.name);
 
         return (
@@ -229,4 +240,3 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
 });
-

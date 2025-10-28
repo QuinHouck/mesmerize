@@ -46,11 +46,26 @@ const TestGameScreen = () => {
     const timerRef = useRef(time);
 
     /**
-     * Initialize test when component mounts or becomes focused
+     * Reset timer when test is restarted
      */
     useEffect(() => {
+        if (!testStarted && !testEnded) {
+            // Reset timer state for new game
+            timerRef.current = test_time;
+            setTime(test_time);
+            // Clear any existing timer
+            if (tid) {
+                clearInterval(tid);
+                setTid(null);
+            }
+        }
+    }, [testStarted, testEnded, test_time]);
 
-    }, [testStarted, isFocused]);
+    useEffect(() => {
+        if (isComplete()) {
+            endGame();
+        }
+    }, [pointsEarned]);
 
     /**
      * Start and manage timer
@@ -89,8 +104,13 @@ const TestGameScreen = () => {
         if (tid) {
             clearInterval(tid);
         }
-        test.dispatch(endTest());
+        const elapsedTime = test_time - timerRef.current;
+        test.dispatch(endTest({ timeElapsed: elapsedTime }));
         navigation.navigate("TestResults");
+    }
+
+    function isComplete(): boolean {
+        return totalPoints === pointsEarned;
     }
 
 
