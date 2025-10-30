@@ -23,6 +23,8 @@ const TestResultsScreen = () => {
     const timeElapsed: number = test.timeElapsed;
     const packageInfo = test.packageInfo;
 
+    const totalAttributes: number = test.selectedAttributes.length;
+
     // Local state for expanded items
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -85,14 +87,13 @@ const TestResultsScreen = () => {
     /**
      * Get item score (correct/total)
      */
-    function getItemScore(itemName: string): { correct: number; total: number } {
+    function getItemScore(itemName: string): { correct: number } {
         const result = results.find(r => r.itemName === itemName);
-        if (!result) return { correct: 0, total: 0 };
+        if (!result) return { correct: 0 };
 
         const correctCount = result.attributeResults.filter(a => a.correct).length;
-        const totalCount = result.attributeResults.filter(a => a.answered).length;
 
-        return { correct: correctCount, total: totalCount };
+        return { correct: correctCount };
     }
 
     /**
@@ -115,26 +116,26 @@ const TestResultsScreen = () => {
      */
     function sortResults(resultsToSort: TestItemResult[]): TestItemResult[] {
         const sortedResults = [...resultsToSort];
-        
+
         if (packageInfo?.sort_attr) {
             sortedResults.sort((a, b) => {
                 // Get the attribute result for the sort attribute
                 const attrA = a.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
                 const attrB = b.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
-                
+
                 const valueA = attrA?.answer || '';
                 const valueB = attrB?.answer || '';
-                
+
                 // Handle numeric sorting
                 if (typeof valueA === 'number' && typeof valueB === 'number') {
                     return valueA - valueB;
                 }
-                
+
                 // Handle string sorting
                 return String(valueA).localeCompare(String(valueB));
             });
         }
-        
+
         return sortedResults;
     }
 
@@ -143,7 +144,7 @@ const TestResultsScreen = () => {
      */
     function getItemDivisionValue(itemName: string): string {
         if (!packageInfo?.test_division || !packageInfo?.items) return '';
-        
+
         const item = packageInfo.items.find((i: PackageItem) => i.name === itemName);
         return item?.[packageInfo.test_division] || '';
     }
@@ -153,10 +154,10 @@ const TestResultsScreen = () => {
      */
     function getDivisionTitle(divisionValue: string): string {
         if (!packageInfo?.test_division || !packageInfo?.divisions) return divisionValue;
-        
+
         const division = packageInfo.divisions.find((d: any) => d.name === packageInfo.test_division);
         if (!division) return divisionValue;
-        
+
         const option = division.options?.find((opt: any) => opt.name === divisionValue);
         return option?.title || divisionValue;
     }
@@ -167,7 +168,7 @@ const TestResultsScreen = () => {
     function getGroupStats(resultsGroup: TestItemResult[]): { discovered: number; points: number } {
         const discovered = resultsGroup.length;
         let points = 0;
-        
+
         resultsGroup.forEach(result => {
             result.attributeResults.forEach(answer => {
                 if (answer.correct && answer.answered) {
@@ -175,7 +176,7 @@ const TestResultsScreen = () => {
                 }
             });
         });
-        
+
         return { discovered, points };
     }
 
@@ -189,7 +190,7 @@ const TestResultsScreen = () => {
 
         // Group results by division value
         const grouped = new Map<string, TestItemResult[]>();
-        
+
         results.forEach(result => {
             const divisionValue = getItemDivisionValue(result.itemName);
             if (!grouped.has(divisionValue)) {
@@ -209,12 +210,12 @@ const TestResultsScreen = () => {
         result.sort((a, b) => {
             const valueA = a.divisionValue;
             const valueB = b.divisionValue;
-            
+
             // Handle numeric sorting
             if (!isNaN(Number(valueA)) && !isNaN(Number(valueB))) {
                 return Number(valueA) - Number(valueB);
             }
-            
+
             // Handle string sorting
             return String(valueA).localeCompare(String(valueB));
         });
@@ -290,7 +291,7 @@ const TestResultsScreen = () => {
                                             {group.results.map((itemResult, index) => {
                                                 const itemName = itemResult.itemName;
                                                 const isExpanded = expandedItems.has(itemName);
-                                                const { correct, total } = getItemScore(itemName);
+                                                const { correct } = getItemScore(itemName);
 
                                                 return (
                                                     <View key={itemName || index} style={styles.item_result}>
@@ -302,7 +303,7 @@ const TestResultsScreen = () => {
                                                                 <Text style={styles.item_name}>{itemName}</Text>
                                                                 <View style={styles.item_header_right}>
                                                                     <Text style={styles.item_score}>
-                                                                        {correct}/{total}
+                                                                        {correct}/{totalAttributes}
                                                                     </Text>
                                                                     <Text style={styles.expand_indicator}>
                                                                         {isExpanded ? '▼' : '▶'}
@@ -358,7 +359,7 @@ const TestResultsScreen = () => {
                                 groupedResults[0]?.results.map((itemResult, index) => {
                                     const itemName = itemResult.itemName;
                                     const isExpanded = expandedItems.has(itemName);
-                                    const { correct, total } = getItemScore(itemName);
+                                    const { correct } = getItemScore(itemName);
 
                                     return (
                                         <View key={itemName || index} style={styles.item_result}>
@@ -370,7 +371,7 @@ const TestResultsScreen = () => {
                                                     <Text style={styles.item_name}>{itemName}</Text>
                                                     <View style={styles.item_header_right}>
                                                         <Text style={styles.item_score}>
-                                                            {correct}/{total}
+                                                            {correct}/{totalAttributes}
                                                         </Text>
                                                         <Text style={styles.expand_indicator}>
                                                             {isExpanded ? '▼' : '▶'}
