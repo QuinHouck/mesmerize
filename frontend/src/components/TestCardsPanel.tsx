@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Dimensions,
+    FlatList,
     NativeScrollEvent,
     NativeSyntheticEvent,
     Platform,
@@ -31,12 +32,7 @@ import type { TestAttributeResult, TestItemResult, TestView } from '../types/tes
 
 const screenWidth = Dimensions.get('window').width;
 
-// Component props interface
-interface AttributeInputProps {
-    item: PackageItem;
-    attribute: PackageAttribute;
-    answerData?: TestAttributeResult;
-}
+// Component props interface (inlined into memo rows)
 
 /**
  * TestCardsPanel - Component for filling out attributes of discovered items
@@ -44,7 +40,7 @@ interface AttributeInputProps {
  */
 const TestCardsPanel = React.memo(() => {
     const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
-    const scrollViewRef = useRef<ScrollView>(null);
+    const flatListRef = useRef<FlatList<PackageItem>>(null);
 
     const test = useTest();
 
@@ -53,7 +49,17 @@ const TestCardsPanel = React.memo(() => {
     const results: TestItemResult[] = test.results;
 
     const currentItem = discoveredItems[currentCardIndex];
-    const currentItemResult = results?.find(r => r.itemName === currentItem?.name);
+
+    // O(1) lookup: item name -> item result
+    const resultsByItem = React.useMemo(() => {
+        const map = new Map<string, TestItemResult>();
+        if (results) {
+            for (const r of results) map.set(r.itemName, r);
+        }
+        return map;
+    }, [results]);
+
+    const currentItemResult = currentItem ? resultsByItem.get(currentItem.name) : undefined;
 
     const currentAttributeIndex = useRef<number>(0);
 
@@ -126,7 +132,7 @@ const TestCardsPanel = React.memo(() => {
         return 'visible-password';
     }
 
-    function focusInput(itemName: string, attributeName: string): void {
+    const focusInput = React.useCallback((itemName: string, attributeName: string): void => {
         // Find the index of the focused attribute
         const relevantAttributes = attributes.filter(attr =>
             (attr.type === 'string' || attr.type === 'number') && attr.name !== 'name'
@@ -142,7 +148,7 @@ const TestCardsPanel = React.memo(() => {
         if (inputRef) {
             inputRef.current?.focus();
         }
-    }
+    }, [attributes]);
 
     /**
      * Gets a reference to an AttributeInput by item name and attribute name
@@ -188,31 +194,33 @@ const TestCardsPanel = React.memo(() => {
     /**
      * Handles view changes
      */
-    function handleViewChange(newView: TestView): void {
+    const handleViewChange = React.useCallback((newView: TestView): void => {
         test.dispatch(setCurrentView(newView));
-    }
+    }, [test]);
 
     /**
      * Handles scrolling to a specific card
      */
     function scrollToCard(index: number): void {
-        if (scrollViewRef.current) {
-            scrollViewRef.current.scrollTo({
-                x: index * screenWidth,
-                animated: true
-            });
+        if (flatListRef.current) {
+            try {
+                flatListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0 });
+            } catch (_) {
+                // Fallback if index not measured yet
+                flatListRef.current.scrollToOffset({ offset: index * screenWidth, animated: true });
+            }
         }
         handleCardChange(index);
     }
 
-    function handleCardChange(index: number): void {
+    const handleCardChange = React.useCallback((index: number): void => {
         test.dispatch(setCurrentItemIndex(index));
-    }
+    }, [test]);
 
     /**
      * Checks if an answer is correct based on attribute type
      */
-    function checkAnswer(input: string | number, correctAnswer: string | number, attrType: string): boolean {
+    const checkAnswer = React.useCallback((input: string | number, correctAnswer: string | number, attrType: string): boolean => {
         if (attrType === 'number') {
             return Number(input) === Number(correctAnswer);
         } else if (attrType === 'string') {
@@ -221,13 +229,13 @@ const TestCardsPanel = React.memo(() => {
             return percent < 0.1; // 10% threshold
         }
         return false;
-    }
+    }, []);
 
 
     /**
      * Handles submission of an attribute answer
      */
-    function handleAttributeSubmit(item: PackageItem, attribute: PackageAttribute, input: string | number): boolean {
+    const handleAttributeSubmit = React.useCallback((item: PackageItem, attribute: PackageAttribute, input: string | number): boolean => {
         const correctAnswer = item[attribute.name];
         const isCorrect = checkAnswer(input, correctAnswer, attribute.type);
 
@@ -240,12 +248,15 @@ const TestCardsPanel = React.memo(() => {
         }));
 
         return isCorrect;
-    }
+    }, [checkAnswer, test]);
+
+    
 
     /**
-     * AttributeInput - Component for a single attribute input field
+     * Renders a single card for an item
      */
-    const AttributeInput: React.FC<AttributeInputProps> = ({ item, attribute, answerData }) => {
+    const MemoAttributeRow: React.FC<{ attribute: PackageAttribute; answerData?: TestAttributeResult; item: PackageItem; onSubmit: (item: PackageItem, attribute: PackageAttribute, input: string | number) => boolean; }>
+        = React.memo(({ attribute, answerData, item, onSubmit }) => {
         // Initialize localInput based on answerData
         const initializeInput = () => {
             if (answerData?.correct) {
@@ -262,13 +273,11 @@ const TestCardsPanel = React.memo(() => {
             const key = `${item.name}_${attribute.name}`;
             inputRefsMap.current.set(key, inputRef);
 
-            // Cleanup on unmount
             return () => {
                 inputRefsMap.current.delete(key);
             };
         }, [item.name, attribute.name]);
 
-        // Reset localInput when answerData changes
         React.useEffect(() => {
             if (answerData?.correct) {
                 setLocalInput(answerData.answer?.toString() || '');
@@ -280,16 +289,11 @@ const TestCardsPanel = React.memo(() => {
         const isCorrect: boolean = answerData?.correct || false;
         const answeredButWrong: boolean = answerData?.correct === false && answerData?.answered === true;
         const isDisabled: boolean = isCorrect;
-
-        // If correct, display the correct answer
         const displayValue: string = isCorrect ? answerData?.answer?.toString() || '' : localInput;
 
-        /**
-         * Handles submission of attribute answer
-         */
         const handleSubmit = (): void => {
-            if (!isDisabled && localInput.trim()) {
-                handleAttributeSubmit(item, attribute, localInput);
+            if (!isDisabled && displayValue.trim()) {
+                onSubmit(item, attribute, displayValue);
             }
         };
 
@@ -303,7 +307,7 @@ const TestCardsPanel = React.memo(() => {
                             styles.attribute_input,
                             isCorrect && styles.correct_input,
                             answeredButWrong && styles.wrong_input,
-                            !isCorrect && !answeredButWrong && localInput && styles.normal_input
+                            !isCorrect && !answeredButWrong && displayValue && styles.normal_input
                         ]}
                         value={displayValue}
                         onChangeText={setLocalInput}
@@ -320,44 +324,51 @@ const TestCardsPanel = React.memo(() => {
                 </View>
             </View>
         );
-    };
+    }, (prev, next) => {
+        return (
+            prev.attribute.name === next.attribute.name &&
+            prev.item._id === next.item._id &&
+            prev.answerData?.correct === next.answerData?.correct &&
+            prev.answerData?.answered === next.answerData?.answered &&
+            prev.answerData?.answer === next.answerData?.answer
+        );
+    });
 
-    /**
-     * Renders a single card for an item
-     */
-    function renderCard(item: PackageItem, index: number): React.ReactElement {
-        const itemResult: TestItemResult | undefined = results?.find(r => r.itemName === item.name);
+    const MemoCard: React.FC<{ item: PackageItem; index: number }>
+        = React.memo(({ item }) => {
+        const itemResult: TestItemResult | undefined = resultsByItem.get(item.name);
+
+        // Build O(1) attribute result map per card
+        const attrMap = React.useMemo(() => {
+            const m = new Map<string, TestAttributeResult>();
+            itemResult?.attributeResults?.forEach(a => m.set(a.attributeName, a));
+            return m;
+        }, [itemResult]);
 
         return (
-            <View key={item._id || index} style={styles.card}>
-                {/* Card Header */}
+            <View style={styles.card}>
                 <View style={styles.card_header}>
                     <Text style={styles.card_title}>{item.name}</Text>
                 </View>
 
-                {/* Attributes Section */}
                 <ScrollView style={styles.attributes_scroll}>
                     {attributes.map(attr => {
-                        // Only show string and number attributes
                         if ((attr.type !== 'string' && attr.type !== 'number') || attr.name === 'name') return null;
-
-                        const answerData: TestAttributeResult | undefined = itemResult?.attributeResults?.find(
-                            a => a.attributeName === attr.name
-                        );
-
+                        const answerData: TestAttributeResult | undefined = attrMap.get(attr.name);
                         return (
-                            <AttributeInput
+                            <MemoAttributeRow
                                 key={attr.name}
                                 item={item}
                                 attribute={attr}
                                 answerData={answerData}
+                                onSubmit={handleAttributeSubmit}
                             />
                         );
                     })}
                 </ScrollView>
             </View>
         );
-    }
+    }, (prev, next) => prev.item._id === next.item._id);
 
     if (!discoveredItems || discoveredItems.length === 0) {
         return (
@@ -379,40 +390,92 @@ const TestCardsPanel = React.memo(() => {
         );
     }
 
+    // Compute adaptive pagination dots (buckets)
+    const totalItems = discoveredItems.length;
+    const computeStep = React.useCallback((total: number): number => {
+        if (total <= 20) return 1;
+        const candidates = [5, 10, 20, 50, 100, 200];
+        for (const s of candidates) {
+            if (Math.ceil(total / s) <= 20) return s;
+        }
+        // fallback: evenly distribute to <= 20 dots
+        return Math.ceil(total / 20);
+    }, []);
+
+    const dotIndices = React.useMemo(() => {
+        if (totalItems <= 0) return [] as number[];
+        const step = computeStep(totalItems);
+        const arr: number[] = [];
+        for (let i = 0; i < totalItems; i += step) arr.push(i);
+        if (arr[arr.length - 1] !== totalItems - 1) arr.push(totalItems - 1);
+        return arr;
+    }, [totalItems, computeStep]);
+
+    const activeDotIndex = React.useMemo(() => {
+        if (dotIndices.length === 0) return -1;
+        // highlight the dot whose target index is nearest to the current card index
+        let best = dotIndices[0];
+        let bestDist = Math.abs(best - (currentCardIndex || 0));
+        for (let i = 1; i < dotIndices.length; i++) {
+            const candidate = dotIndices[i];
+            const dist = Math.abs(candidate - (currentCardIndex || 0));
+            if (dist < bestDist) {
+                best = candidate;
+                bestDist = dist;
+            }
+        }
+        return best;
+    }, [dotIndices, currentCardIndex]);
+
     return (
         <View style={styles.container}>
-            {/* Card Carousel */}
-            <ScrollView
-                ref={scrollViewRef}
+            {/* Card Carousel (Virtualized) */}
+            <FlatList
+                ref={flatListRef}
+                data={discoveredItems}
+                keyExtractor={(item, index) => String(item._id || `${item.name}-${index}`)}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                onScrollBeginDrag={() => {
-                    isManualScroll.current = true;
-                }}
+                initialNumToRender={3}
+                windowSize={5}
+                maxToRenderPerBatch={3}
+                removeClippedSubviews
+                onScrollBeginDrag={() => { isManualScroll.current = true; }}
                 onMomentumScrollEnd={(event: NativeSyntheticEvent<NativeScrollEvent>) => {
                     const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
                     setCurrentCardIndex(index);
                     handleCardChange(index);
                 }}
+                getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+                renderItem={({ item, index }) => (
+                    <View style={{ width: screenWidth }}>
+                        <MemoCard item={item} index={index} />
+                    </View>
+                )}
                 style={styles.carousel}
-            >
-                {discoveredItems.map((item, index) => renderCard(item, index))}
-            </ScrollView>
+            />
 
-            {/* Pagination Dots */}
-            <View style={styles.pagination}>
-                {discoveredItems.map((_, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={[
-                            styles.dot,
-                            index === currentCardIndex && styles.active_dot
-                        ]}
-                        onPress={() => scrollToCard(index)}
-                    />
-                ))}
-            </View>
+            {/* Pagination Dots (adaptive, never exceeding screen width) */}
+            {dotIndices.length > 0 && (
+                <View style={styles.pagination}>
+                    {dotIndices.map((targetIndex, idx) => (
+                        <TouchableOpacity
+                            key={`${targetIndex}-${idx}`}
+                            onPress={() => scrollToCard(targetIndex)}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            style={styles.dot_touch}
+                        >
+                            <View
+                                style={[
+                                    styles.dot,
+                                    activeDotIndex === targetIndex && styles.active_dot
+                                ]}
+                            />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
 
             {/* Navigation Buttons */}
             <View style={styles.button_container}>
@@ -521,24 +584,30 @@ const styles = StyleSheet.create({
 
     pagination: {
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 15,
-        gap: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        width: '100%',
+    },
+
+    dot_touch: {
+        paddingVertical: 4,
+        paddingHorizontal: 2,
     },
 
     dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.35)',
     },
 
     active_dot: {
         backgroundColor: 'white',
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
     },
 
     button_container: {
