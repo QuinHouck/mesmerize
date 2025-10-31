@@ -97,17 +97,6 @@ const TestOptionScreen = () => {
             return;
         }
 
-        //TODO: Implement
-        // let listDiv: any = null;
-        // let listDivName: string | null = null;
-        if (packageInfo.divisions && packageInfo.test_division) {
-            let found = packageInfo.divisions.find((e: PackageDivision) => e.name === packageInfo.test_division);
-            if (found && found.options) {
-                // listDivName = packageInfo.test_division;
-                // listDiv = found.options;
-            }
-        }
-
         const testData = {
             pack: selectedPackage.name,
             div: selectedDiv ? selectedDiv.name : null,
@@ -253,7 +242,7 @@ const TestOptionScreen = () => {
                             : 'No attributes selected'}
                     </Text>
                     <View style={styles.attributes_container}>
-                        {packageInfo.attributes && packageInfo.attributes.filter((attribute: PackageAttribute) => attribute.type === "string" || attribute.type === "number").map((attribute: PackageAttribute) => {
+                        {packageInfo.attributes && packageInfo.attributes.filter((attribute: PackageAttribute) => attribute.type !== "map").map((attribute: PackageAttribute) => {
                             const isSelected = isAttributeSelected(attribute);
                             const isRequired = attribute.name === 'name';
                             return (

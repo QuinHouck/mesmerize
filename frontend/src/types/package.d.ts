@@ -3,7 +3,7 @@
 export interface PackageAttribute {
   name: string;
   title: string;
-  type: 'string' | 'number' | 'image';
+  type: 'string' | 'number' | 'image' | 'map';
   question: boolean;
   answer: boolean;
 }
@@ -48,3 +48,13 @@ export interface PackageListItem {
   name: string;
   version: string;
 }
+
+// Image data structure returned by getImages and used to verify/display images for items
+export interface ImageData {
+  image: any; // React Native ImageSourcePropType (imported asset)
+  uri: string; // The resolved URI of the image
+  ar: number; // Aspect ratio (width / height) used for proper image display
+}
+
+// Images map keyed by item name, used to verify and display images for quiz/test items
+export type Images = Record<string, ImageData> | null;

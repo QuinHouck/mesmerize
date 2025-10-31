@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { PackageAttribute, PackageInfo, PackageItem } from '../../types/package';
+import type { PackageAttribute, PackageInfo, PackageItem, Images } from '../../types/package';
 import type { InitializeTestPayload, SetTestAttributesPayload, SetTestPackagePayload, SubmitAttributeAnswerPayload, TestItemResult, TestView } from '../../types/test';
 import { resetResults } from "../helpers/testHelper";
 
@@ -23,7 +23,7 @@ interface TestState {
     totalItems: number;
     pointsEarned: number;
     totalPoints: number;
-    images: any;
+    images: Images;
     error: string | null;
 }
 

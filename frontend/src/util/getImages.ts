@@ -1,5 +1,5 @@
 import { Image } from 'react-native';
-import type { PackageItem } from '../types/package';
+import type { PackageItem, Images } from '../types/package';
 
 // Type definitions
 interface ImageConfig {
@@ -8,14 +8,8 @@ interface ImageConfig {
     height: string;
 }
 
-interface ImageData {
-    image: any;
-    uri: string;
-    ar: number;
-}
-
 interface GetImagesResult {
-    imgs: Record<string, ImageData>;
+    imgs: Images;
     height: string;
 }
 
@@ -90,7 +84,7 @@ export async function getImages(chosen: PackageItem[], pack: string): Promise<Ge
         // Load images using the configured loader function
         const images = config.loader();
 
-        const obj: Record<string, ImageData> = {};
+        const obj: NonNullable<Images> = {};
 
         for (const item of chosen) {
             try {

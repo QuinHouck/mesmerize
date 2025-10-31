@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { resetResults, getSelectedItems, updateWeights } from "../helpers/quizHelper";
-import type { PackageItem } from '../../types/package';
+import type { PackageItem, Images } from '../../types/package';
 import type { QuizRange, QuizResult, InitializeGamePayload, SubmitAnswerPayload, SetImagesPayload } from '../../types/quiz';
 
 // State interface
@@ -20,7 +20,7 @@ interface QuizState {
     correctAnswers: number;
     totalQuestions: number;
     timeLimit: number;
-    images: any;
+    images: Images;
     imageHeight: string;
     error: string | null;
 }

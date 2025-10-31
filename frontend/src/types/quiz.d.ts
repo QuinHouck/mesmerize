@@ -1,6 +1,6 @@
 // Quiz/Game types for multiple choice quiz functionality
 
-import type { PackageItem } from './package';
+import type { PackageItem, Images } from './package';
 
 export interface QuizRange {
   start: number;
@@ -26,7 +26,7 @@ export interface InitializeGamePayload {
   divisionOption: string | null;
   range: QuizRange | null;
   filteredItems: PackageItem[];
-  images: any;
+  images: Images | null;
   imageHeight: string;
   timeLimit: number;
   totalQuestions: number;
@@ -39,7 +39,7 @@ export interface SubmitAnswerPayload {
 }
 
 export interface SetImagesPayload {
-  images: any;
+  images: Images;
   imageHeight: string;
 }
 
