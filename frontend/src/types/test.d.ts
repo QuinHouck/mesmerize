@@ -1,6 +1,6 @@
 // Test types for write-in test functionality
 
-import type { PackageInfo, PackageAttribute, PackageItem } from './package';
+import type { PackageInfo, PackageAttribute, PackageItem, Images, AttributeType } from './package';
 
 export type TestView = 'name' | 'cards' | 'list' | 'map';
 
@@ -10,6 +10,7 @@ export interface TestAttributeResult {
     input: string | number;
     correct: boolean;
     answered: boolean;
+    type: AttributeType;
 }
 
 export interface TestItemResult {
@@ -41,5 +42,9 @@ export interface SubmitAttributeAnswerPayload {
 
 export interface SetTestAttributesPayload {
     attributeNames: string[];
+}
+
+export interface SetTestImagesPayload {
+    images: Images;
 }
 

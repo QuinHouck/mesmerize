@@ -5,9 +5,10 @@ import Modal from "react-native-modal";
 import { useTest, usePackages, useUser } from '../hooks/useRedux';
 
 import colors from '../util/colors';
-import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes } from '../store/slices/testSlice';
+import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes, setTestImages } from '../store/slices/testSlice';
 import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
 import { setLastTestSettings } from '../store/slices/userSlice';
+import { getAttributeImages } from '../store/helpers/testHelper';
 
 import type { PackageInfo, PackageAttribute, PackageItem, PackageDivision, PackageDivisionOption } from '../types/package';
 import type { InitializeTestPayload } from '../types/test';
@@ -90,7 +91,7 @@ const TestOptionScreen = () => {
     }, [downloadedPackages]);
 
 
-    function handleStart(): void {
+    async function handleStart(): Promise<void> {
         // Validate attribute selection
         if (selectedAttributes.length === 0) {
             alert('Please select at least one attribute to test');
@@ -123,6 +124,24 @@ const TestOptionScreen = () => {
             timeLimit: packageInfo.test_time || 300,
             selectedAttributes: selectedAttributes,
         };
+
+        // Load images if there are image attributes - wait for them to load before navigating
+        const hasImageAttributes = selectedAttributes.some((attr: PackageAttribute) => attr.type === 'image');
+        if (hasImageAttributes) {
+            const imageAttribute = selectedAttributes.find((attr: PackageAttribute) => attr.type === 'image');
+            if (imageAttribute) {
+                try {
+                    const images = await getAttributeImages(filteredItems, imageAttribute, selectedPackage.name);
+                    if (images) {
+                        test.dispatch(setTestImages({ images }));
+                    }
+                } catch (error) {
+                    console.error('Error loading images:', error);
+                    // Still navigate even if image loading fails - component can handle it
+                }
+            }
+        }
+
         test.dispatch(initializeTest(initializePayload));
 
         navigation.navigate("TestGame");

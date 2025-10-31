@@ -1,9 +1,9 @@
 // Package/content types
-
+export type AttributeType = 'string' | 'number' | 'image' | 'map';
 export interface PackageAttribute {
   name: string;
   title: string;
-  type: 'string' | 'number' | 'image' | 'map';
+  type: AttributeType;
   question: boolean;
   answer: boolean;
 }

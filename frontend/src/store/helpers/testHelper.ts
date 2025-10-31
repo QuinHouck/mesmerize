@@ -1,5 +1,6 @@
-import type { PackageAttribute, PackageItem } from '../../types/package';
+import type { Images, PackageAttribute, PackageItem } from '../../types/package';
 import type { TestAttributeResult, TestItemResult } from '../../types/test';
+import { getImages } from '../../util/getImages';
 
 /**
  * Creates initial results array for all items with empty answers
@@ -16,13 +17,14 @@ export const resetResults = (
         const attributeResults: TestAttributeResult[] = [];
         for (const attribute of attributes) {
             // Only include string or number attributes
-            if (attribute.type === 'string' || attribute.type === 'number') {
+            if (attribute.type!== 'map') {
                 attributeResults.push({
                     attributeName: attribute.name,
-                    answer: item[attribute.name],
+                    answer: attribute.type === 'image' ? item.name : item[attribute.name],
                     input: '',
                     correct: false,
                     answered: false,
+                    type: attribute.type,
                 });
             }
         }
@@ -37,6 +39,40 @@ export const resetResults = (
 
     return results;
 };
+
+/**
+ * Gets all images for the given items based on the attribute
+ * Returns a map of item names to their image data
+ * 
+ * @param items - Array of items to get images for
+ * @param attribute - The image attribute (used to determine if images should be loaded)
+ * @param packageName - Package name to determine which images to load
+ * @returns Promise resolving to Images object or null if no images found
+ */
+export const getAttributeImages = async (
+    items: PackageItem[],
+    attribute: PackageAttribute,
+    packageName: string
+): Promise<Images> => {
+    // Only proceed if attribute type is 'image'
+    if (attribute.type !== 'image') {
+        return null;
+    }
+
+    // If no items, return null
+    if (!items || items.length === 0) {
+        return null;
+    }
+
+    try {
+        // Use existing getImages function to load all images for the items
+        const { imgs } = await getImages(items, packageName);
+        return imgs;
+    } catch (error) {
+        console.error('Error loading attribute images:', error);
+        return null;
+    }
+}
 
 /**
  * Calculates total correct answers for a specific item

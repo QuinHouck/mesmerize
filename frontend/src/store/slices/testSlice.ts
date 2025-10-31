@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { PackageAttribute, PackageInfo, PackageItem, Images } from '../../types/package';
-import type { InitializeTestPayload, SetTestAttributesPayload, SetTestPackagePayload, SubmitAttributeAnswerPayload, TestItemResult, TestView } from '../../types/test';
+import type { Images, PackageAttribute, PackageInfo, PackageItem } from '../../types/package';
+import type { InitializeTestPayload, SetTestAttributesPayload, SetTestImagesPayload, SetTestPackagePayload, SubmitAttributeAnswerPayload, TestItemResult, TestView } from '../../types/test';
 import { resetResults } from "../helpers/testHelper";
 
 // State interface
@@ -217,7 +217,7 @@ const testSlice = createSlice({
             state.lastDiscoveredItem = null;
             state.pointsEarned = 0;
             state.timeElapsed = 0;
-            
+
             // Recreate results array with fresh data from filteredItems
             if (state.filteredItems.length > 0 && state.selectedAttributes.length > 0) {
                 state.results = resetResults(state.filteredItems, state.selectedAttributes);
@@ -232,6 +232,16 @@ const testSlice = createSlice({
         // Clear error
         clearTestError: (state) => {
             state.error = null;
+        },
+
+        // Set images
+        setTestImages: (state, action: PayloadAction<SetTestImagesPayload>) => {
+            const { images } = action.payload;
+            if (images) {
+                state.images = images;
+            } else {
+                console.log("No images found")
+            }
         },
     },
 });
@@ -251,6 +261,7 @@ export const {
     quickRestartTest,
     setTestError,
     clearTestError,
+    setTestImages,
 } = testSlice.actions;
 
 // Export reducer
