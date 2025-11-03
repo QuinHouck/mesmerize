@@ -14,7 +14,6 @@ import type { PackageInfo, PackageAttribute, PackageItem, PackageDivision, Packa
 import type { InitializeTestPayload } from '../types/test';
 
 import DropDown from '../icons/DropDown.svg';
-import Check from '../icons/Check.svg';
 import { TestOptionScreenNavigationProp } from 'types/navigation';
 
 const TestOptionScreen = () => {
@@ -233,62 +232,39 @@ const TestOptionScreen = () => {
                     <DropDown style={styles.button_icon} />
                 </TouchableOpacity>}
             </View>
-
-            <ScrollView style={styles.content_scroll}>
-                {/* Division Selection */}
-                <View style={styles.section_container}>
-                    <Text style={styles.section_title}>Select Division (Optional)</Text>
-                    <View style={styles.division_container}>
-                        <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
-                            <Text style={(selectedDiv === null) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
+            <View style={styles.division_container}>
+                <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
+                    <Text style={(selectedDiv === null) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
+                </TouchableOpacity>
+                {packageInfo?.divisions && Array.isArray(packageInfo.divisions) && packageInfo.divisions.map((division: PackageDivision) => {
+                    return (
+                        <TouchableOpacity key={division.name} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
+                            <Text style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_title_selected : styles.division_button_title}>{(selectedDivOption) ? selectedDivOption.title : division.title}</Text>
                         </TouchableOpacity>
-                        {packageInfo.divisions && packageInfo.divisions.map((division: PackageDivision) => {
-                            return (
-                                <TouchableOpacity key={division.title} style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(division)}>
-                                    <Text style={(selectedDiv && selectedDiv.name === division.name) ? styles.division_button_title_selected : styles.division_button_title}>{(selectedDivOption) ? selectedDivOption.title : division.title}</Text>
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </View>
+                    );
+                })}
+            </View>
+            <View style={styles.attributes_container}>
+                <View style={styles.attributes_title}>
+                    <Text style={styles.section_text}>Select Attributes:</Text>
                 </View>
-
-                {/* Attribute Selection */}
-                <View style={styles.section_container}>
-                    <Text style={styles.section_title}>Select Attributes to Test</Text>
-                    <Text style={styles.section_subtitle}>
-                        {selectedAttributes.length > 0
-                            ? `${selectedAttributes.length} attribute(s) selected`
-                            : 'No attributes selected'}
-                    </Text>
-                    <View style={styles.attributes_container}>
-                        {packageInfo.attributes && packageInfo.attributes.filter((attribute: PackageAttribute) => attribute.type !== "map").map((attribute: PackageAttribute) => {
-                            const isSelected = isAttributeSelected(attribute);
-                            const isRequired = attribute.name === 'name';
-                            return (
-                                <TouchableOpacity
-                                    key={attribute.name}
-                                    style={[
-                                        styles.attribute_button,
-                                        isSelected && styles.attribute_button_selected
-                                    ]}
-                                    onPress={() => handleAttributeToggle(attribute)}
-                                    disabled={isRequired}
-                                >
-                                    <Text style={[
-                                        styles.attribute_button_text,
-                                        isSelected && styles.attribute_button_text_selected
-                                    ]}>
-                                        {attribute.title}
-                                    </Text>
-                                    {isSelected && (
-                                        <Check style={styles.check_icon} />
-                                    )}
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </View>
-                </View>
-            </ScrollView>
+                <ScrollView style={styles.attributes_scroll} contentContainerStyle={styles.attributes_content}>
+                    {packageInfo && packageInfo.attributes && packageInfo.attributes.filter((attribute: PackageAttribute) => attribute.type !== "map").map((attribute: PackageAttribute) => {
+                        const isSelected = isAttributeSelected(attribute);
+                        const isRequired = attribute.name === 'name';
+                        return (
+                            <TouchableOpacity
+                                key={attribute.name}
+                                style={isSelected ? styles.attribute_button_selected : styles.attribute_button}
+                                onPress={() => handleAttributeToggle(attribute)}
+                                disabled={isRequired}
+                            >
+                                <Text style={isSelected ? styles.attribute_text_selected : styles.attribute_text}>{attribute.title}</Text>
+                            </TouchableOpacity>
+                        )
+                    })}
+                </ScrollView>
+            </View>
 
             <View style={styles.bottom_container}>
                 <TouchableOpacity style={styles.start_button} onPress={handleStart}>
@@ -338,7 +314,7 @@ const styles = StyleSheet.create({
     main_container: {
         flex: 1,
         flexDirection: 'column',
-        backgroundColor: "#222222",
+        backgroundColor: colors.darkGrey,
     },
 
     top_container: {
@@ -394,79 +370,78 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
     },
 
-    content_scroll: {
-        flex: 1,
-        backgroundColor: colors.whitePurple,
-    },
-
-    section_container: {
-        paddingHorizontal: 30,
-        paddingVertical: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.2)',
-    },
-
-    section_title: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10,
-    },
-
-    section_subtitle: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: 14,
-        fontWeight: '400',
-        marginBottom: 15,
-    },
-
     division_container: {
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        paddingHorizontal: 30,
+        paddingVertical: 10,
+        backgroundColor: colors.whitePurple
     },
 
     attributes_container: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
+        flex: 1,
+        width: '100%',
+        backgroundColor: colors.whitePurple
+    },
+
+    attributes_title: {
+        padding: 10,
+        alignItems: 'center',
+        backgroundColor: colors.darkPurple
+    },
+
+    section_text: {
+        color: 'white',
+        fontSize: 15,
+        fontWeight: '500'
+    },
+
+    attributes_scroll: {
+        flex: 1,
+    },
+
+    attributes_content: {
+        alignItems: 'center',
+        padding: 20,
+        gap: 20,
     },
 
     attribute_button: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        width: '100%',
         paddingVertical: 10,
-        paddingHorizontal: 15,
         backgroundColor: 'white',
-        borderRadius: 8,
-        borderWidth: 2,
-        borderColor: colors.lightPurple,
-        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 5,
+        borderWidth: 4,
+        borderColor: colors.lightPurple
     },
 
     attribute_button_selected: {
+        width: '100%',
+        paddingVertical: 10,
         backgroundColor: colors.lightPurple,
-        borderColor: colors.lightPurple,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 5,
+        borderWidth: 4,
+        borderColor: colors.lightPurple
     },
 
-    attribute_button_text: {
+    attribute_text: {
         color: colors.lightPurple,
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 15,
+        fontWeight: '600'
     },
 
-    attribute_button_text_selected: {
+    attribute_text_selected: {
         color: 'white',
-    },
-
-    check_icon: {
-        width: 18,
-        height: 18,
-        color: 'white',
+        fontSize: 15,
+        fontWeight: '600'
     },
 
     division_button: {
-        minWidth: '50%',
+        minWidth: '20%',
         paddingVertical: 10,
         paddingHorizontal: 5,
         backgroundColor: 'white',
@@ -478,7 +453,7 @@ const styles = StyleSheet.create({
     },
 
     division_button_selected: {
-        minWidth: '50%',
+        minWidth: '20%',
         paddingVertical: 10,
         paddingHorizontal: 5,
         backgroundColor: colors.lightPurple,
@@ -491,13 +466,13 @@ const styles = StyleSheet.create({
 
     division_button_title: {
         color: colors.lightPurple,
-        fontSize: 20,
+        fontSize: 15,
         fontWeight: '600'
     },
 
     division_button_title_selected: {
         color: 'white',
-        fontSize: 20,
+        fontSize: 15,
         fontWeight: '600'
     },
 
@@ -533,15 +508,13 @@ const styles = StyleSheet.create({
     },
 
     modal_options_container: {
-        width: '70%',
+        width: '80%',
         height: '50%',
         backgroundColor: colors.whitePurple,
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-evenly',
         borderRadius: 5,
-        borderWidth: 5,
-        borderColor: colors.lightPurple
     },
 
     modal_options_button: {
@@ -566,7 +539,9 @@ const styles = StyleSheet.create({
     },
 
     empty_text: {
-        color: 'white'
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
     },
 
     loading_container: {

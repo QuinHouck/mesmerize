@@ -34,6 +34,7 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
     const test = useTest();
 
     const lastDiscoveredItem = test.lastDiscoveredItem;
+    const attributes = test.selectedAttributes;
 
     const [input, setInput] = useState<string>("");
     const [lastInput, setLastInput] = useState<string>(lastDiscoveredItem?.name || "");
@@ -161,12 +162,14 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
                     >
                         <Text style={styles.button_text}>List</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.button]}
-                        onPress={() => handleViewChange('cards')}
-                    >
-                        <Text style={styles.button_text}>Cards</Text>
-                    </TouchableOpacity>
+                    {attributes.length > 1 || (attributes.length === 1 && attributes[0].name !== 'name') ? (
+                        <TouchableOpacity
+                            style={[styles.button]}
+                            onPress={() => handleViewChange('cards')}
+                        >
+                            <Text style={styles.button_text}>Cards</Text>
+                        </TouchableOpacity>
+                    ) : null}
                     {/* {hasMaps && (
                         <TouchableOpacity 
                             style={[styles.button]} 

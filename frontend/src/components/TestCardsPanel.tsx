@@ -289,7 +289,7 @@ const TestCardsPanel = React.memo(() => {
      * Handles submission of an attribute answer
      */
     const handleAttributeSubmit = React.useCallback((item: PackageItem, attribute: PackageAttribute, input: string | number): boolean => {
-        const correctAnswer = item[attribute.name];
+        const correctAnswer = item[attribute.name.toLowerCase()];
         const isCorrect = checkAnswer(input, correctAnswer, attribute.type);
 
         test.dispatch(submitAttributeAnswer({

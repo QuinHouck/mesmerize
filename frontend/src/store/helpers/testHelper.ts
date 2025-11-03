@@ -20,7 +20,7 @@ export const resetResults = (
             if (attribute.type!== 'map') {
                 attributeResults.push({
                     attributeName: attribute.name,
-                    answer: attribute.type === 'image' ? item.name : item[attribute.name],
+                    answer: attribute.type === 'image' ? item.name : item[attribute.name.toLowerCase()],
                     input: '',
                     correct: false,
                     answered: false,

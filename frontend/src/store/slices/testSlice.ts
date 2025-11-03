@@ -155,7 +155,16 @@ const testSlice = createSlice({
 
         // Set current view (name, cards, list, map)
         setCurrentView: (state, action: PayloadAction<TestView>) => {
-            state.currentView = action.payload;
+            const requestedView = action.payload;
+            // Prevent navigation to cards if only name attribute is selected
+            const onlyNameSelected = state.selectedAttributes.length === 1 && 
+                state.selectedAttributes[0].name === 'name';
+            if (requestedView === 'cards' && onlyNameSelected) {
+                // Redirect to name view if trying to navigate to cards with only name selected
+                state.currentView = 'name';
+            } else {
+                state.currentView = requestedView;
+            }
         },
 
         // Discover a new item (add to discovered items)

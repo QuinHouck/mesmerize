@@ -22,8 +22,12 @@ const TestResultsScreen = () => {
     const discoveredItems: PackageItem[] = test.discoveredItems;
     const timeElapsed: number = test.timeElapsed;
     const packageInfo = test.packageInfo;
+    const selectedAttributes = test.selectedAttributes;
 
-    const totalAttributes: number = test.selectedAttributes.length;
+    const totalAttributes: number = selectedAttributes.length;
+    
+    // Check if only name attribute is selected
+    const onlyNameSelected = selectedAttributes.length === 1 && selectedAttributes[0].name === 'name';
 
     // Local state for expanded items
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -295,25 +299,38 @@ const TestResultsScreen = () => {
 
                                                 return (
                                                     <View key={itemName || index} style={styles.item_result}>
-                                                        <TouchableOpacity
-                                                            style={styles.item_header_touchable}
-                                                            onPress={() => toggleItem(itemName)}
-                                                        >
-                                                            <View style={styles.item_header}>
-                                                                <Text style={styles.item_name}>{itemName}</Text>
-                                                                <View style={styles.item_header_right}>
-                                                                    <Text style={styles.item_score}>
-                                                                        {correct}/{totalAttributes}
-                                                                    </Text>
-                                                                    <Text style={styles.expand_indicator}>
-                                                                        {isExpanded ? '▼' : '▶'}
-                                                                    </Text>
+                                                        {onlyNameSelected ? (
+                                                            <View style={styles.item_header_touchable}>
+                                                                <View style={styles.item_header}>
+                                                                    <Text style={styles.item_name}>{itemName}</Text>
+                                                                    <View style={styles.item_header_right}>
+                                                                        <Text style={styles.item_score}>
+                                                                            {correct}/{totalAttributes}
+                                                                        </Text>
+                                                                    </View>
                                                                 </View>
                                                             </View>
-                                                        </TouchableOpacity>
+                                                        ) : (
+                                                            <>
+                                                                <TouchableOpacity
+                                                                    style={styles.item_header_touchable}
+                                                                    onPress={() => toggleItem(itemName)}
+                                                                >
+                                                                    <View style={styles.item_header}>
+                                                                        <Text style={styles.item_name}>{itemName}</Text>
+                                                                        <View style={styles.item_header_right}>
+                                                                            <Text style={styles.item_score}>
+                                                                                {correct}/{totalAttributes}
+                                                                            </Text>
+                                                                            <Text style={styles.expand_indicator}>
+                                                                                {isExpanded ? '▼' : '▶'}
+                                                                            </Text>
+                                                                        </View>
+                                                                    </View>
+                                                                </TouchableOpacity>
 
-                                                        {/* Expanded attributes view */}
-                                                        {isExpanded && (
+                                                                {/* Expanded attributes view */}
+                                                                {isExpanded && (
                                                             <View style={styles.attributes_container}>
                                                                 {itemResult.attributeResults.map((attr, attrIndex) => {
                                                                     if (attr.attributeName === 'name') {
@@ -347,6 +364,8 @@ const TestResultsScreen = () => {
                                                                     )
                                                                 })}
                                                             </View>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </View>
                                                 );
@@ -363,25 +382,38 @@ const TestResultsScreen = () => {
 
                                     return (
                                         <View key={itemName || index} style={styles.item_result}>
-                                            <TouchableOpacity
-                                                style={styles.item_header_touchable}
-                                                onPress={() => toggleItem(itemName)}
-                                            >
-                                                <View style={styles.item_header}>
-                                                    <Text style={styles.item_name}>{itemName}</Text>
-                                                    <View style={styles.item_header_right}>
-                                                        <Text style={styles.item_score}>
-                                                            {correct}/{totalAttributes}
-                                                        </Text>
-                                                        <Text style={styles.expand_indicator}>
-                                                            {isExpanded ? '▼' : '▶'}
-                                                        </Text>
+                                            {onlyNameSelected ? (
+                                                <View style={styles.item_header_touchable}>
+                                                    <View style={styles.item_header}>
+                                                        <Text style={styles.item_name}>{itemName}</Text>
+                                                        <View style={styles.item_header_right}>
+                                                            <Text style={styles.item_score}>
+                                                                {correct}/{totalAttributes}
+                                                            </Text>
+                                                        </View>
                                                     </View>
                                                 </View>
-                                            </TouchableOpacity>
+                                            ) : (
+                                                <>
+                                                    <TouchableOpacity
+                                                        style={styles.item_header_touchable}
+                                                        onPress={() => toggleItem(itemName)}
+                                                    >
+                                                        <View style={styles.item_header}>
+                                                            <Text style={styles.item_name}>{itemName}</Text>
+                                                            <View style={styles.item_header_right}>
+                                                                <Text style={styles.item_score}>
+                                                                    {correct}/{totalAttributes}
+                                                                </Text>
+                                                                <Text style={styles.expand_indicator}>
+                                                                    {isExpanded ? '▼' : '▶'}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                    </TouchableOpacity>
 
-                                            {/* Expanded attributes view */}
-                                            {isExpanded && (
+                                                    {/* Expanded attributes view */}
+                                                    {isExpanded && (
                                                 <View style={styles.attributes_container}>
                                                     {itemResult.attributeResults.map((attr, attrIndex) => {
                                                         if (attr.attributeName === 'name') {
@@ -413,12 +445,14 @@ const TestResultsScreen = () => {
                                                                 </View>
                                                             </View>
                                                         )
-                                                    })}
-                                                </View>
-                                            )}
-                                        </View>
-                                    );
-                                })
+                                                                })}
+                                                            </View>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </View>
+                                        );
+                                    })
                             )}
                         </>
                     )}

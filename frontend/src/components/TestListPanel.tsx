@@ -301,12 +301,14 @@ const TestListPanel = React.memo(() => {
                 >
                     <Text style={styles.button_text}>Names</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.nav_button}
-                    onPress={() => onViewChange('cards')}
-                >
-                    <Text style={styles.button_text}>Cards</Text>
-                </TouchableOpacity>
+                {attributes.length > 1 || (attributes.length === 1 && attributes[0].name !== 'name') ? (
+                    <TouchableOpacity
+                        style={styles.nav_button}
+                        onPress={() => onViewChange('cards')}
+                    >
+                        <Text style={styles.button_text}>Cards</Text>
+                    </TouchableOpacity>
+                ) : null}
             </View>
         </View>
     );
