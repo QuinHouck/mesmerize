@@ -26,7 +26,6 @@ import {
     submitAttributeAnswer
 } from '../store/slices/testSlice';
 
-import Check from '../icons/Check.svg';
 
 // Import types
 import type { Images, PackageAttribute, PackageItem } from '../types/package';
@@ -397,9 +396,6 @@ const TestCardsPanel = React.memo(() => {
                             returnKeyType='done'
                             onSubmitEditing={handleSubmit}
                         />
-                        {isCorrect && (
-                            <Check style={styles.check_icon} />
-                        )}
                     </View>
                 </View>
             );
@@ -757,7 +753,6 @@ const styles = StyleSheet.create({
     },
 
     right_images_container: {
-        width: 200,
         justifyContent: 'flex-start',
         alignItems: 'center',
         gap: 20,
@@ -832,12 +827,6 @@ const styles = StyleSheet.create({
     wrong_input: {
         borderColor: '#ed0e0e',
         backgroundColor: '#ffd4d4',
-    },
-
-    check_icon: {
-        width: 24,
-        height: 24,
-        color: '#2ebf44',
     },
 
     pagination: {
