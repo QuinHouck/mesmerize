@@ -1,10 +1,11 @@
 import { useIsFocused, useNavigation } from '@react-navigation/core';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTest } from '../hooks/useRedux';
 
 import TestCardsPanel from '../components/TestCardsPanel';
 import TestListPanel from '../components/TestListPanel';
+import TestMapPanel from '../components/TestMapPanel';
 import TestNamePanel from '../components/TestNamePanel';
 
 
@@ -13,8 +14,6 @@ import {
 } from '../store/slices/testSlice';
 
 import { TestGameScreenNavigationProp } from 'types/navigation';
-
-const screenWidth = Dimensions.get('window').width;
 
 /**
  * TestGameScreen - Main test game container
@@ -111,17 +110,6 @@ const TestGameScreen = () => {
 
 
     /**
-     * Renders the map view
-     */
-    function renderMapView(): React.JSX.Element {
-        return (
-            <ScrollView style={styles.scroll_map_container}>
-                {/* <Map /> */}
-            </ScrollView>
-        );
-    }
-
-    /**
      * Renders the appropriate panel based on current view
      */
     function renderCurrentView(): React.JSX.Element {
@@ -135,7 +123,9 @@ const TestGameScreen = () => {
                     <TestListPanel />
                 );
             case 'map':
-                return renderMapView();
+                return (
+                    <TestMapPanel />
+                );
             case 'name':
             default:
                 return (
@@ -262,30 +252,5 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
-    },
-
-    // Map View
-    map_container: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    scroll_map_container: {
-        width: screenWidth,
-        paddingTop: 20,
-    },
-
-    list_div_title: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderBottomWidth: 2,
-        paddingHorizontal: 10,
-        borderBottomColor: 'rgba(255,255,255,1)',
-    },
-
-    list_div_title_text: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '500',
     },
 });

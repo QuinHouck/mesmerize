@@ -25,6 +25,7 @@ const TestListPanel = React.memo(() => {
     const totalItems: number = test.totalItems;
     const results: TestItemResult[] = test.results;
     const attributes: PackageAttribute[] = test.selectedAttributes;
+    const hasMapAttribute: boolean = test.hasMapAttribute;
     const packageInfo = test.packageInfo;
 
     function onViewChange(view: TestView): void {
@@ -309,6 +310,14 @@ const TestListPanel = React.memo(() => {
                         <Text style={styles.button_text}>Cards</Text>
                     </TouchableOpacity>
                 ) : null}
+                {hasMapAttribute && (
+                    <TouchableOpacity
+                        style={styles.nav_button}
+                        onPress={() => onViewChange('map')}
+                    >
+                        <Text style={styles.button_text}>Map</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

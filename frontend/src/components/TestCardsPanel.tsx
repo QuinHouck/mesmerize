@@ -51,6 +51,7 @@ const TestCardsPanel = React.memo(() => {
     const discoveredItems: PackageItem[] = test.discoveredItems;
     const results: TestItemResult[] = test.results;
     const images: Images = test.images;
+    const hasMapAttribute: boolean = test.hasMapAttribute;
 
     const currentItem = discoveredItems[currentCardIndex];
 
@@ -648,14 +649,22 @@ const TestCardsPanel = React.memo(() => {
                     style={styles.nav_button}
                     onPress={() => handleViewChange('name')}
                 >
-                    <Text style={styles.button_text}>← Names</Text>
+                    <Text style={styles.button_text}>Names</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.nav_button}
                     onPress={() => handleViewChange('list')}
                 >
-                    <Text style={styles.button_text}>List →</Text>
+                    <Text style={styles.button_text}>List</Text>
                 </TouchableOpacity>
+                {hasMapAttribute && (
+                    <TouchableOpacity
+                        style={styles.nav_button}
+                        onPress={() => handleViewChange('map')}
+                    >
+                        <Text style={styles.button_text}>Map</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Image Selection Modal */}

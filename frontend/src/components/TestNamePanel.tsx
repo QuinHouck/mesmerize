@@ -35,6 +35,7 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
 
     const lastDiscoveredItem = test.lastDiscoveredItem;
     const attributes = test.selectedAttributes;
+    const hasMapAttribute: boolean = test.hasMapAttribute;
 
     const [input, setInput] = useState<string>("");
     const [lastInput, setLastInput] = useState<string>(lastDiscoveredItem?.name || "");
@@ -170,14 +171,14 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
                             <Text style={styles.button_text}>Cards</Text>
                         </TouchableOpacity>
                     ) : null}
-                    {/* {hasMaps && (
+                    {hasMapAttribute && (
                         <TouchableOpacity 
                             style={[styles.button]} 
-                            onPress={() => onViewChange('map')}
+                            onPress={() => handleViewChange('map')}
                         >
                             <Text style={styles.button_text}>Map</Text>
                         </TouchableOpacity>
-                    )} */}
+                    )}
                 </View>
             </View>
 

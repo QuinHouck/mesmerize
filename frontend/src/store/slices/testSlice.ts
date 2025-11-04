@@ -25,6 +25,7 @@ interface TestState {
     totalPoints: number;
     images: Images;
     error: string | null;
+    hasMapAttribute: boolean;
 }
 
 // Initial state
@@ -49,6 +50,7 @@ const initialState: TestState = {
     totalPoints: 0,
     images: null,
     error: null,
+    hasMapAttribute: false,
 };
 
 // Create the slice
@@ -147,6 +149,8 @@ const testSlice = createSlice({
             state.timeElapsed = 0;
 
             state.results = resetResults(filteredItems, state.selectedAttributes);
+
+            state.hasMapAttribute = state.packageInfo?.attributes?.some(attr => attr.type === 'map') || false;
         },
 
         setCurrentItemIndex: (state, action: PayloadAction<number>) => {
@@ -162,6 +166,11 @@ const testSlice = createSlice({
             if (requestedView === 'cards' && onlyNameSelected) {
                 // Redirect to name view if trying to navigate to cards with only name selected
                 state.currentView = 'name';
+            } else if (requestedView === 'map') {
+                // Only allow navigation to map if package has a map attribute
+                if (state.hasMapAttribute) {
+                    state.currentView = requestedView;
+                }
             } else {
                 state.currentView = requestedView;
             }
