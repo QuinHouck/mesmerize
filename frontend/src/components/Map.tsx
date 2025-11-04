@@ -1,10 +1,9 @@
+import { Africa, Asia, Europe, NA, Oceania, SA } from 'images/countries/continents/countries';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { MapProps } from '../types/map';
-
-import { Africa, Asia, Europe, NA, Oceania, SA } from 'images/countries/continents/countries';
 import { ContinentInfo } from 'types/map';
 import ContinentMap from '../images/countries/continents/ContinentMap';
+import type { MapProps } from '../types/map';
 
 
 /**

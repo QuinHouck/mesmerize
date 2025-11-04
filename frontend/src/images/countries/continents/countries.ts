@@ -1,19 +1,23 @@
 import { SA_countries } from './SA';
 import { NA_countries } from './NA';
+import { Europe_countries } from './Europe';
+import { Asia_countries } from './Asia';
+import { Africa_countries } from './Africa';
+import { Oceania_countries } from './Oceania';
 
 export const Africa = {
     id: 'Africa',
     height: 246.371,
     width: 248.037,
     mappedAttributeId: 'iso2',
-    countries: SA_countries
+    countries: Africa_countries
 }
 export const Asia = {
     id: 'Asia',
     height: 439.13,
     width: 491,
     mappedAttributeId: 'iso2',
-    countries: SA_countries
+    countries: Asia_countries
 }
 export const NA = {
     id: 'NA',
@@ -27,7 +31,7 @@ export const Oceania = {
     height: 249,
     width: 304,
     mappedAttributeId: 'iso2',
-    countries: SA_countries
+    countries: Oceania_countries
 }
 
 export const SA = {
@@ -43,5 +47,5 @@ export const Europe = {
     height: 763,
     width: 745,
     mappedAttributeId: 'iso2',
-    countries: SA_countries
+    countries: Europe_countries
 }
