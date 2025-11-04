@@ -259,7 +259,7 @@ const QuizGameScreen: React.FC = () => {
             case "map":
                 return (
                     <View style={{ height: '100%', width: "100%", alignItems: 'center' }}>
-                        {/* <Map selected={current} pack={pack} div={div} divOption={divOption} type={"Quiz"} style={{ width: '100%' }} /> */}
+                        <Map selected={selected[idx]} packName={pack} div={div} divOption={divOption} type={"Quiz"}/>
                     </View>
                 );
             default:

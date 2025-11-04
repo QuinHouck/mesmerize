@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { resetResults, getSelectedItems, updateWeights } from "../helpers/quizHelper";
+import { resetResults, getSelectedItems, updateWeights } from "../../utils/quizHelper";
 import type { PackageItem, Images } from '../../types/package';
 import type { QuizRange, QuizResult, InitializeGamePayload, SubmitAnswerPayload, SetImagesPayload } from '../../types/quiz';
 

@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Images, PackageAttribute, PackageInfo, PackageItem } from '../../types/package';
 import type { InitializeTestPayload, SetTestAttributesPayload, SetTestImagesPayload, SetTestPackagePayload, SubmitAttributeAnswerPayload, TestItemResult, TestView } from '../../types/test';
-import { resetResults } from "../helpers/testHelper";
+import { resetResults } from "../../utils/testHelper";
 
 // State interface
 interface TestState {

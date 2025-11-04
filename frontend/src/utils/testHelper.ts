@@ -1,6 +1,6 @@
-import type { Images, PackageAttribute, PackageItem } from '../../types/package';
-import type { TestAttributeResult, TestItemResult } from '../../types/test';
-import { getImages } from '../../util/getImages';
+import type { Images, PackageAttribute, PackageItem } from '../types/package';
+import type { TestAttributeResult, TestItemResult } from '../types/test';
+import { getImages } from '../util/getImages';
 
 /**
  * Creates initial results array for all items with empty answers

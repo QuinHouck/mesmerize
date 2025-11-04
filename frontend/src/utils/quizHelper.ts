@@ -1,5 +1,5 @@
-import type { PackageItem } from '../../types/package';
-import type { QuizResult } from '../../types/quiz';
+import type { PackageItem } from '../types/package';
+import type { QuizResult } from '../types/quiz';
 
 export const resetResults = (
     items: PackageItem[],

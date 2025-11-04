@@ -8,7 +8,7 @@ import colors from '../util/colors';
 import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes, setTestImages } from '../store/slices/testSlice';
 import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
 import { setLastTestSettings } from '../store/slices/userSlice';
-import { getAttributeImages } from '../store/helpers/testHelper';
+import { getAttributeImages } from '../utils/testHelper';
 
 import type { PackageInfo, PackageAttribute, PackageItem, PackageDivision, PackageDivisionOption } from '../types/package';
 import type { InitializeTestPayload } from '../types/test';
