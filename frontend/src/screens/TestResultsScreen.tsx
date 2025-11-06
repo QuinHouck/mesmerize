@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import colors from '../util/colors';
 import { useTest } from '../hooks/useRedux';

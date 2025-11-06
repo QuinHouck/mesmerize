@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Modal from "react-native-modal";
 
 import colors from '../util/colors';

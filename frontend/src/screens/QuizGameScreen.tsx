@@ -1,6 +1,7 @@
 import { useIsFocused, useNavigation } from '@react-navigation/core';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Modal from "react-native-modal";
 
 import { useQuiz } from '../hooks/useRedux';

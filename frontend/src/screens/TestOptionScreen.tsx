@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Modal from "react-native-modal";
 import { useTest, usePackages, useUser } from '../hooks/useRedux';
 

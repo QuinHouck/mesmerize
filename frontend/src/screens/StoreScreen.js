@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import NetInfo from '@react-native-community/netinfo';
 
