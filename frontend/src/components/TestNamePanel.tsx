@@ -151,12 +151,12 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
             {/* Stats and Navigation */}
             <View style={styles.stats_container}>
                 <View style={styles.stats_left}>
-                    <View style={{ borderColor: 'white', borderBottomWidth: 2, width: '100%' }}>
+                    <View>
                         <Text style={styles.stats_left_text}>Last Answer</Text>
                     </View>
                     <Text style={styles.stats_left_text}>{lastInput}</Text>
                 </View>
-                <View style={[styles.stats_left, { paddingBottom: 10 }]}>
+                <View style={styles.stats_right}>
                     <TouchableOpacity
                         style={[styles.button]}
                         onPress={() => handleViewChange('list')}
@@ -172,8 +172,8 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
                         </TouchableOpacity>
                     ) : null}
                     {hasMapAttribute && (
-                        <TouchableOpacity 
-                            style={[styles.button]} 
+                        <TouchableOpacity
+                            style={[styles.button]}
                             onPress={() => handleViewChange('map')}
                         >
                             <Text style={styles.button_text}>Map</Text>
@@ -238,27 +238,34 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 15,
         fontWeight: '600',
-        borderBottomWidth: 3,
+        borderBottomWidth: 1,
         borderBottomColor: 'white',
-        paddingLeft: 15,
+        paddingLeft: 10,
+        paddingBottom: 5,
+    },
+
+    stats_right: {
+        gap: 10,
+        minWidth: '25%',
+        marginBottom: 5,
+        paddingRight: 10,
     },
 
     button: {
+        padding: 5,
+        width: 80,
         alignSelf: 'flex-end',
-        width: 60,
         justifyContent: 'center',
         alignItems: 'center',
+        borderColor: 'white',
+        borderWidth: 1,
+        borderRadius: 5,
     },
 
     button_text: {
         color: 'white',
         fontSize: 16,
         fontWeight: '400',
-        borderColor: 'white',
-        borderWidth: 1,
-        borderRadius: 5,
-        paddingVertical: 3,
-        paddingHorizontal: 5,
     },
 
     answer_container: {

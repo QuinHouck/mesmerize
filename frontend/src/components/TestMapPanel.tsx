@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
+    Dimensions,
     FlatList,
     StyleSheet,
     Text,
@@ -15,6 +16,8 @@ import colors from '../util/colors';
 import type { PackageItem } from '../types/package';
 import type { TestView } from '../types/test';
 
+const screenWidth = Dimensions.get('window').width;
+
 /**
  * TestMapPanel - Component for displaying discovered items on a map
  * Shows grouped maps by division if test_division exists and no division is selected
@@ -22,7 +25,8 @@ import type { TestView } from '../types/test';
  */
 const TestMapPanel = React.memo((): React.JSX.Element => {
     const test = useTest();
-    
+    const flatListRef = useRef<FlatList<{ divisionValue: string; divisionTitle: string; items: PackageItem[] }>>(null);
+
     const discoveredItems: PackageItem[] = test.discoveredItems;
     const pack: string | null = test.packageName;
     const div: string | null = test.division;
@@ -42,10 +46,10 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
      */
     function getDivisionTitle(divisionValue: string): string {
         if (!packageInfo?.test_division || !packageInfo?.divisions) return divisionValue;
-        
+
         const division = packageInfo.divisions.find((d: any) => d.name === packageInfo.test_division);
         if (!division) return divisionValue;
-        
+
         const option = division.options?.find((opt: any) => opt.name === divisionValue);
         return option?.title || divisionValue;
     }
@@ -59,19 +63,19 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
         }
 
         // Group items by division value
-        const grouped = new Map<string, PackageItem[]>();
-        
+        const grouped: Record<string, PackageItem[]> = {};
+
         filteredItems.forEach(item => {
             const divisionValue = item[packageInfo.test_division!] || '';
-            if (!grouped.has(divisionValue)) {
-                grouped.set(divisionValue, []);
+            if (!grouped[divisionValue]) {
+                grouped[divisionValue] = [];
             }
-            grouped.get(divisionValue)!.push(item);
+            grouped[divisionValue].push(item);
         });
 
         // Create result array with titles
         const result: Array<{ divisionValue: string; divisionTitle: string; items: PackageItem[] }> = [];
-        grouped.forEach((items, divisionValue) => {
+        Object.entries(grouped).forEach(([divisionValue, items]) => {
             const divisionTitle = getDivisionTitle(divisionValue);
             result.push({ divisionValue, divisionTitle, items });
         });
@@ -80,12 +84,12 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
         result.sort((a, b) => {
             const valueA = a.divisionValue;
             const valueB = b.divisionValue;
-            
+
             // Handle numeric sorting
             if (!isNaN(Number(valueA)) && !isNaN(Number(valueB))) {
                 return Number(valueA) - Number(valueB);
             }
-            
+
             // Handle string sorting
             return String(valueA).localeCompare(String(valueB));
         });
@@ -116,22 +120,31 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
      */
     function renderMapItem({ item: group }: { item: { divisionValue: string; divisionTitle: string; items: PackageItem[] } }): React.JSX.Element {
         const groupDiscoveredItems = getDiscoveredItemsForDivision(group.divisionValue);
-        
+        const discoveredCount = groupDiscoveredItems.length;
+        const totalCount = group.items.length;
+
         return (
-            <View style={styles.map_group_container}>
-                <View style={styles.section_header}>
-                    <Text style={styles.section_title}>
-                        {group.divisionTitle || 'Uncategorized'}
-                    </Text>
-                </View>
-                <View style={styles.map_container}>
-                    <Map 
-                        selected={groupDiscoveredItems} 
-                        packName={pack || ''} 
-                        div={div} 
-                        divOption={group.divisionValue} 
-                        type="Test" 
-                    />
+            <View style={{ width: screenWidth }}>
+                <View style={styles.map_group_container}>
+                    <View style={styles.section_header}>
+                        <View style={styles.section_header_content}>
+                            <Text style={styles.section_title}>
+                                {group.divisionTitle || 'Uncategorized'}
+                            </Text>
+                            <Text style={styles.section_stats}>
+                                {discoveredCount}/{totalCount}
+                            </Text>
+                        </View>
+                    </View>
+                    <View style={styles.map_container}>
+                        <Map
+                            selected={groupDiscoveredItems}
+                            packName={pack || ''}
+                            div={div}
+                            divOption={group.divisionValue}
+                            type="Test"
+                        />
+                    </View>
                 </View>
             </View>
         );
@@ -140,50 +153,36 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
     const groupedItems = getGroupedItems();
     const showGrouping = shouldGroupByDivision();
 
-    // Single map view (no division or division selected)
-    if (!showGrouping) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.map_container}>
-                    <Map 
-                        selected={discoveredItems} 
-                        packName={pack || ''} 
-                        div={div} 
-                        divOption={divOption} 
-                        type="Test" 
-                    />
-                </View>
-                
-                {/* Navigation Buttons */}
-                <View style={styles.button_container}>
-                    <TouchableOpacity
-                        style={styles.nav_button}
-                        onPress={() => onViewChange('name')}
-                    >
-                        <Text style={styles.button_text}>Names</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.nav_button}
-                        onPress={() => onViewChange('list')}
-                    >
-                        <Text style={styles.button_text}>List</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        );
-    }
-
     // Grouped maps view (test_division exists and no division selected)
     return (
         <View style={styles.container}>
-            <FlatList
-                data={groupedItems}
-                renderItem={renderMapItem}
-                keyExtractor={(item, index) => item.divisionValue || `group-${index}`}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.flatlist_content}
-            />
-            
+            {!showGrouping ? (
+                <View style={styles.map_container}>
+                    <Map
+                        selected={discoveredItems}
+                        packName={pack || ''}
+                        div={div}
+                        divOption={divOption}
+                        type="Test"
+                    />
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    data={groupedItems}
+                    renderItem={renderMapItem}
+                    keyExtractor={(item, index) => item.divisionValue || `group-${index}`}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+                    initialNumToRender={3}
+                    windowSize={5}
+                    maxToRenderPerBatch={3}
+                    removeClippedSubviews
+                />
+            )}
+
             {/* Navigation Buttons */}
             <View style={styles.button_container}>
                 <TouchableOpacity
@@ -197,6 +196,12 @@ const TestMapPanel = React.memo((): React.JSX.Element => {
                     onPress={() => onViewChange('list')}
                 >
                     <Text style={styles.button_text}>List</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.nav_button}
+                    onPress={() => onViewChange('cards')}
+                >
+                    <Text style={styles.button_text}>Cards</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -215,19 +220,15 @@ const styles = StyleSheet.create({
 
     map_container: {
         width: '100%',
-        height: 400,
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 10,
     },
 
-    flatlist_content: {
-        paddingHorizontal: 10,
-        paddingTop: 10,
-    },
-
     map_group_container: {
-        marginBottom: 20,
+        flex: 1,
+        width: '100%',
     },
 
     section_header: {
@@ -239,15 +240,29 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 
+    section_header_content: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
     section_title: {
         color: 'white',
         fontSize: 18,
         fontWeight: '700',
+        flex: 1,
+    },
+
+    section_stats: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '500',
+        marginLeft: 10,
     },
 
     button_container: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
         borderTopWidth: 2,
@@ -256,12 +271,11 @@ const styles = StyleSheet.create({
     },
 
     nav_button: {
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        padding: 10,
         borderWidth: 1,
         borderColor: 'white',
         borderRadius: 5,
-        minWidth: 120,
+        width: 100,
         alignItems: 'center',
     },
 

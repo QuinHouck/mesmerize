@@ -177,37 +177,10 @@ const TestListPanel = React.memo(() => {
     }
 
     /**
-     * Calculates total correct attributes across all discovered items
-     */
-    function getTotalCorrectAttributes(): number {
-        let correct = 0;
-        results?.forEach(result => {
-            result.attributeResults?.forEach(answer => {
-                if (answer.correct) correct++;
-            });
-        });
-        return correct;
-    }
-
-    /**
-     * Calculates total possible attributes for discovered items
-     */
-    function getTotalPossibleAttributes(): number {
-        // Only count string and number attributes
-        const validAttributes = attributes.filter(
-            attr => attr.type === 'string' || attr.type === 'number'
-        );
-        return discoveredItems.length * validAttributes.length;
-    }
-
-    /**
      * Calculates percentage of correct answers
      */
     function getPercentage(): number {
-        const total = getTotalPossibleAttributes();
-        if (total === 0) return 0;
-        const correct = getTotalCorrectAttributes();
-        return Math.floor((correct / total) * 100);
+        return Math.floor((discoveredItems.length / totalItems) * 100);
     }
 
     /**
@@ -429,7 +402,7 @@ const styles = StyleSheet.create({
 
     button_container: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
         borderTopWidth: 2,
@@ -438,12 +411,11 @@ const styles = StyleSheet.create({
     },
 
     nav_button: {
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        padding: 10,
         borderWidth: 1,
         borderColor: 'white',
         borderRadius: 5,
-        minWidth: 120,
+        width: 100,
         alignItems: 'center',
     },
 

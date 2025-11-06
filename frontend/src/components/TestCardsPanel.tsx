@@ -536,26 +536,6 @@ const TestCardsPanel = React.memo(() => {
             );
         }, (prev, next) => prev.item._id === next.item._id);
 
-    if (!discoveredItems || discoveredItems.length === 0) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.empty_container}>
-                    <Text style={styles.empty_text}>
-                        No items discovered yet. Go back to name view to discover items!
-                    </Text>
-                </View>
-                <View style={styles.button_container}>
-                    <TouchableOpacity
-                        style={styles.nav_button}
-                        onPress={() => handleViewChange('name')}
-                    >
-                        <Text style={styles.button_text}>← Names</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        );
-    }
-
     // Compute adaptive pagination dots (buckets)
     const totalItems = discoveredItems.length;
     const computeStep = React.useCallback((total: number): number => {
@@ -595,52 +575,62 @@ const TestCardsPanel = React.memo(() => {
 
     return (
         <View style={styles.container}>
-            {/* Card Carousel (Virtualized) */}
-            <FlatList
-                ref={flatListRef}
-                data={discoveredItems}
-                keyExtractor={(item, index) => String(item._id || `${item.name}-${index}`)}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                initialNumToRender={3}
-                windowSize={5}
-                maxToRenderPerBatch={3}
-                removeClippedSubviews
-                onScrollBeginDrag={() => { isManualScroll.current = true; }}
-                onMomentumScrollEnd={(event: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-                    setCurrentCardIndex(index);
-                    handleCardChange(index);
-                }}
-                getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
-                renderItem={({ item, index }) => (
-                    <View style={{ width: screenWidth }}>
-                        <MemoCard item={item} index={index} />
-                    </View>
-                )}
-                style={styles.carousel}
-            />
-
-            {/* Pagination Dots (adaptive, never exceeding screen width) */}
-            {dotIndices.length > 0 && (
-                <View style={styles.pagination}>
-                    {dotIndices.map((targetIndex, idx) => (
-                        <TouchableOpacity
-                            key={`${targetIndex}-${idx}`}
-                            onPress={() => scrollToCard(targetIndex)}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            style={styles.dot_touch}
-                        >
-                            <View
-                                style={[
-                                    styles.dot,
-                                    activeDotIndex === targetIndex && styles.active_dot
-                                ]}
-                            />
-                        </TouchableOpacity>
-                    ))}
+            {!discoveredItems || discoveredItems.length === 0 ? (
+                <View style={styles.empty_container}>
+                    <Text style={styles.empty_text}>
+                        No items discovered yet. Go back to name view to discover items!
+                    </Text>
                 </View>
+            ) : (
+                <>
+                    {/* Card Carousel (Virtualized) */}
+                    <FlatList
+                        ref={flatListRef}
+                        data={discoveredItems}
+                        keyExtractor={(item, index) => String(item._id || `${item.name}-${index}`)}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        initialNumToRender={3}
+                        windowSize={5}
+                        maxToRenderPerBatch={3}
+                        removeClippedSubviews
+                        onScrollBeginDrag={() => { isManualScroll.current = true; }}
+                        onMomentumScrollEnd={(event: NativeSyntheticEvent<NativeScrollEvent>) => {
+                            const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+                            setCurrentCardIndex(index);
+                            handleCardChange(index);
+                        }}
+                        getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+                        renderItem={({ item, index }) => (
+                            <View style={{ width: screenWidth }}>
+                                <MemoCard item={item} index={index} />
+                            </View>
+                        )}
+                        style={styles.carousel}
+                    />
+
+                    {/* Pagination Dots (adaptive, never exceeding screen width) */}
+                    {dotIndices.length > 0 && (
+                        <View style={styles.pagination}>
+                            {dotIndices.map((targetIndex, idx) => (
+                                <TouchableOpacity
+                                    key={`${targetIndex}-${idx}`}
+                                    onPress={() => scrollToCard(targetIndex)}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    style={styles.dot_touch}
+                                >
+                                    <View
+                                        style={[
+                                            styles.dot,
+                                            activeDotIndex === targetIndex && styles.active_dot
+                                        ]}
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </>
             )}
 
             {/* Navigation Buttons */}
@@ -875,11 +865,12 @@ const styles = StyleSheet.create({
     },
 
     nav_button: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        padding: 10,
         borderWidth: 1,
         borderColor: 'white',
         borderRadius: 5,
+        width: 100,
+        alignItems: 'center',
     },
 
     button_text: {
