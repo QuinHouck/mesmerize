@@ -150,7 +150,8 @@ const testSlice = createSlice({
 
             state.results = resetResults(filteredItems, state.selectedAttributes);
 
-            state.hasMapAttribute = state.packageInfo?.attributes?.some(attr => attr.type === 'map') || false;
+            // Todo: remove presdient specific logic
+            state.hasMapAttribute = state.packageInfo?.attributes?.some(attr => attr.type === 'map') && state.packageInfo?.name !== 'presidents' || false;
         },
 
         setCurrentItemIndex: (state, action: PayloadAction<number>) => {
