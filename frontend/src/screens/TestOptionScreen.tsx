@@ -1,7 +1,7 @@
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useNavigation } from '@react-navigation/core';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePackages, useTest, useUser } from '../hooks/useRedux';
@@ -43,6 +43,7 @@ const TestOptionScreen = () => {
     const [end, setEnd] = useState(1);
 
     const [isLoading, setLoading] = useState(true);
+    const [isStarting, setIsStarting] = useState(false);
 
     // Load downloaded packages on mount
     useEffect(() => {
@@ -122,6 +123,8 @@ const TestOptionScreen = () => {
             divOptionName: selectedDivOption ? selectedDivOption.name : null,
             attributes: selectedAttributes.map((attr: PackageAttribute) => attr.name)
         }
+
+        setIsStarting(true);
 
         // Save last test settings to Redux (persisted automatically)
         user.dispatch(setLastTestSettings(testData));
@@ -334,10 +337,16 @@ const TestOptionScreen = () => {
             </View>
 
             <View style={styles.bottom_container}>
-                <TouchableOpacity style={styles.start_button} onPress={handleStart}>
+                <TouchableOpacity style={styles.start_button} onPress={handleStart} disabled={isStarting}>
                     <Text style={styles.start_text}>Start</Text>
                 </TouchableOpacity>
             </View>
+            {isStarting && (
+                <View style={styles.loading_overlay}>
+                    <ActivityIndicator size="large" color="#ffffff" />
+                    <Text style={styles.loading_overlay_text}>Loading images...</Text>
+                </View>
+            )}
             <Modal
                 isVisible={showDivModal}
                 coverScreen={true}
@@ -673,6 +682,24 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 50,
         fontWeight: '700'
+    },
+
+    loading_overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    loading_overlay_text: {
+        marginTop: 20,
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '600'
     },
 
 });
