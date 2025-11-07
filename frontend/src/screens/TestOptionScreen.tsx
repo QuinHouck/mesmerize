@@ -11,6 +11,7 @@ import { initializeTest, setTestAttributes, setTestImages, setTestPackage, toggl
 import { setLastTestSettings } from '../store/slices/userSlice';
 import colors from '../util/colors';
 import { getAttributeImages } from '../utils/testHelper';
+import { modalProps } from '../utils/constants';
 
 import type { PackageAttribute, PackageDivision, PackageDivisionOption, PackageInfo, PackageItem } from '../types/package';
 import type { InitializeTestPayload } from '../types/test';
@@ -44,6 +45,7 @@ const TestOptionScreen = () => {
 
     const [isLoading, setLoading] = useState(true);
     const [isStarting, setIsStarting] = useState(false);
+
 
     // Load downloaded packages on mount
     useEffect(() => {
@@ -349,9 +351,9 @@ const TestOptionScreen = () => {
             )}
             <Modal
                 isVisible={showDivModal}
-                coverScreen={true}
                 onBackdropPress={handleDivCancel}
                 style={styles.modal_container}
+                {...modalProps}
             >
                 <View style={styles.modal_options_container}>
                     {selectedDiv && selectedDiv.options.map((option: PackageDivisionOption) => {
@@ -365,9 +367,9 @@ const TestOptionScreen = () => {
             </Modal>
             <Modal
                 isVisible={showPackModal}
-                coverScreen={true}
                 onBackdropPress={handlePackCancel}
                 style={styles.modal_container}
+                {...modalProps}
             >
                 <View style={styles.modal_options_container}>
                     {downloadedPackages && downloadedPackages.map((option: PackageInfo) => {
@@ -381,9 +383,9 @@ const TestOptionScreen = () => {
             </Modal>
             <Modal
                 isVisible={showRangeModal}
-                coverScreen={true}
                 onBackdropPress={() => handleCloseRange(false)}
                 style={styles.modal_container}
+                {...modalProps}
             >
                 <View style={styles.slider_container}>
                     <Text style={styles.slider_text}>{`${start} - ${end}`}</Text>

@@ -16,6 +16,7 @@ import DropDown from '../icons/DropDown.svg';
 import type { QuizOptionScreenNavigationProp } from '../types/navigation';
 import type { PackageAttribute, PackageDivision, PackageDivisionOption, PackageInfo, PackageItem } from '../types/package';
 import type { QuizRange } from '../types/quiz';
+import { modalProps } from 'utils/constants';
 
 const QuizOptionScreen: React.FC = () => {
     // Redux hooks
@@ -65,13 +66,13 @@ const QuizOptionScreen: React.FC = () => {
                 const packageData = downloaded.find((p: PackageInfo) => p.name === lastSettings.pack);
                 if (packageData) {
                     packages.dispatch(setCurrentPackage(packageData));
-                    
+
                     // Find the actual division object from the division name
                     if (lastSettings.div && packageData.divisions) {
                         const divisionObj = packageData.divisions.find((d: PackageDivision) => d.name === lastSettings.div);
                         if (divisionObj) {
                             setSelectedDiv(divisionObj);
-                            
+
                             // Find the actual division option object from the option name
                             if (lastSettings.divOptionName) {
                                 const divOptionObj = divisionObj.options.find((o: PackageDivisionOption) => o.name === lastSettings.divOptionName);
@@ -81,7 +82,7 @@ const QuizOptionScreen: React.FC = () => {
                             }
                         }
                     }
-                    
+
                     setQuestion(lastSettings.question);
                     setQuestionType(lastSettings.questionType);
                     setAnswer(lastSettings.answer);
@@ -352,7 +353,7 @@ const QuizOptionScreen: React.FC = () => {
             </View>
             <Modal
                 isVisible={showDivModal}
-                coverScreen={true}
+                {...modalProps}
                 onBackdropPress={handleDivCancel}
                 style={styles.modal_container}
             >
@@ -368,7 +369,7 @@ const QuizOptionScreen: React.FC = () => {
             </Modal>
             <Modal
                 isVisible={showPackModal}
-                coverScreen={true}
+                {...modalProps}
                 onBackdropPress={handlePackCancel}
                 style={styles.modal_container}
             >
@@ -384,7 +385,7 @@ const QuizOptionScreen: React.FC = () => {
             </Modal>
             <Modal
                 isVisible={showRangeModal}
-                coverScreen={true}
+                {...modalProps}
                 onBackdropPress={() => handleCloseRange(false)}
                 style={styles.modal_container}
             >

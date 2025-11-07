@@ -18,6 +18,7 @@ import { getImages } from '../util/getImages';
 import Map from '../components/Map';
 
 import type { QuizGameScreenNavigationProp } from '../types/navigation';
+import { modalProps } from '../utils/constants';
 
 const QuizGameScreen: React.FC = () => {
     // Redux hooks
@@ -321,9 +322,9 @@ const QuizGameScreen: React.FC = () => {
             </KeyboardAvoidingView>
             <Modal
                 isVisible={isPaused}
-                coverScreen={true}
                 onBackdropPress={handleResumeGame}
                 style={styles.modal_container}
+                {...modalProps}
             >
                 <View style={styles.modal_middle_container}>
                     <Text style={[styles.resume_button_text, { fontSize: 30 }]}>Paused</Text>

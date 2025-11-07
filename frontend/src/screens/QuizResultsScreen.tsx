@@ -13,6 +13,7 @@ import X from '../icons/X.svg';
 
 import type { QuizResultsScreenNavigationProp } from '../types/navigation';
 import type { QuizResult } from '../types/quiz';
+import { modalProps } from 'utils/constants';
 
 interface ImageData {
     ar: number;
@@ -145,9 +146,9 @@ const QuizResultsScreen: React.FC = () => {
 
             <Modal 
                 isVisible={showingModal}
-                coverScreen={true}
                 onBackdropPress={handleClose}
                 style={styles.modal_container}
+                {...modalProps}
             >
                 <TouchableOpacity style={styles.modal_image_container} onPress={handleClose}>
                     {selectedImage && <Image 
