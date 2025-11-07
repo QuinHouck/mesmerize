@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { useNavigation } from '@react-navigation/core';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Modal from "react-native-modal";
-import { useTest, usePackages, useUser } from '../hooks/useRedux';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePackages, useTest, useUser } from '../hooks/useRedux';
 
-import colors from '../util/colors';
-import { setTestPackage, toggleAttribute, initializeTest, setTestAttributes, setTestImages } from '../store/slices/testSlice';
 import { loadDownloadedPackages, setCurrentPackage } from '../store/slices/packagesSlice';
+import { initializeTest, setTestAttributes, setTestImages, setTestPackage, toggleAttribute } from '../store/slices/testSlice';
 import { setLastTestSettings } from '../store/slices/userSlice';
+import colors from '../util/colors';
 import { getAttributeImages } from '../utils/testHelper';
 
-import type { PackageInfo, PackageAttribute, PackageItem, PackageDivision, PackageDivisionOption } from '../types/package';
+import type { PackageAttribute, PackageDivision, PackageDivisionOption, PackageInfo, PackageItem } from '../types/package';
 import type { InitializeTestPayload } from '../types/test';
 
-import DropDown from '../icons/DropDown.svg';
 import { TestOptionScreenNavigationProp } from 'types/navigation';
+import DropDown from '../icons/DropDown.svg';
 
 const TestOptionScreen = () => {
     const packages = usePackages();
@@ -36,6 +37,10 @@ const TestOptionScreen = () => {
 
     const [showDivModal, setDivModal] = useState(false);
     const [showPackModal, setPackModal] = useState(false);
+    const [showRangeModal, setRangeModal] = useState(false);
+    const [ranged, setRanged] = useState(false);
+    const [start, setStart] = useState(1);
+    const [end, setEnd] = useState(1);
 
     const [isLoading, setLoading] = useState(true);
 
@@ -90,6 +95,19 @@ const TestOptionScreen = () => {
         setLoading(false);
     }, [downloadedPackages]);
 
+    useEffect(() => {
+        if (!packageInfo || !packageInfo.items || packageInfo.items.length === 0) {
+            setStart(1);
+            setEnd(1);
+            setRanged(false);
+            return;
+        }
+
+        setStart(1);
+        setEnd(packageInfo.items.length);
+        setRanged(false);
+    }, [packageInfo]);
+
 
     async function handleStart(): Promise<void> {
         // Validate attribute selection
@@ -113,6 +131,17 @@ const TestOptionScreen = () => {
         if (selectedDiv && selectedDivOption) {
             filteredItems = packageInfo.items.filter((item: PackageItem) => {
                 return item[selectedDiv.name] === selectedDivOption.name;
+            });
+        }
+
+        if (ranged && packageInfo.ranged) {
+            const attr = packageInfo.ranged;
+            filteredItems = filteredItems.filter((item: PackageItem) => {
+                const value = Number(item[attr]);
+                if (Number.isNaN(value)) {
+                    return false;
+                }
+                return value >= start && value <= end;
             });
         }
 
@@ -160,8 +189,15 @@ const TestOptionScreen = () => {
     }
 
     function handleDiv(division: PackageDivision | null): void {
-        setSelectedDiv(division);
-        setDivModal(division ? true : false);
+        if (!division) {
+            setSelectedDiv(null);
+            setDivOption(null);
+            setDivModal(false);
+        } else {
+            setSelectedDiv(division);
+            setDivModal(true);
+        }
+        setRanged(false);
     }
 
     function handleDivCancel(): void {
@@ -174,6 +210,7 @@ const TestOptionScreen = () => {
     function handleDivOption(option: PackageDivisionOption): void {
         setDivOption(option);
         setDivModal(false);
+        setRanged(false);
     }
 
     function handlePackCancel(): void {
@@ -185,10 +222,31 @@ const TestOptionScreen = () => {
             packages.dispatch(setCurrentPackage(option));
             setDivOption(null);
             setSelectedDiv(null);
+            setRanged(false);
+            setStart(1);
+            setEnd(option.items ? option.items.length : 1);
             // Clear attributes when switching packages
             test.dispatch(setTestPackage({ packageName: option.name, packageInfo: option }));
         }
         setPackModal(false);
+    }
+
+    function handleRange(): void {
+        setRangeModal(true);
+    }
+
+    function handleCloseRange(submitted: boolean): void {
+        if (submitted) {
+            setRanged(true);
+            setSelectedDiv(null);
+            setDivOption(null);
+        }
+        setRangeModal(false);
+    }
+
+    function handleSlider(values: number[]): void {
+        setStart(values[0]);
+        setEnd(values[1]);
     }
 
     if (packagesLoading || isLoading || !packageInfo) {
@@ -234,8 +292,8 @@ const TestOptionScreen = () => {
                 </TouchableOpacity>}
             </View>
             <View style={styles.division_container}>
-                <TouchableOpacity style={(!selectedDiv) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
-                    <Text style={(selectedDiv === null) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
+                <TouchableOpacity style={(!selectedDiv && !ranged) ? styles.division_button_selected : styles.division_button} onPress={() => handleDiv(null)}>
+                    <Text style={(selectedDiv === null && !ranged) ? styles.division_button_title_selected : styles.division_button_title}>All</Text>
                 </TouchableOpacity>
                 {packageInfo?.divisions && Array.isArray(packageInfo.divisions) && packageInfo.divisions.map((division: PackageDivision) => {
                     return (
@@ -244,6 +302,14 @@ const TestOptionScreen = () => {
                         </TouchableOpacity>
                     );
                 })}
+                {packageInfo?.ranged &&
+                    <TouchableOpacity style={(!selectedDiv && ranged) ? styles.division_button_selected : styles.division_button} onPress={handleRange}>
+                        {(selectedDiv === null && ranged) ?
+                            <Text style={styles.division_button_title_selected}>{`${start} - ${end}`}</Text>
+                            :
+                            <Text style={styles.division_button_title}>Range</Text>
+                        }
+                    </TouchableOpacity>}
             </View>
             <View style={styles.attributes_container}>
                 <View style={styles.attributes_title}>
@@ -302,6 +368,38 @@ const TestOptionScreen = () => {
                             </TouchableOpacity>
                         )
                     })}
+                </View>
+            </Modal>
+            <Modal
+                isVisible={showRangeModal}
+                coverScreen={true}
+                onBackdropPress={() => handleCloseRange(false)}
+                style={styles.modal_container}
+            >
+                <View style={styles.slider_container}>
+                    <Text style={styles.slider_text}>{`${start} - ${end}`}</Text>
+                    <MultiSlider
+                        values={[start, end]}
+                        isMarkersSeparated={true}
+                        onValuesChange={handleSlider}
+                        min={1}
+                        max={packageInfo?.items ? packageInfo.items.length : 1}
+                        step={1}
+                        snapped
+                        sliderLength={200}
+                        containerStyle={styles.slider}
+                        unselectedStyle={{
+                            backgroundColor: 'white',
+                            height: 5,
+                        }}
+                        selectedStyle={{
+                            backgroundColor: colors.darkPurple,
+                            height: 5,
+                        }}
+                    />
+                    <TouchableOpacity style={[styles.modal_options_button, { backgroundColor: colors.darkPurple }]} onPress={() => handleCloseRange(true)}>
+                        <Text style={styles.modal_options_text}>Submit</Text>
+                    </TouchableOpacity>
                 </View>
             </Modal>
         </SafeAreaView>
@@ -555,6 +653,26 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 20,
         fontWeight: '600',
+    },
+
+    slider: {
+        width: '80%',
+    },
+
+    slider_container: {
+        width: '80%',
+        height: '50%',
+        backgroundColor: colors.lightPurple,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
+        borderRadius: 10,
+    },
+
+    slider_text: {
+        color: 'white',
+        fontSize: 50,
+        fontWeight: '700'
     },
 
 });
