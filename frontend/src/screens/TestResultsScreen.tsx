@@ -7,9 +7,177 @@ import colors from '../util/colors';
 import { useTest } from '../hooks/useRedux';
 import { resetTest, initializeTest } from '../store/slices/testSlice';
 
-import type { PackageAttribute, PackageItem } from '../types/package';
+import type { PackageAttribute, PackageItem, Images } from '../types/package';
 import type { TestItemResult } from '../types/test';
 import { TestResultsScreenNavigationProp } from 'types/navigation';
+
+type AttributeDetailsProps = {
+    itemResult: TestItemResult;
+    getAttributeTitle: (attributeName: string) => string;
+    getAttribute: (attributeName: string) => PackageAttribute | undefined;
+    images: Images;
+};
+
+const AttributeDetails: React.FC<AttributeDetailsProps> = ({
+    itemResult,
+    getAttributeTitle,
+    getAttribute,
+    images,
+}) => {
+    const hasImageAttributes = itemResult.attributeResults.some(attr => {
+        const packageAttr = getAttribute(attr.attributeName);
+        return packageAttr && packageAttr.type === 'image';
+    });
+
+    return (
+        <View style={styles.attributes_container}>
+            <View style={styles.attributes_content}>
+                <View style={styles.left_attributes}>
+                    {itemResult.attributeResults
+                        .filter(attr => {
+                            const packageAttr = getAttribute(attr.attributeName);
+                            return (
+                                packageAttr &&
+                                (packageAttr.type === 'string' || packageAttr.type === 'number') &&
+                                attr.attributeName !== 'name'
+                            );
+                        })
+                        .map((attr, attrIndex) => (
+                            <View key={attrIndex} style={styles.attribute_row}>
+                                <Text style={styles.attribute_name}>
+                                    {getAttributeTitle(attr.attributeName)}:
+                                </Text>
+                                <View style={styles.attribute_answer_container}>
+                                    <Text
+                                        style={[
+                                            styles.attribute_answer,
+                                            attr.correct ? styles.correct_answer : styles.incorrect_answer,
+                                        ]}
+                                    >
+                                        {attr.input}
+                                    </Text>
+                                    {!attr.correct && (
+                                        <Text style={attr.answered ? styles.correct_answer : styles.incorrect_answer}>
+                                            {' → '}{attr.answer}
+                                        </Text>
+                                    )}
+                                </View>
+                            </View>
+                        ))}
+                </View>
+
+                {hasImageAttributes && (
+                    <View style={styles.right_images}>
+                        {itemResult.attributeResults
+                            .filter(attr => {
+                                const packageAttr = getAttribute(attr.attributeName);
+                                return packageAttr && packageAttr.type === 'image';
+                            })
+                            .map((attr, attrIndex) => {
+                                const correctItemName = attr.answer as string;
+                                const correctImage = correctItemName && images ? images[correctItemName] : null;
+
+                                return (
+                                    <View key={attrIndex} style={styles.result_image_container}>
+                                        <Text style={styles.attribute_name}>
+                                            {getAttributeTitle(attr.attributeName)}:
+                                        </Text>
+                                        <View
+                                            style={[
+                                                styles.result_image_placeholder,
+                                                attr.correct ? styles.result_image_correct : styles.result_image_incorrect,
+                                            ]}
+                                        >
+                                            {correctImage ? (
+                                                <Image
+                                                    source={correctImage.image}
+                                                    style={styles.result_image}
+                                                    resizeMode="contain"
+                                                />
+                                            ) : (
+                                                <Text style={styles.question_mark}>?</Text>
+                                            )}
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                    </View>
+                )}
+            </View>
+        </View>
+    );
+};
+
+type ItemResultCardProps = {
+    itemResult: TestItemResult;
+    totalAttributes: number;
+    onlyNameSelected: boolean;
+    isExpanded: boolean;
+    onToggle: () => void;
+    getAttributeTitle: (attributeName: string) => string;
+    getAttribute: (attributeName: string) => PackageAttribute | undefined;
+    images: Images;
+};
+
+const ItemResultCard: React.FC<ItemResultCardProps> = ({
+    itemResult,
+    totalAttributes,
+    onlyNameSelected,
+    isExpanded,
+    onToggle,
+    getAttributeTitle,
+    getAttribute,
+    images,
+}) => {
+    const correct = itemResult.attributeResults.filter(attr => attr.correct).length;
+    const itemName = itemResult.itemName;
+
+    if (onlyNameSelected) {
+        return (
+            <View style={styles.item_result}>
+                <View style={styles.item_header_touchable}>
+                    <View style={styles.item_header}>
+                        <Text style={styles.item_name}>{itemName}</Text>
+                        <View style={styles.item_header_right}>
+                            <Text style={styles.item_score}>
+                                {correct}/{totalAttributes}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.item_result}>
+            <TouchableOpacity
+                style={styles.item_header_touchable}
+                onPress={onToggle}
+            >
+                <View style={styles.item_header}>
+                    <Text style={styles.item_name}>{itemName}</Text>
+                    <View style={styles.item_header_right}>
+                        <Text style={styles.item_score}>
+                            {correct}/{totalAttributes}
+                        </Text>
+                        <Text style={styles.expand_indicator}>
+                            {isExpanded ? '▼' : '▶'}
+                        </Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+            {isExpanded && (
+                <AttributeDetails
+                    itemResult={itemResult}
+                    getAttributeTitle={getAttributeTitle}
+                    getAttribute={getAttribute}
+                    images={images}
+                />
+            )}
+        </View>
+    );
+};
 
 const TestResultsScreen = () => {
     // Redux hooks
@@ -88,18 +256,6 @@ const TestResultsScreen = () => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-    /**
-     * Get item score (correct/total)
-     */
-    function getItemScore(itemName: string): { correct: number } {
-        const result = results.find(r => r.itemName === itemName);
-        if (!result) return { correct: 0 };
-
-        const correctCount = result.attributeResults.filter(a => a.correct).length;
-
-        return { correct: correctCount };
     }
 
     /**
@@ -239,6 +395,25 @@ const TestResultsScreen = () => {
     const groupedResults = getGroupedResults();
     const showGrouping = shouldGroupByDivision();
 
+    function renderItemResults(resultsToRender: TestItemResult[]) {
+        return resultsToRender.map((itemResult, index) => {
+            const itemName = itemResult.itemName;
+            return (
+                <ItemResultCard
+                    key={`${itemName}-${index}` || index}
+                    itemResult={itemResult}
+                    totalAttributes={totalAttributes}
+                    onlyNameSelected={onlyNameSelected}
+                    isExpanded={expandedItems.has(itemName)}
+                    onToggle={() => toggleItem(itemName)}
+                    getAttributeTitle={getAttributeTitle}
+                    getAttribute={getAttribute}
+                    images={images}
+                />
+            );
+        });
+    }
+
     return (
         <SafeAreaView style={styles.main_container}>
             <View style={styles.top_container}>
@@ -301,267 +476,13 @@ const TestResultsScreen = () => {
                                             </View>
 
                                             {/* Section Results */}
-                                            {group.results.map((itemResult, index) => {
-                                                const itemName = itemResult.itemName;
-                                                const isExpanded = expandedItems.has(itemName);
-                                                const { correct } = getItemScore(itemName);
-
-                                                return (
-                                                    <View key={`${itemName}-${index}` || index} style={styles.item_result}>
-                                                        {onlyNameSelected ? (
-                                                            <View style={styles.item_header_touchable}>
-                                                                <View style={styles.item_header}>
-                                                                    <Text style={styles.item_name}>{itemName}</Text>
-                                                                    <View style={styles.item_header_right}>
-                                                                        <Text style={styles.item_score}>
-                                                                            {correct}/{totalAttributes}
-                                                                        </Text>
-                                                                    </View>
-                                                                </View>
-                                                            </View>
-                                                        ) : (
-                                                            <>
-                                                                <TouchableOpacity
-                                                                    style={styles.item_header_touchable}
-                                                                    onPress={() => toggleItem(itemName)}
-                                                                >
-                                                                    <View style={styles.item_header}>
-                                                                        <Text style={styles.item_name}>{itemName}</Text>
-                                                                        <View style={styles.item_header_right}>
-                                                                            <Text style={styles.item_score}>
-                                                                                {correct}/{totalAttributes}
-                                                                            </Text>
-                                                                            <Text style={styles.expand_indicator}>
-                                                                                {isExpanded ? '▼' : '▶'}
-                                                                            </Text>
-                                                                        </View>
-                                                                    </View>
-                                                                </TouchableOpacity>
-
-                                                                {/* Expanded attributes view */}
-                                                                {isExpanded && (
-                                                                    <View style={styles.attributes_container}>
-                                                                        <View style={styles.attributes_content}>
-                                                                            {/* Left side: String and number attributes */}
-                                                                            <View style={styles.left_attributes}>
-                                                                                {itemResult.attributeResults
-                                                                                    .filter(attr => {
-                                                                                        const packageAttr = getAttribute(attr.attributeName);
-                                                                                        return packageAttr &&
-                                                                                            (packageAttr.type === 'string' || packageAttr.type === 'number') &&
-                                                                                            attr.attributeName !== 'name';
-                                                                                    })
-                                                                                    .map((attr, attrIndex) => {
-                                                                                        return (
-                                                                                            <View key={attrIndex} style={styles.attribute_row}>
-                                                                                                <Text style={styles.attribute_name}>
-                                                                                                    {getAttributeTitle(attr.attributeName)}:
-                                                                                                </Text>
-                                                                                                <View style={styles.attribute_answer_container}>
-                                                                                                    <>
-                                                                                                        <Text
-                                                                                                            style={[
-                                                                                                                styles.attribute_answer,
-                                                                                                                attr.correct
-                                                                                                                    ? styles.correct_answer
-                                                                                                                    : styles.incorrect_answer,
-                                                                                                            ]}
-                                                                                                        >
-                                                                                                            {attr.input}
-                                                                                                        </Text>
-                                                                                                        {!attr.correct && (
-                                                                                                            <Text style={styles.correct_answer}>
-                                                                                                                {' → '}{attr.answer}
-                                                                                                            </Text>
-                                                                                                        )}
-                                                                                                    </>
-                                                                                                </View>
-                                                                                            </View>
-                                                                                        );
-                                                                                    })}
-                                                                            </View>
-
-                                                                            {/* Right side: Image attributes */}
-                                                                            {itemResult.attributeResults.some(attr => {
-                                                                                const packageAttr = getAttribute(attr.attributeName);
-                                                                                return packageAttr && packageAttr.type === 'image';
-                                                                            }) && (
-                                                                                    <View style={styles.right_images}>
-                                                                                        {itemResult.attributeResults
-                                                                                            .filter(attr => {
-                                                                                                const packageAttr = getAttribute(attr.attributeName);
-                                                                                                return packageAttr && packageAttr.type === 'image';
-                                                                                            })
-                                                                                            .map((attr, attrIndex) => {
-                                                                                                // Get the correct answer (item name for image attributes)
-                                                                                                const correctItemName = attr.answer as string;
-                                                                                                const correctImage = images && correctItemName ? images[correctItemName] : null;
-
-                                                                                                return (
-                                                                                                    <View key={attrIndex} style={styles.result_image_container}>
-                                                                                                        <Text style={styles.attribute_name}>
-                                                                                                            {getAttributeTitle(attr.attributeName)}:
-                                                                                                        </Text>
-                                                                                                        <View style={[
-                                                                                                            styles.result_image_placeholder,
-                                                                                                            attr.correct ? styles.result_image_correct : styles.result_image_incorrect
-                                                                                                        ]}>
-                                                                                                            {correctImage ? (
-                                                                                                                <Image
-                                                                                                                    source={correctImage.image}
-                                                                                                                    style={styles.result_image}
-                                                                                                                    resizeMode="contain"
-                                                                                                                />
-                                                                                                            ) : (
-                                                                                                                <Text style={styles.question_mark}>?</Text>
-                                                                                                            )}
-                                                                                                        </View>
-                                                                                                    </View>
-                                                                                                );
-                                                                                            })}
-                                                                                    </View>
-                                                                                )}
-                                                                        </View>
-                                                                    </View>
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </View>
-                                                );
-                                            })}
+                                            {renderItemResults(group.results)}
                                         </View>
                                     );
                                 })
                             ) : (
                                 // Render without section headers
-                                groupedResults[0]?.results.map((itemResult, index) => {
-                                    const itemName = itemResult.itemName;
-                                    const isExpanded = expandedItems.has(itemName);
-                                    const { correct } = getItemScore(itemName);
-
-                                    return (
-                                        <View key={`${itemName}-${index}` || index} style={styles.item_result}>
-                                            {onlyNameSelected ? (
-                                                <View style={styles.item_header_touchable}>
-                                                    <View style={styles.item_header}>
-                                                        <Text style={styles.item_name}>{itemName}</Text>
-                                                        <View style={styles.item_header_right}>
-                                                            <Text style={styles.item_score}>
-                                                                {correct}/{totalAttributes}
-                                                            </Text>
-                                                        </View>
-                                                    </View>
-                                                </View>
-                                            ) : (
-                                                <>
-                                                    <TouchableOpacity
-                                                        style={styles.item_header_touchable}
-                                                        onPress={() => toggleItem(itemName)}
-                                                    >
-                                                        <View style={styles.item_header}>
-                                                            <Text style={styles.item_name}>{itemName}</Text>
-                                                            <View style={styles.item_header_right}>
-                                                                <Text style={styles.item_score}>
-                                                                    {correct}/{totalAttributes}
-                                                                </Text>
-                                                                <Text style={styles.expand_indicator}>
-                                                                    {isExpanded ? '▼' : '▶'}
-                                                                </Text>
-                                                            </View>
-                                                        </View>
-                                                    </TouchableOpacity>
-
-                                                    {/* Expanded attributes view */}
-                                                    {isExpanded && (
-                                                        <View style={styles.attributes_container}>
-                                                            <View style={styles.attributes_content}>
-                                                                {/* Left side: String and number attributes */}
-                                                                <View style={styles.left_attributes}>
-                                                                    {itemResult.attributeResults
-                                                                        .filter(attr => {
-                                                                            const packageAttr = getAttribute(attr.attributeName);
-                                                                            return packageAttr &&
-                                                                                (packageAttr.type === 'string' || packageAttr.type === 'number') &&
-                                                                                attr.attributeName !== 'name';
-                                                                        })
-                                                                        .map((attr, attrIndex) => {
-                                                                            return (
-                                                                                <View key={attrIndex} style={styles.attribute_row}>
-                                                                                    <Text style={styles.attribute_name}>
-                                                                                        {getAttributeTitle(attr.attributeName)}:
-                                                                                    </Text>
-                                                                                    <View style={styles.attribute_answer_container}>
-                                                                                        <>
-                                                                                            <Text
-                                                                                                style={[
-                                                                                                    styles.attribute_answer,
-                                                                                                    attr.correct
-                                                                                                        ? styles.correct_answer
-                                                                                                        : styles.incorrect_answer,
-                                                                                                ]}
-                                                                                            >
-                                                                                                {attr.input}
-                                                                                            </Text>
-                                                                                            {!attr.correct && (
-                                                                                                <Text style={styles.correct_answer}>
-                                                                                                    {' → '}{attr.answer}
-                                                                                                </Text>
-                                                                                            )}
-                                                                                        </>
-                                                                                    </View>
-                                                                                </View>
-                                                                            );
-                                                                        })}
-                                                                </View>
-
-                                                                {/* Right side: Image attributes */}
-                                                                {itemResult.attributeResults.some(attr => {
-                                                                    const packageAttr = getAttribute(attr.attributeName);
-                                                                    return packageAttr && packageAttr.type === 'image';
-                                                                }) && (
-                                                                        <View style={styles.right_images}>
-                                                                            {itemResult.attributeResults
-                                                                                .filter(attr => {
-                                                                                    const packageAttr = getAttribute(attr.attributeName);
-                                                                                    return packageAttr && packageAttr.type === 'image';
-                                                                                })
-                                                                                .map((attr, attrIndex) => {
-                                                                                    // Get the correct answer (item name for image attributes)
-                                                                                    const correctItemName = attr.answer as string;
-                                                                                    const correctImage = images && correctItemName ? images[correctItemName] : null;
-
-                                                                                    return (
-                                                                                        <View key={attrIndex} style={styles.result_image_container}>
-                                                                                            <Text style={styles.attribute_name}>
-                                                                                                {getAttributeTitle(attr.attributeName)}:
-                                                                                            </Text>
-                                                                                            <View style={[
-                                                                                                styles.result_image_placeholder,
-                                                                                                attr.correct ? styles.result_image_correct : styles.result_image_incorrect
-                                                                                            ]}>
-                                                                                                {correctImage ? (
-                                                                                                    <Image
-                                                                                                        source={correctImage.image}
-                                                                                                        style={styles.result_image}
-                                                                                                        resizeMode="contain"
-                                                                                                    />
-                                                                                                ) : (
-                                                                                                    <Text style={styles.question_mark}>?</Text>
-                                                                                                )}
-                                                                                            </View>
-                                                                                        </View>
-                                                                                    );
-                                                                                })}
-                                                                        </View>
-                                                                    )}
-                                                            </View>
-                                                        </View>
-                                                    )}
-                                                </>
-                                            )}
-                                        </View>
-                                    );
-                                })
+                                renderItemResults(groupedResults[0]?.results ?? [])
                             )}
                         </>
                     )}
