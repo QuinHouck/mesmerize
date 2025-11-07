@@ -233,7 +233,7 @@ const TestCardsPanel = React.memo(() => {
         }
 
         // Only check image attributes if all string/number attributes are correct
-        if (imageAttributes.length > 0) {
+        if (imageAttributes.length > 0 && !isManualScroll.current) {
             for (const attr of imageAttributes) {
                 const attrResult = itemResult.attributeResults.find(a => a.attributeName === attr.name);
                 if (!attrResult || !attrResult.correct) {
