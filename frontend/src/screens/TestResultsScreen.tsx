@@ -193,6 +193,7 @@ const TestResultsScreen = () => {
     const packageInfo = test.packageInfo;
     const selectedAttributes = test.selectedAttributes;
     const images = test.images;
+    const filteredItems = test.filteredItems;
 
     const totalAttributes: number = selectedAttributes.length;
 
@@ -274,6 +275,28 @@ const TestResultsScreen = () => {
     }
 
     /**
+     * Get attribute value from filtered items for a given item name
+     */
+    function getAttributeValue(attributeName: string, itemName: string): string | number | undefined {
+        if (!filteredItems || filteredItems.length === 0) {
+            return undefined;
+        }
+
+        const item = filteredItems.find((filteredItem: PackageItem) => filteredItem.name === itemName);
+        if (!item) {
+            return undefined;
+        }
+
+        const value = item[attributeName as keyof PackageItem] as unknown;
+
+        if (typeof value === 'string' || typeof value === 'number') {
+            return value;
+        }
+
+        return undefined;
+    }
+
+    /**
      * Checks if we should group by test_division
      */
     function shouldGroupByDivision(): boolean {
@@ -288,12 +311,20 @@ const TestResultsScreen = () => {
 
         if (packageInfo?.sort_attr) {
             sortedResults.sort((a, b) => {
-                // Get the attribute result for the sort attribute
-                const attrA = a.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
-                const attrB = b.attributeResults.find(ar => ar.attributeName === packageInfo.sort_attr);
+                const valueA = getAttributeValue(packageInfo.sort_attr, a.itemName);
+                const valueB = getAttributeValue(packageInfo.sort_attr, b.itemName);
 
-                const valueA = attrA?.answer || '';
-                const valueB = attrB?.answer || '';
+                if ((valueA === undefined || valueA === null) && (valueB === undefined || valueB === null)) {
+                    return 0;
+                }
+
+                if (valueA === undefined || valueA === null) {
+                    return 1;
+                }
+
+                if (valueB === undefined || valueB === null) {
+                    return -1;
+                }
 
                 // Handle numeric sorting
                 if (typeof valueA === 'number' && typeof valueB === 'number') {

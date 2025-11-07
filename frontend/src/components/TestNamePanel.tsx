@@ -77,19 +77,30 @@ const TestNamePanel = React.memo((): React.JSX.Element => {
         if (!input.trim()) return;
 
         let matchedItem: PackageItem | null = null;
+        let tempItem: PackageItem | null = null;
 
         // Search through all items for a match
         for (const item of items) {
             // Check main name
             if (isMatch(input, item.name)) {
                 matchedItem = item;
-                break;
-            }
-            // Check accepted alternatives
-            if (item.accepted?.some((alt: string) => isMatch(input, alt))) {
+            } else if (item.accepted?.some((alt: string) => isMatch(input, alt))) {
                 matchedItem = item;
-                break;
             }
+
+            if (matchedItem) {
+                if (discoveredItems.some(discovered => discovered._id === matchedItem!._id)) {
+                    tempItem = matchedItem;
+                    matchedItem = null;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        if(!matchedItem && tempItem) {
+            matchedItem = tempItem;
+            tempItem = null;
         }
 
         // Determine feedback based on match result
